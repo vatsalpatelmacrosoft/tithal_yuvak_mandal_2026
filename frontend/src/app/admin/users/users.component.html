@@ -7,15 +7,19 @@
       <span class="hero-badge">{{ users().length }} User</span>
     </div>
   </div>
-  <p-button label="Add User" icon="pi pi-user-plus" (click)="openAddForm()" />
+  <div class="hero-right">
+    <p-button label="Add User" icon="pi pi-user-plus" (click)="openAddForm()" />
+  </div>
 </div>
 
 <div class="table-card">
-  <div class="filter-bar">
-    <span class="p-input-icon-left">
-      <i class="pi pi-search"></i>
-      <input pInputText [(ngModel)]="searchTerm" placeholder="Search name, mobile, role..." style="width:260px">
-    </span>
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <div class="search-wrap">
+        <i class="pi pi-search sw-icon"></i>
+        <input pInputText [(ngModel)]="searchTerm" class="sw-input" placeholder="Search name, mobile, role…">
+      </div>
+    </div>
   </div>
   <p-table [value]="filteredUsers" [tableStyle]="{'min-width':'60rem'}" styleClass="p-datatable-striped">
     <ng-template pTemplate="header">

@@ -46,9 +46,24 @@ import { ToastService } from '../../core/services/toast.service';
               <p style="font-size:0.85rem;color:#9CA3AF;margin-bottom:4px">Your ID</p>
               <p style="font-size:1.5rem;font-weight:700;color:#CC5500;letter-spacing:2px">{{ memberId }}</p>
             </div>
-            <p style="color:#9CA3AF;margin-top:16px;font-size:0.88rem">
-              QR code has been sent to your WhatsApp number
-            </p>
+
+            <!-- Welcome Link -->
+            <div style="margin-top:24px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:12px;padding:18px 20px;text-align:left">
+              <p style="font-size:0.82rem;color:#166534;font-weight:600;margin:0 0 10px;display:flex;align-items:center;gap:6px">
+                <i class="pi pi-link"></i> Your Welcome Card Link
+              </p>
+              <div style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #D1FAE5;border-radius:8px;padding:8px 12px">
+                <span style="font-size:0.78rem;color:#374151;flex:1;word-break:break-all;overflow:hidden">{{ welcomeLink }}</span>
+                <button (click)="copyLink()"
+                        style="background:none;border:none;cursor:pointer;color:#059669;padding:4px;flex-shrink:0"
+                        [title]="copied ? 'Copied!' : 'Copy link'">
+                  <i class="pi" [class.pi-copy]="!copied" [class.pi-check]="copied"></i>
+                </button>
+              </div>
+              <p style="font-size:0.76rem;color:#4B5563;margin:8px 0 0">
+                Open this link to view your digital welcome card and QR code.
+              </p>
+            </div>
           </div>
         </p-card>
       </div>
@@ -81,13 +96,18 @@ import { ToastService } from '../../core/services/toast.service';
                 <small class="p-error" *ngIf="hasErr('mo_number')">{{ getErr('mo_number') }}</small>
               </div>
               <div class="field">
-                <label>WhatsApp Number <small style="color:#9CA3AF">(for QR delivery)</small></label>
+                <label>WhatsApp Number</label>
                 <input pInputText formControlName="whatsapp_number" type="tel"
                   placeholder="If different from mobile" class="w-full">
               </div>
               <div class="field">
                 <label>Email</label>
                 <input pInputText formControlName="email" type="email" placeholder="Email (optional)" class="w-full">
+              </div>
+              <div class="field">
+                <label>Karyakar Type</label>
+                <p-dropdown [options]="karyakarOptions" formControlName="is_karyakar"
+                  optionLabel="label" optionValue="value" styleClass="w-full" />
               </div>
               <div class="field">
                 <label class="required">Xetra</label>
@@ -129,15 +149,24 @@ export class RegisterComponent implements OnInit {
   private toast = inject(ToastService);
   private fb    = inject(FormBuilder);
 
-  formType = ''; inactive = false; success = false; saving = false;
-  memberId = ''; xetras: any[] = []; mandals: any[] = []; loadingMandals = false;
+  formType    = ''; inactive = false; success = false; saving = false;
+  memberId    = ''; memberUuid = ''; welcomeLink = ''; copied = false;
+  xetras: any[] = []; mandals: any[] = []; loadingMandals = false;
   apiErrors: Record<string, string> = {};
+
+  karyakarOptions = [
+    { label: 'No',               value: 'no'       },
+    { label: 'Bal Karyakar',     value: 'bal'      },
+    { label: 'Yuva Karyakar',    value: 'yuva'     },
+    { label: 'Sanyukta Karyakar',value: 'sanyukta' },
+  ];
 
   form = this.fb.group({
     first_name: ['', Validators.required], middle_name: [''], last_name: ['', Validators.required],
     mo_number: ['', [Validators.required, Validators.pattern(/^[6-9]\d{9}$/)]], whatsapp_number: [''],
     email: ['', Validators.email], address: [''],
     xetra_id: [null, Validators.required], mandal_id: [null, Validators.required],
+    is_karyakar: ['no'],
   });
 
   ngOnInit() {
@@ -159,6 +188,13 @@ export class RegisterComponent implements OnInit {
     });
   }
 
+  copyLink() {
+    navigator.clipboard.writeText(this.welcomeLink).then(() => {
+      this.copied = true;
+      setTimeout(() => this.copied = false, 2500);
+    });
+  }
+
   hasErr(f: string) { const c = this.form.get(f); return (c?.invalid && c.touched) || !!this.apiErrors[f]; }
   getErr(f: string) {
     if (this.apiErrors[f]) return this.apiErrors[f];
@@ -174,7 +210,12 @@ export class RegisterComponent implements OnInit {
     this.saving = true; this.apiErrors = {};
     this.api.publicPost<any>(`register/${this.formType}`, this.form.value).subscribe({
       next: res => {
-        if (res.success) { this.success = true; this.memberId = res.data?.yuvak_id || res.data?.yuvati_id || ''; }
+        if (res.success) {
+          this.success    = true;
+          this.memberId   = res.data?.yuvak_id || res.data?.yuvati_id || '';
+          this.memberUuid = res.data?.uuid || '';
+          this.welcomeLink = `${window.location.origin}/welcome/${this.formType}/${this.memberUuid}`;
+        }
         this.saving = false;
       },
       error: err => {

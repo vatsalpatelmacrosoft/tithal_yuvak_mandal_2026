@@ -7,15 +7,19 @@
       <span class="hero-badge">{{ rows().length }} Shibir</span>
     </div>
   </div>
-  <p-button label="Add Shibir" icon="pi pi-plus" (click)="openForm()" />
+  <div class="hero-right">
+    <p-button label="Add Shibir" icon="pi pi-plus" (click)="openForm()" />
+  </div>
 </div>
 
 <div class="table-card">
-  <div class="filter-bar">
-    <span class="p-input-icon-left">
-      <i class="pi pi-search"></i>
-      <input pInputText [(ngModel)]="searchTerm" placeholder="Search by name..." style="width:260px">
-    </span>
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <div class="search-wrap">
+        <i class="pi pi-search sw-icon"></i>
+        <input pInputText [(ngModel)]="searchTerm" class="sw-input" placeholder="Search by name…">
+      </div>
+    </div>
   </div>
   <p-table [value]="filteredRows" [tableStyle]="{'min-width':'50rem'}" styleClass="p-datatable-striped">
     <ng-template pTemplate="header">

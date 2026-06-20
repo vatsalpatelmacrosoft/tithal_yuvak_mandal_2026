@@ -9,15 +9,19 @@
       <span class="hero-badge">{{ quizzes().length }} Quiz{{ quizzes().length !== 1 ? 'zes' : '' }}</span>
     </div>
   </div>
-  <p-button label="Create Quiz" icon="pi pi-plus" (click)="router.navigate(['/admin/quiz/new'])" />
+  <div class="hero-right">
+    <p-button label="Create Quiz" icon="pi pi-plus" (click)="router.navigate(['/admin/quiz/new'])" />
+  </div>
 </div>
 
 <div class="table-card">
-  <div class="filter-bar">
-    <span class="p-input-icon-left">
-      <i class="pi pi-search"></i>
-      <input pInputText [(ngModel)]="searchTerm" placeholder="Search quiz title..." style="width:260px">
-    </span>
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <div class="search-wrap">
+        <i class="pi pi-search sw-icon"></i>
+        <input pInputText [(ngModel)]="searchTerm" class="sw-input" placeholder="Search quiz title…">
+      </div>
+    </div>
   </div>
 
   <p-table [value]="filteredQuizzes" [tableStyle]="{'min-width':'70rem'}" styleClass="p-datatable-striped">

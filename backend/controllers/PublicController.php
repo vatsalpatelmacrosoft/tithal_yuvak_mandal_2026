@@ -51,20 +51,23 @@ class PublicController
         require_once __DIR__ . '/../helpers/id_encoder.php';
         $uuid = $this->uuid();
 
+        $karyakar = in_array($body['is_karyakar'] ?? '', ['no','bal','yuva','sanyukta'])
+                    ? $body['is_karyakar'] : 'no';
+
         $this->pdo->prepare("
             INSERT INTO yuvaks (uuid,yuvak_id,first_name,middle_name,last_name,mo_number,
-                whatsapp_number,email,address,xetra_id,mandal_id)
-            VALUES (?, 'TEMP', ?,?,?,?,?,?,?,?,?)
+                whatsapp_number,email,address,xetra_id,mandal_id,is_karyakar)
+            VALUES (?, 'TEMP', ?,?,?,?,?,?,?,?,?,?)
         ")->execute([$uuid, $body['first_name'], $body['middle_name'] ?? null,
             $body['last_name'], $body['mo_number'], $body['whatsapp_number'] ?? null,
             $body['email'] ?? null, $body['address'] ?? null,
-            $body['xetra_id'], $body['mandal_id']]);
+            $body['xetra_id'], $body['mandal_id'], $karyakar]);
 
         $newId   = (int)$this->pdo->lastInsertId();
         $yuvakId = buildYuvakId($newId, $xetra['code']);
         $this->pdo->prepare("UPDATE yuvaks SET yuvak_id=? WHERE id=?")->execute([$yuvakId, $newId]);
 
-        sendSuccess(['yuvak_id' => $yuvakId], 'Registration successful! Your Yuvak ID: ' . $yuvakId);
+        sendSuccess(['yuvak_id' => $yuvakId, 'uuid' => $uuid], 'Registration successful! Your Yuvak ID: ' . $yuvakId);
     }
 
     public function registerYuvati(array $body): void
@@ -85,20 +88,23 @@ class PublicController
         require_once __DIR__ . '/../helpers/id_encoder.php';
         $uuid = $this->uuid();
 
+        $karyakar = in_array($body['is_karyakar'] ?? '', ['no','bal','yuva','sanyukta'])
+                    ? $body['is_karyakar'] : 'no';
+
         $this->pdo->prepare("
             INSERT INTO yuvatis (uuid,yuvati_id,first_name,middle_name,last_name,mo_number,
-                whatsapp_number,email,address,xetra_id,mandal_id)
-            VALUES (?, 'TEMP', ?,?,?,?,?,?,?,?,?)
+                whatsapp_number,email,address,xetra_id,mandal_id,is_karyakar)
+            VALUES (?, 'TEMP', ?,?,?,?,?,?,?,?,?,?)
         ")->execute([$uuid, $body['first_name'], $body['middle_name'] ?? null,
             $body['last_name'], $body['mo_number'], $body['whatsapp_number'] ?? null,
             $body['email'] ?? null, $body['address'] ?? null,
-            $body['xetra_id'], $body['mandal_id']]);
+            $body['xetra_id'], $body['mandal_id'], $karyakar]);
 
         $newId    = (int)$this->pdo->lastInsertId();
         $yuvatiId = buildYuvatiId($newId, $xetra['code']);
         $this->pdo->prepare("UPDATE yuvatis SET yuvati_id=? WHERE id=?")->execute([$yuvatiId, $newId]);
 
-        sendSuccess(['yuvati_id' => $yuvatiId], 'Registration successful! Your Yuvati ID: ' . $yuvatiId);
+        sendSuccess(['yuvati_id' => $yuvatiId, 'uuid' => $uuid], 'Registration successful! Your Yuvati ID: ' . $yuvatiId);
     }
 
     // ── Yuvak Validation ─────────────────────────────────────────

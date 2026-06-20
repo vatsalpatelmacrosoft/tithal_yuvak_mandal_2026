@@ -7,35 +7,63 @@
       <span class="hero-badge">{{ total() }} Yuvak</span>
     </div>
   </div>
-  <p-button label="Add Yuvak" icon="pi pi-plus" (click)="goToCreate()" *ngIf="canCreate" />
+
+  <div class="hero-right" *ngIf="canCreate">
+    <p-button label="Add Yuvak" icon="pi pi-plus" (click)="goToCreate()" />
+  </div>
 </div>
 
 <div class="table-card">
-  <div class="filter-bar">
-    <span class="p-input-icon-left">
-      <i class="pi pi-search"></i>
-      <input pInputText [(ngModel)]="searchTerm" (ngModelChange)="onSearch($event)"
-        placeholder="Search name, mobile, ID..." style="width:260px">
-    </span>
-    <p-dropdown [options]="xetras" [(ngModel)]="filters.xetra_id" (ngModelChange)="loadData(1)"
-      optionLabel="name" optionValue="id" placeholder="All Xetra" [showClear]="true" />
-    <p-dropdown [options]="mandals" [(ngModel)]="filters.mandal_id" (ngModelChange)="loadData(1)"
-      optionLabel="name" optionValue="id" placeholder="All Mandal" [showClear]="true" />
+  <!-- ── Toolbar ─────────────────────────────────────────── -->
+  <div class="toolbar">
+    <div class="toolbar-left">
+
+      <!-- Search -->
+      <div class="search-wrap">
+        <i class="pi pi-search sw-icon"></i>
+        <input pInputText [(ngModel)]="searchTerm" (ngModelChange)="onSearch($event)" class="sw-input"
+          placeholder="Search name, mobile, ID…">
+      </div>
+
+      <!-- Xetra filter -->
+      <div class="filter-wrap">
+        <i class="pi pi-map-marker fw-icon"></i>
+        <p-dropdown [options]="xetras" [(ngModel)]="filters.xetra_id" (ngModelChange)="loadData(1)" optionLabel="name"
+          optionValue="id" placeholder="All Xetra" [showClear]="true" styleClass="fw-dropdown" />
+      </div>
+
+      <!-- Mandal filter -->
+      <div class="filter-wrap">
+        <i class="pi pi-building fw-icon"></i>
+        <p-dropdown [options]="mandals" [(ngModel)]="filters.mandal_id" (ngModelChange)="loadData(1)" optionLabel="name"
+          optionValue="id" placeholder="All Mandal" [showClear]="true" styleClass="fw-dropdown" />
+      </div>
+
+    </div>
   </div>
-  <p-table [value]="yuvaks()" [lazy]="true" (onLazyLoad)="onLazyLoad($event)"
-           [totalRecords]="total()" [rows]="perPage" [paginator]="true"
-           [loading]="loading" [tableStyle]="{'min-width':'70rem'}"
-           [showCurrentPageReport]="true" currentPageReportTemplate="{first}-{last} of {totalRecords}"
-           styleClass="p-datatable-striped">
+
+  <!-- ── Table ───────────────────────────────────────────── -->
+  <p-table [value]="yuvaks()" [lazy]="true" (onLazyLoad)="onLazyLoad($event)" [totalRecords]="total()" [rows]="perPage"
+    [paginator]="true" [loading]="loading" [tableStyle]="{'min-width':'70rem'}" [showCurrentPageReport]="true"
+    currentPageReportTemplate="{first}-{last} of {totalRecords}" styleClass="p-datatable-striped">
     <ng-template pTemplate="header">
       <tr>
-        <th>Yuvak ID</th><th>Name</th><th>Mobile</th>
-        <th>Xetra</th><th>Mandal</th><th>Karyakar</th><th>QR</th><th style="width:10rem">Actions</th>
+        <th>Yuvak ID</th>
+        <th>Name</th>
+        <th>Mobile</th>
+        <th>Xetra</th>
+        <th>Mandal</th>
+        <th>Karyakar</th>
+        <th style="width:6rem">Welcome</th>
+        <th style="width:10rem">Actions</th>
       </tr>
     </ng-template>
+
     <ng-template pTemplate="body" let-y>
       <tr>
-        <td><code style="background:#FFF0E0;padding:2px 7px;border-radius:4px;font-size:0.82rem">{{ y.yuvak_id }}</code></td>
+        <td>
+          <code class="id-badge">{{ y.yuvak_id }}</code>
+        </td>
         <td style="font-weight:500">{{ y.first_name }} {{ y.middle_name }} {{ y.last_name }}</td>
         <td>{{ y.mo_number }}</td>
         <td>{{ y.xetra_name }}</td>
@@ -46,29 +74,28 @@
           </span>
         </td>
         <td>
-          <div style="display: flex; gap: 4px;">
-            <p-button icon="pi pi-qrcode" [rounded]="true" [text]="true" size="small"
-              (click)="openWelcomePage(y)" pTooltip="Open Welcome Page" tooltipPosition="top" />
-            <p-button icon="pi pi-copy" [rounded]="true" [text]="true" severity="secondary" size="small"
-              (click)="copyWelcomeLink(y)" pTooltip="Copy Welcome Link" tooltipPosition="top" />
-          </div>
+          <p-button icon="pi pi-qrcode" [rounded]="true" [text]="true" size="small" (click)="copyWelcomeLink(y)"
+            pTooltip="Copy Welcome Link" tooltipPosition="top" />
         </td>
         <td>
-          <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" size="small"
-            (click)="edit(y)" *ngIf="canUpdate" pTooltip="Edit" tooltipPosition="top" />
+          <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" size="small" (click)="edit(y)" *ngIf="canUpdate"
+            pTooltip="Edit" tooltipPosition="top" />
           <p-button icon="pi pi-send" [rounded]="true" [text]="true" severity="info" size="small"
-            (click)="sendNotification(y)" [loading]="sendingNotify === y.uuid"
-            pTooltip="Send Welcome Message" tooltipPosition="top" />
+            (click)="sendNotification(y)" [loading]="sendingNotify === y.uuid" pTooltip="Send Welcome SMS"
+            tooltipPosition="top" />
           <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small"
             (click)="confirmDelete(y)" *ngIf="canDelete" pTooltip="Archive" tooltipPosition="top" />
         </td>
       </tr>
     </ng-template>
+
     <ng-template pTemplate="emptymessage">
-      <tr><td colspan="8" style="text-align:center;padding:3rem;color:#9CA3AF">
-        <i class="pi pi-user" style="font-size:2rem;display:block;margin-bottom:10px;color:#D1D5DB"></i>
-        No Yuvak records found
-      </td></tr>
+      <tr>
+        <td colspan="8" style="text-align:center;padding:3rem;color:#9CA3AF">
+          <i class="pi pi-user" style="font-size:2rem;display:block;margin-bottom:10px;color:#D1D5DB"></i>
+          No Yuvak records found
+        </td>
+      </tr>
     </ng-template>
   </p-table>
 </div>

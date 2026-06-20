@@ -7,7 +7,9 @@
       <span class="hero-badge">{{ rows().length }} Xetra</span>
     </div>
   </div>
-  <p-button label="Add Xetra" icon="pi pi-plus" (click)="openForm()" *ngIf="canCreate" />
+  <div class="hero-right" *ngIf="canCreate">
+    <p-button label="Add Xetra" icon="pi pi-plus" (click)="openForm()" />
+  </div>
 </div>
 
 <div class="table-card">

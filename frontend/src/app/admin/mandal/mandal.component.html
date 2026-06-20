@@ -7,15 +7,21 @@
       <span class="hero-badge">{{ rows().length }} Mandal</span>
     </div>
   </div>
-  <p-button label="Add Mandal" icon="pi pi-plus" (click)="openForm()"
-    *ngIf="auth.hasPermission('mandal','can_create')" />
+  <div class="hero-right" *ngIf="auth.hasPermission('mandal','can_create')">
+    <p-button label="Add Mandal" icon="pi pi-plus" (click)="openForm()" />
+  </div>
 </div>
 
 <div class="table-card">
-  <div class="filter-bar" style="margin-bottom:16px">
-    <p-dropdown [options]="xetras" [(ngModel)]="xetraFilter" (ngModelChange)="load()"
-      optionLabel="name" optionValue="id" placeholder="All Xetra" [showClear]="true"
-      [style]="{minWidth:'220px'}" />
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <div class="filter-wrap">
+        <i class="pi pi-map-marker fw-icon"></i>
+        <p-dropdown [options]="xetras" [(ngModel)]="xetraFilter" (ngModelChange)="load()"
+          optionLabel="name" optionValue="id" placeholder="All Xetra" [showClear]="true"
+          styleClass="fw-dropdown" />
+      </div>
+    </div>
   </div>
 
   <p-table [value]="rows()" [tableStyle]="{'min-width':'48rem'}" styleClass="p-datatable-striped">

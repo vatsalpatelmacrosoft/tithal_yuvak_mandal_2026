@@ -4,31 +4,7 @@
   border-left-color: #1E88E5 !important;
 }
 
-::ng-deep .field .p-dropdown {
-  height: 40px !important;
-  border: 1.5px solid #E5E7EB !important;
-  border-radius: 8px !important;
-  width: 100% !important;
-}
-
-::ng-deep .field .p-chips .p-chips-multiple-container {
-  border: 1.5px solid #E5E7EB !important;
-  border-radius: 8px !important;
-  min-height: 40px !important;
-  width: 100% !important;
-}
-
 .form-hero-icon {
   background: linear-gradient(135deg, #1565C0, #3949AB) !important;
   box-shadow: 0 4px 14px rgba(57, 73, 171, 0.35) !important;
-}
-
-::ng-deep .form-hero-actions .p-button:not(.p-button-outlined) {
-  background: linear-gradient(135deg, #1565C0, #3949AB) !important;
-  border-color: transparent !important;
-  box-shadow: 0 2px 8px rgba(57, 73, 171, 0.3);
-
-  &:hover {
-    background: linear-gradient(135deg, #0D47A1, #1A237E) !important;
-  }
 }
