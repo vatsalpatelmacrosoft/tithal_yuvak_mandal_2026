@@ -46,8 +46,12 @@
           </span>
         </td>
         <td>
-          <p-button icon="pi pi-qrcode" [rounded]="true" [text]="true" size="small"
-            (click)="showQr(y)" pTooltip="View QR" tooltipPosition="top" />
+          <div style="display: flex; gap: 4px;">
+            <p-button icon="pi pi-qrcode" [rounded]="true" [text]="true" size="small"
+              (click)="openWelcomePage(y)" pTooltip="Open Welcome Page" tooltipPosition="top" />
+            <p-button icon="pi pi-copy" [rounded]="true" [text]="true" severity="secondary" size="small"
+              (click)="copyWelcomeLink(y)" pTooltip="Copy Welcome Link" tooltipPosition="top" />
+          </div>
         </td>
         <td>
           <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" size="small"

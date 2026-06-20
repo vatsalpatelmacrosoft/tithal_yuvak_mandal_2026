@@ -30,7 +30,7 @@
     <ng-template pTemplate="header">
       <tr>
         <th>Yuvak ID</th><th>Name</th><th>Mobile</th>
-        <th>Xetra</th><th>Mandal</th><th>Karyakar</th><th style="width:8rem">Actions</th>
+        <th>Xetra</th><th>Mandal</th><th>Karyakar</th><th>QR</th><th style="width:10rem">Actions</th>
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-y>
@@ -46,6 +46,14 @@
           </span>
         </td>
         <td>
+          <div style="display: flex; gap: 4px;">
+            <p-button icon="pi pi-qrcode" [rounded]="true" [text]="true" size="small"
+              (click)="openWelcomePage(y)" pTooltip="Open Welcome Page" tooltipPosition="top" />
+            <p-button icon="pi pi-copy" [rounded]="true" [text]="true" severity="secondary" size="small"
+              (click)="copyWelcomeLink(y)" pTooltip="Copy Welcome Link" tooltipPosition="top" />
+          </div>
+        </td>
+        <td>
           <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" size="small"
             (click)="edit(y)" *ngIf="canUpdate" pTooltip="Edit" tooltipPosition="top" />
           <p-button icon="pi pi-send" [rounded]="true" [text]="true" severity="info" size="small"
@@ -57,7 +65,7 @@
       </tr>
     </ng-template>
     <ng-template pTemplate="emptymessage">
-      <tr><td colspan="7" style="text-align:center;padding:3rem;color:#9CA3AF">
+      <tr><td colspan="8" style="text-align:center;padding:3rem;color:#9CA3AF">
         <i class="pi pi-user" style="font-size:2rem;display:block;margin-bottom:10px;color:#D1D5DB"></i>
         No Yuvak records found
       </td></tr>

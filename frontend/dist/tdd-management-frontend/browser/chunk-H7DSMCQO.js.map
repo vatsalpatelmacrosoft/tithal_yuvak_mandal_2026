@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["src/app/core/services/toast.service.ts"],
-  "sourcesContent": ["import { Injectable, inject } from '@angular/core';\nimport { MessageService } from 'primeng/api';\n\n@Injectable({ providedIn: 'root' })\nexport class ToastService {\n  private msg = inject(MessageService);\n\n  success(message: string) { this.msg.add({ severity: 'success', summary: 'Success', detail: message, life: 4000 }); }\n  error(message: string)   { this.msg.add({ severity: 'error',   summary: 'Error',   detail: message, life: 4000 }); }\n  warning(message: string) { this.msg.add({ severity: 'warn',    summary: 'Warning', detail: message, life: 4000 }); }\n  info(message: string)    { this.msg.add({ severity: 'info',    summary: 'Info',    detail: message, life: 4000 }); }\n}\n"],
-  "mappings": ";;;;;;;;;AAIM,IAAO,eAAP,MAAO,cAAY;EACf,MAAM,OAAO,cAAc;EAEnC,QAAQ,SAAe;AAAI,SAAK,IAAI,IAAI,EAAE,UAAU,WAAW,SAAS,WAAW,QAAQ,SAAS,MAAM,IAAI,CAAE;EAAG;EACnH,MAAM,SAAe;AAAM,SAAK,IAAI,IAAI,EAAE,UAAU,SAAW,SAAS,SAAW,QAAQ,SAAS,MAAM,IAAI,CAAE;EAAG;EACnH,QAAQ,SAAe;AAAI,SAAK,IAAI,IAAI,EAAE,UAAU,QAAW,SAAS,WAAW,QAAQ,SAAS,MAAM,IAAI,CAAE;EAAG;EACnH,KAAK,SAAe;AAAO,SAAK,IAAI,IAAI,EAAE,UAAU,QAAW,SAAS,QAAW,QAAQ,SAAS,MAAM,IAAI,CAAE;EAAG;;qBANxG,eAAY;EAAA;4EAAZ,eAAY,SAAZ,cAAY,WAAA,YADC,OAAM,CAAA;;",
-  "names": []
-}

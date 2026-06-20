@@ -36,28 +36,27 @@ class WhatsAppService
         string $memberName,
         string $memberId,
         string $memberType,
-        string $qrUrl,
         string $welcomeLink = ''
     ): bool {
         $to   = $this->normalizePhone($to);
         $text = $this->buildRegistrationText($memberName, $memberId, $memberType, $welcomeLink);
 
         return match ($this->provider) {
-            'meta'   => $this->sendViaMeta($to, $text, $qrUrl),
-            'twilio' => $this->sendViaTwilio($to, $text, $qrUrl),
+            'meta'   => $this->sendViaMeta($to, $text),
+            'twilio' => $this->sendViaTwilio($to, $text),
             default  => $this->logFallback($to, $text),
         };
     }
 
     // ── Meta Cloud API ─────────────────────────────────────────
-    private function sendViaMeta(string $to, string $text, string $qrUrl): bool
+    private function sendViaMeta(string $to, string $text): bool
     {
-        $url = "https://graph.facebook.com/v19.0/{$this->phoneId}/messages";
+        $url  = "https://graph.facebook.com/v19.0/{$this->phoneId}/messages";
         $body = [
             'messaging_product' => 'whatsapp',
-            'to' => $to,
-            'type' => 'image',
-            'image' => ['link' => $qrUrl, 'caption' => $text],
+            'to'   => $to,
+            'type' => 'text',
+            'text' => ['body' => $text, 'preview_url' => true],
         ];
 
         return $this->httpPost($url, $body, [
@@ -67,14 +66,13 @@ class WhatsAppService
     }
 
     // ── Twilio ─────────────────────────────────────────────────
-    private function sendViaTwilio(string $to, string $text, string $qrUrl): bool
+    private function sendViaTwilio(string $to, string $text): bool
     {
-        $url = "https://api.twilio.com/2010-04-01/Accounts/{$this->accountSid}/Messages.json";
+        $url  = "https://api.twilio.com/2010-04-01/Accounts/{$this->accountSid}/Messages.json";
         $body = http_build_query([
             'From' => "whatsapp:{$this->fromNumber}",
-            'To' => "whatsapp:+{$to}",
+            'To'   => "whatsapp:+{$to}",
             'Body' => $text,
-            'MediaUrl' => $qrUrl,
         ]);
 
         $ch = curl_init($url);
@@ -86,7 +84,6 @@ class WhatsAppService
         ]);
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
 
         if ($httpCode >= 400) {
             error_log("[WhatsApp/Twilio] Error $httpCode: $response");
@@ -113,7 +110,6 @@ class WhatsAppService
         ]);
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
 
         if ($httpCode >= 400) {
             error_log("[WhatsApp/Meta] Error $httpCode: $response");
@@ -129,15 +125,15 @@ class WhatsAppService
             ? "\n🔗 *Your profile & QR code:*\n{$welcomeLink}\n"
             : '';
         return <<<TEXT
-🕉️ *TDD Samaj – Registration Successful!*
-
+*Tithal Yuvak Mandal*
 Jai Swaminarayan, *{$name}*!
 
-Your *{$label} ID* is:
+✅ Registration Successful!
+
+Your *{$label} ID:*
 📛 `{$id}`
 {$linkLine}
-Please save this ID for future reference.
-Your personal QR code is attached – show it at the gate for attendance.
+Show your ID or QR code at the gate for attendance.
 
 _Tithal Mandir System_
 TEXT;

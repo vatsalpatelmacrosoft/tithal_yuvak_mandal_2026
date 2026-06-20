@@ -81,6 +81,18 @@ export class YuvatiListComponent implements OnInit {
     });
   }
 
+  openWelcomePage(y: any) {
+    const url = `${window.location.origin}/welcome/yuvati/${y.uuid}`;
+    window.open(url, '_blank');
+  }
+
+  copyWelcomeLink(y: any) {
+    const url = `${window.location.origin}/welcome/yuvati/${y.uuid}`;
+    navigator.clipboard.writeText(url).then(() => {
+      this.toast.success('Welcome link copied!');
+    });
+  }
+
   showQr(y: any) {
     this.qrTarget = y; this.qrUrl = ''; this.showQrDialog = true;
     this.api.get<any>(`yuvati/${y.uuid}/qr`).subscribe(res => { if (res.success) this.qrUrl = res.data.qr_url; });

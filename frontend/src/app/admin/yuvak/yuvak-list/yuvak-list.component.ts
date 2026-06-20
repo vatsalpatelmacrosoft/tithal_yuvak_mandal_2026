@@ -73,6 +73,18 @@ export class YuvakListComponent implements OnInit {
   goToCreate() { this.router.navigate(['/admin/yuvak/new']); }
   edit(y: Yuvak) { this.router.navigate(['/admin/yuvak', y.uuid]); }
 
+  openWelcomePage(y: Yuvak) {
+    const url = `${window.location.origin}/welcome/yuvak/${y.uuid}`;
+    window.open(url, '_blank');
+  }
+
+  copyWelcomeLink(y: Yuvak) {
+    const url = `${window.location.origin}/welcome/yuvak/${y.uuid}`;
+    navigator.clipboard.writeText(url).then(() => {
+      this.toast.success('Welcome link copied!');
+    });
+  }
+
   sendingNotify: string | null = null;
   sendNotification(y: Yuvak) {
     this.sendingNotify = y.uuid;

@@ -34,6 +34,12 @@
                   [margin]="2" cssClass="qr-canvas" />
         </div>
         <div class="qr-hint">Show this QR code at the gate for attendance</div>
+        <div class="copy-url-section" style="margin-top: 16px; text-align: center;">
+          <button (click)="copyWelcomeUrl()" class="copy-btn" style="background: white; border: 1px solid #e5e7eb; border-radius: 20px; padding: 8px 16px; font-size: 0.85rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; color: #374151; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: all 0.2s;">
+            <i class="pi" [class.pi-copy]="!copied" [class.pi-check]="copied" style="font-size: 0.95rem;" [style.color]="copied ? '#10B981' : '#f97316'"></i>
+            <span>{{ copied ? 'Copied Link!' : 'Copy Welcome Link' }}</span>
+          </button>
+        </div>
       </div>
     </div>
 

@@ -3,18 +3,18 @@
 // Orchestrates: Generate QR → Send WhatsApp message
 
 require_once __DIR__ . '/QrCodeService.php';
-require_once __DIR__ . '/WhatsAppService.php';
+require_once __DIR__ . '/SmsService.php';
 
 class NotificationService
 {
-    private QrCodeService   $qr;
-    private WhatsAppService $wa;
-    private string          $frontendUrl;
+    private QrCodeService $qr;
+    private SmsService    $sms;
+    private string        $frontendUrl;
 
     public function __construct()
     {
         $this->qr          = new QrCodeService();
-        $this->wa          = new WhatsAppService();
+        $this->sms         = new SmsService();
         $this->frontendUrl = rtrim(getenv('FRONTEND_URL') ?: 'http://localhost:4200', '/');
     }
 
@@ -36,12 +36,11 @@ class NotificationService
         string $whatsappNumber = ''
     ): void {
         $sendTo      = $whatsappNumber ?: $moNumber;
-        $qrUrl       = $this->qr->generateForMember($uuid, $yuvakId, 'yuvak');
         $welcomeLink = $this->welcomeLink('yuvak', $uuid);
 
         try {
-            $this->wa->sendRegistrationMessage(
-                $sendTo, "$firstName $lastName", $yuvakId, 'yuvak', $qrUrl, $welcomeLink
+            $this->sms->sendRegistrationMessage(
+                $sendTo, "$firstName $lastName", $yuvakId, 'yuvak', $welcomeLink
             );
         } catch (\Throwable $e) {
             error_log("[Notify] WhatsApp send failed for Yuvak $yuvakId: " . $e->getMessage());
@@ -61,12 +60,11 @@ class NotificationService
         string $whatsappNumber = ''
     ): void {
         $sendTo      = $whatsappNumber ?: $moNumber;
-        $qrUrl       = $this->qr->generateForMember($uuid, $yuvatiId, 'yuvati');
         $welcomeLink = $this->welcomeLink('yuvati', $uuid);
 
         try {
-            $this->wa->sendRegistrationMessage(
-                $sendTo, "$firstName $lastName", $yuvatiId, 'yuvati', $qrUrl, $welcomeLink
+            $this->sms->sendRegistrationMessage(
+                $sendTo, "$firstName $lastName", $yuvatiId, 'yuvati', $welcomeLink
             );
         } catch (\Throwable $e) {
             error_log("[Notify] WhatsApp send failed for Yuvati $yuvatiId: " . $e->getMessage());
@@ -81,13 +79,12 @@ class NotificationService
         $idField    = $type === 'yuvak' ? 'yuvak_id' : 'yuvati_id';
         $memberId   = $member[$idField];
         $uuid       = $member['uuid'];
-        $sendTo     = $member['whatsapp_number'] ?: $member['mo_number'];
-        $name       = trim("{$member['first_name']} {$member['last_name']}");
-        $qrUrl      = $this->qr->generateForMember($uuid, $memberId, $type);
-        $welcomeLink= $this->welcomeLink($type, $uuid);
+        $sendTo      = $member['whatsapp_number'] ?: $member['mo_number'];
+        $name        = trim("{$member['first_name']} {$member['last_name']}");
+        $welcomeLink = $this->welcomeLink($type, $uuid);
 
         try {
-            $this->wa->sendRegistrationMessage($sendTo, $name, $memberId, $type, $qrUrl, $welcomeLink);
+            $this->sms->sendRegistrationMessage($sendTo, $name, $memberId, $type, $welcomeLink);
         } catch (\Throwable $e) {
             error_log("[Notify] Resend failed for $type $memberId: " . $e->getMessage());
             throw $e;

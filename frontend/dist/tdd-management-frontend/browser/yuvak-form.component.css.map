@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["src/app/admin/yuvak/yuvak-form/yuvak-form.component.scss"],
-  "sourcesContent": [":host { display: block; }\n\n::ng-deep .field .p-dropdown {\n  height: 40px !important;\n  border: 1.5px solid #E5E7EB !important;\n  border-radius: 8px !important;\n  width: 100% !important;\n  &.err { border-color: #EF4444 !important; }\n}\n\n::ng-deep .field .p-chips .p-chips-multiple-container {\n  border: 1.5px solid #E5E7EB !important;\n  border-radius: 8px !important;\n  min-height: 40px !important;\n  width: 100% !important;\n}\n\n::ng-deep .form-hero-actions .p-button:not(.p-button-outlined) {\n  background: linear-gradient(135deg, #FF6B00, #FF9240) !important;\n  border-color: transparent !important;\n  box-shadow: 0 2px 8px rgba(255, 107, 0, 0.3);\n\n  &:hover {\n    background: linear-gradient(135deg, #CC5500, #FF6B00) !important;\n  }\n}\n"],
-  "mappings": ";AAAA;AAAQ,WAAA;;AAER,UAAA,CAAA,MAAA,CAAA;AACE,UAAA;AACA,UAAA,MAAA,MAAA;AACA,iBAAA;AACA,SAAA;;AACA,UAAA,CALF,MAKE,CALF,UAKE,CAAA;AAAQ,gBAAA;;AAGV,UAAA,CARA,MAQA,CAAA,QAAA,CAAA;AACE,UAAA,MAAA,MAAA;AACA,iBAAA;AACA,cAAA;AACA,SAAA;;AAGF,UAAA,CAAA,kBAAA,CAAA,QAAA,KAAA,CAAA;AACE;IAAA;MAAA,MAAA;MAAA,OAAA;MAAA;AACA,gBAAA;AACA,cAAA,EAAA,IAAA,IAAA,KAAA,GAAA,EAAA,GAAA,EAAA,CAAA,EAAA;;AAEA,UAAA,CALF,kBAKE,CALF,QAKE,KAAA,CALF,kBAKE;AACE;IAAA;MAAA,MAAA;MAAA,OAAA;MAAA;;",
-  "names": []
-}

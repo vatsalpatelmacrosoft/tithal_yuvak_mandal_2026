@@ -40,4 +40,13 @@ export class WelcomeComponent implements OnInit {
       }
     });
   }
+
+  copied = false;
+
+  copyWelcomeUrl() {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      this.copied = true;
+      setTimeout(() => this.copied = false, 2000);
+    });
+  }
 }
