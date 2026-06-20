@@ -1,0 +1,23 @@
+:host { display: block; }
+
+.camera-scan-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #3949AB, #5C6BC0);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+
+  .pi { font-size: 1.3rem; }
+
+  &:hover  { opacity: 0.9; }
+  &:active { opacity: 0.8; }
+}

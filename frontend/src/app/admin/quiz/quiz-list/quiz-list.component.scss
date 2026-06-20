@@ -1,0 +1,14 @@
+:host { display: block; }
+
+.text-center { text-align: center; }
+
+.count-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 700;
+
+  &.blue  { background: #EFF6FF; color: #1D4ED8; }
+  &.green { background: #ECFDF5; color: #059669; }
+}

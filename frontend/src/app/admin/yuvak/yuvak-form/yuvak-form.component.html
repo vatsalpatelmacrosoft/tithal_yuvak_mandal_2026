@@ -1,0 +1,102 @@
+<div class="back-link" (click)="router.navigate(['/admin/yuvak'])">
+  <i class="pi pi-arrow-left"></i> Back to Yuvak
+</div>
+
+<div class="form-hero">
+  <div class="form-hero-left">
+    <div class="form-hero-icon"><i class="pi pi-user"></i></div>
+    <div>
+      <div class="form-hero-title">{{ isEdit ? 'Edit Yuvak' : 'Add New Yuvak' }}</div>
+      <div class="form-hero-sub">{{ isEdit ? 'Update member information' : 'Register a new Yuvak member' }}</div>
+    </div>
+  </div>
+  <div class="form-hero-actions">
+    <p-button label="Cancel" [outlined]="true" (click)="router.navigate(['/admin/yuvak'])" />
+    <p-button [label]="isEdit ? 'Update' : 'Save'" icon="pi pi-save" [loading]="saving" (click)="onSubmit()" />
+  </div>
+</div>
+
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+  <div class="form-section">
+    <div class="section-title"><i class="pi pi-user"></i> Personal Information</div>
+    <div class="form-row">
+      <div class="field">
+        <label class="req">First Name</label>
+        <input pInputText formControlName="first_name" placeholder="First name" [class.err]="hasError('first_name')">
+        <small class="p-error" *ngIf="hasError('first_name')">{{ getError('first_name') }}</small>
+      </div>
+      <div class="field">
+        <label>Middle Name</label>
+        <input pInputText formControlName="middle_name" placeholder="Middle name (optional)">
+      </div>
+      <div class="field">
+        <label class="req">Last Name</label>
+        <input pInputText formControlName="last_name" placeholder="Last name" [class.err]="hasError('last_name')">
+        <small class="p-error" *ngIf="hasError('last_name')">{{ getError('last_name') }}</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="section-title"><i class="pi pi-phone"></i> Contact Details</div>
+    <div class="form-row">
+      <div class="field">
+        <label class="req">Mobile Number</label>
+        <input pInputText formControlName="mo_number" type="tel" placeholder="10-digit mobile"
+          [class.err]="hasError('mo_number')">
+        <small class="p-error" *ngIf="hasError('mo_number')">{{ getError('mo_number') }}</small>
+      </div>
+      <div class="field">
+        <label>WhatsApp Number</label>
+        <input pInputText formControlName="whatsapp_number" type="tel" placeholder="If different from mobile">
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input pInputText formControlName="email" type="email" placeholder="Email address"
+          [class.err]="hasError('email')">
+        <small class="p-error" *ngIf="hasError('email')">{{ getError('email') }}</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="section-title"><i class="pi pi-map"></i> Organisation Details</div>
+    <div class="form-row">
+      <div class="field">
+        <label class="req">Xetra</label>
+        <p-dropdown [options]="xetras" formControlName="xetra_id" optionLabel="name" optionValue="id"
+          placeholder="Select Xetra" [ngClass]="{'err': hasError('xetra_id')}" />
+        <small class="p-error" *ngIf="hasError('xetra_id')">Xetra is required</small>
+      </div>
+      <div class="field">
+        <label class="req">Mandal</label>
+        <p-dropdown [options]="mandals" formControlName="mandal_id" optionLabel="name" optionValue="id"
+          [placeholder]="loadingMandals ? 'Loading...' : (!form.get('xetra_id')?.value ? 'Select Xetra first' : 'Select Mandal')"
+          [disabled]="!form.get('xetra_id')?.value || loadingMandals"
+          [ngClass]="{'err': hasError('mandal_id')}" />
+        <small class="p-error" *ngIf="hasError('mandal_id')">Mandal is required</small>
+      </div>
+      <div class="field">
+        <label>Is Karyakar?</label>
+        <p-dropdown [options]="karyakarOptions" formControlName="is_karyakar" optionLabel="label" optionValue="value" />
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="section-title"><i class="pi pi-info-circle"></i> Additional Info</div>
+    <div class="field" style="margin-bottom:16px">
+      <label>Address</label>
+      <textarea pInputTextarea formControlName="address" placeholder="Full residential address" rows="3"></textarea>
+    </div>
+    <div class="field">
+      <label>Tags</label>
+      <p-chips formControlName="tags" placeholder="Add tag and press Enter" />
+    </div>
+  </div>
+
+  <div class="form-hero-actions" style="justify-content:flex-end;margin-bottom:8px">
+    <p-button type="button" label="Cancel" [outlined]="true" (click)="router.navigate(['/admin/yuvak'])" />
+    <p-button type="submit" [label]="isEdit ? 'Update' : 'Save'" icon="pi pi-save" [loading]="saving" />
+  </div>
+</form>

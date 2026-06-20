@@ -1,0 +1,282 @@
+<div class="module-hero">
+  <div class="hero-left">
+    <div class="hero-icon" style="background:linear-gradient(135deg,#0D9488,#14B8A6);box-shadow:0 4px 14px rgba(20,184,166,0.35)">
+      <i class="pi pi-chart-bar"></i>
+    </div>
+    <div>
+      <div class="hero-title">Quiz Reports</div>
+      <div class="hero-subtitle">Analytics, participant results and gender-wise breakdowns</div>
+    </div>
+  </div>
+</div>
+
+<p-tabView>
+
+  <!-- ── Tab 1: Quiz Wise ──────────────────────────────────── -->
+  <p-tabPanel header="Quiz Wise">
+    <div class="report-toolbar">
+      <span style="font-size:0.88rem;color:#6B7280">Overall performance across all quizzes</span>
+      <p-button label="Export CSV" icon="pi pi-download" size="small" [outlined]="true"
+                (click)="export('quiz-wise')" />
+    </div>
+
+    <p-table [value]="quizWise()" [loading]="loadingQ" styleClass="p-datatable-striped"
+             [tableStyle]="{'min-width':'70rem'}">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Quiz Title</th>
+          <th class="text-center">Questions</th>
+          <th class="text-center">Participants</th>
+          <th class="text-center">Completed</th>
+          <th class="text-center">Incomplete</th>
+          <th class="text-center">Highest %</th>
+          <th class="text-center">Avg %</th>
+          <th class="text-center">Lowest %</th>
+          <th class="text-center">Pass %</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-q>
+        <tr>
+          <td>
+            <div style="font-weight:600">{{ q.title || q.name }}</div>
+            <p-tag [value]="q.is_active ? 'Active' : 'Inactive'"
+                   [severity]="$any(q.is_active ? 'success' : 'danger')" />
+          </td>
+          <td class="text-center">{{ q.question_count }}</td>
+          <td class="text-center"><span class="stat-pill blue">{{ q.total_participants }}</span></td>
+          <td class="text-center"><span class="stat-pill green">{{ q.total_completed }}</span></td>
+          <td class="text-center"><span class="stat-pill orange">{{ q.total_incomplete }}</span></td>
+          <td class="text-center">{{ q.highest_score | number:'1.1-1' }}%</td>
+          <td class="text-center"><strong>{{ q.average_score | number:'1.1-1' }}%</strong></td>
+          <td class="text-center">{{ q.lowest_score | number:'1.1-1' }}%</td>
+          <td class="text-center">{{ q.pass_percentage | number:'1.1-1' }}%</td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr><td colspan="9" class="empty-msg">No quiz data available.</td></tr>
+      </ng-template>
+    </p-table>
+  </p-tabPanel>
+
+  <!-- ── Tab 2: Participant Wise ───────────────────────────── -->
+  <p-tabPanel header="Participant Wise">
+    <div class="report-toolbar">
+      <div style="min-width:260px">
+        <p-dropdown [options]="quizzes()" [(ngModel)]="selectedQuiz"
+                    placeholder="Select a quiz" [showClear]="false"
+                    (onChange)="onQuizSelect($event.value)" styleClass="w-full" />
+      </div>
+      <p-button label="Export CSV" icon="pi pi-download" size="small" [outlined]="true"
+                [disabled]="!selectedQuiz()" (click)="export('participant-wise')" />
+    </div>
+
+    <div class="no-quiz-hint" *ngIf="!selectedQuiz()">
+      <i class="pi pi-arrow-up" style="display:block;margin-bottom:8px;font-size:1.4rem;color:#C7D2FE"></i>
+      Select a quiz above to view participant results.
+    </div>
+
+    <p-table *ngIf="selectedQuiz()" [value]="participants()" [loading]="loadingP"
+             styleClass="p-datatable-striped" [tableStyle]="{'min-width':'70rem'}">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>#</th>
+          <th>Name / Yuvak ID</th>
+          <th>Type</th>
+          <th>Gender</th>
+          <th class="text-center">Score</th>
+          <th class="text-center">Total</th>
+          <th class="text-center">%</th>
+          <th class="text-center">Correct</th>
+          <th class="text-center">Wrong</th>
+          <th>Submitted</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-p let-i="rowIndex">
+        <tr>
+          <td style="color:#9CA3AF">{{ i + 1 }}</td>
+          <td>
+            <div style="font-weight:600">{{ p.name || p.yuvak_id || '—' }}</div>
+            <div *ngIf="p.yuvak_id && p.name" style="font-size:0.8rem;color:#9CA3AF">{{ p.yuvak_id }}</div>
+          </td>
+          <td><p-tag [value]="typeLabel(p.participant_type)" severity="secondary" /></td>
+          <td>{{ p.gender | titlecase }}</td>
+          <td class="text-center"><strong>{{ p.score }}</strong></td>
+          <td class="text-center">{{ p.total_marks }}</td>
+          <td class="text-center">
+            <span [class]="'pct-badge ' + (+p.percentage >= 40 ? 'pass' : 'fail')">
+              {{ p.percentage | number:'1.1-1' }}%
+            </span>
+          </td>
+          <td class="text-center" style="color:#10B981;font-weight:600">{{ p.correct_answers }}</td>
+          <td class="text-center" style="color:#EF4444;font-weight:600">{{ p.incorrect_answers }}</td>
+          <td style="font-size:0.82rem;color:#6B7280">
+            {{ p.submitted_at ? (p.submitted_at | date:'dd MMM yy, hh:mm a') : 'Not submitted' }}
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr><td colspan="10" class="empty-msg">No participants found for this quiz.</td></tr>
+      </ng-template>
+    </p-table>
+  </p-tabPanel>
+
+  <!-- ── Tab 3: Question Analysis ─────────────────────────── -->
+  <p-tabPanel header="Question Analysis">
+    <div class="report-toolbar">
+      <div style="min-width:260px">
+        <p-dropdown [options]="quizzes()" [(ngModel)]="selectedQuiz"
+                    placeholder="Select a quiz" [showClear]="false"
+                    (onChange)="onQuizSelect($event.value)" styleClass="w-full" />
+      </div>
+      <p-button label="Export CSV" icon="pi pi-download" size="small" [outlined]="true"
+                [disabled]="!selectedQuiz()" (click)="export('question-wise')" />
+    </div>
+
+    <div class="no-quiz-hint" *ngIf="!selectedQuiz()">
+      Select a quiz above to view question-wise analysis.
+    </div>
+
+    <p-table *ngIf="selectedQuiz()" [value]="questions()" [loading]="loadingQs"
+             styleClass="p-datatable-striped" [tableStyle]="{'min-width':'60rem'}">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>#</th>
+          <th>Question</th>
+          <th>Correct Ans</th>
+          <th class="text-center">Marks</th>
+          <th class="text-center">Responses</th>
+          <th class="text-center">Correct</th>
+          <th class="text-center">Wrong</th>
+          <th class="text-center">Accuracy</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-q let-i="rowIndex">
+        <tr>
+          <td style="color:#9CA3AF">{{ i + 1 }}</td>
+          <td style="max-width:360px">{{ q.title }}</td>
+          <td>
+            <span class="correct-opt">{{ q.correct_answer?.toUpperCase() }}</span>
+          </td>
+          <td class="text-center">{{ q.marks }}</td>
+          <td class="text-center">{{ q.total_responses }}</td>
+          <td class="text-center" style="color:#10B981;font-weight:600">{{ q.correct_responses }}</td>
+          <td class="text-center" style="color:#EF4444;font-weight:600">{{ q.incorrect_responses }}</td>
+          <td class="text-center">
+            <div class="acc-bar">
+              <div class="acc-fill" [style.width]="q.accuracy_percentage + '%'"></div>
+              <span>{{ q.accuracy_percentage | number:'1.1-1' }}%</span>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr><td colspan="8" class="empty-msg">No question data available.</td></tr>
+      </ng-template>
+    </p-table>
+  </p-tabPanel>
+
+  <!-- ── Tab 4: Gender Wise ────────────────────────────────── -->
+  <p-tabPanel header="Gender Wise">
+    <div class="report-toolbar">
+      <div style="min-width:260px">
+        <p-dropdown [options]="quizzes()" [(ngModel)]="selectedQuiz"
+                    placeholder="Select a quiz" [showClear]="false"
+                    (onChange)="onQuizSelect($event.value)" styleClass="w-full" />
+      </div>
+      <p-button label="Export CSV" icon="pi pi-download" size="small" [outlined]="true"
+                [disabled]="!selectedQuiz()" (click)="export('gender-wise')" />
+    </div>
+
+    <div class="no-quiz-hint" *ngIf="!selectedQuiz()">
+      Select a quiz above to view gender-wise breakdown.
+    </div>
+
+    <div *ngIf="selectedQuiz()">
+      <!-- Summary Cards -->
+      <div class="gender-summary" *ngIf="!loadingG">
+        <div class="gender-card male">
+          <i class="pi pi-user gender-icon"></i>
+          <div class="gender-count">{{ getGenderCount('male') }}</div>
+          <div class="gender-label">Male</div>
+        </div>
+        <div class="gender-card female">
+          <i class="pi pi-user gender-icon"></i>
+          <div class="gender-count">{{ getGenderCount('female') }}</div>
+          <div class="gender-label">Female</div>
+        </div>
+        <div class="gender-card other">
+          <i class="pi pi-users gender-icon"></i>
+          <div class="gender-count">{{ getGenderCount('other') }}</div>
+          <div class="gender-label">Other</div>
+        </div>
+        <div class="gender-card total">
+          <i class="pi pi-chart-pie gender-icon"></i>
+          <div class="gender-count">{{ getGenderCount('male') + getGenderCount('female') + getGenderCount('other') }}</div>
+          <div class="gender-label">Total</div>
+        </div>
+      </div>
+
+      <!-- Performance by Gender Summary -->
+      <div style="margin-bottom:20px">
+      <p-table [value]="genderSummary()" [loading]="loadingG" styleClass="p-datatable-striped">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Gender</th>
+            <th class="text-center">Participants</th>
+            <th class="text-center">Highest %</th>
+            <th class="text-center">Average %</th>
+            <th class="text-center">Lowest %</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-s>
+          <tr>
+            <td><strong>{{ s.gender | titlecase }}</strong></td>
+            <td class="text-center">{{ s.total_participants }}</td>
+            <td class="text-center">{{ s.highest_score | number:'1.1-1' }}%</td>
+            <td class="text-center"><strong>{{ s.average_score | number:'1.1-1' }}%</strong></td>
+            <td class="text-center">{{ s.lowest_score | number:'1.1-1' }}%</td>
+          </tr>
+        </ng-template>
+      </p-table>
+      </div>
+
+      <!-- Detailed lists per gender -->
+      <div *ngFor="let gender of ['male','female','other']">
+        <div class="gender-section" *ngIf="genderDetails()[gender]?.length">
+          <div class="gender-section-title">{{ gender | titlecase }} Participants</div>
+          <p-table [value]="genderDetails()[gender]" styleClass="p-datatable-striped"
+                   [tableStyle]="{'min-width':'40rem'}">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>#</th>
+                <th>Name / Yuvak ID</th>
+                <th>Type</th>
+                <th class="text-center">Score</th>
+                <th class="text-center">Total</th>
+                <th class="text-center">%</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-p let-i="rowIndex">
+              <tr>
+                <td style="color:#9CA3AF">{{ i + 1 }}</td>
+                <td>
+                  <div style="font-weight:600">{{ p.name || p.yuvak_id || '—' }}</div>
+                  <div *ngIf="p.yuvak_id && p.name" style="font-size:0.78rem;color:#9CA3AF">{{ p.yuvak_id }}</div>
+                </td>
+                <td><p-tag [value]="typeLabel(p.participant_type)" severity="secondary" /></td>
+                <td class="text-center"><strong>{{ p.score }}</strong></td>
+                <td class="text-center">{{ p.total_marks }}</td>
+                <td class="text-center">
+                  <span [class]="'pct-badge ' + (+p.percentage >= 40 ? 'pass' : 'fail')">
+                    {{ p.percentage | number:'1.1-1' }}%
+                  </span>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </div>
+    </div>
+  </p-tabPanel>
+
+</p-tabView>

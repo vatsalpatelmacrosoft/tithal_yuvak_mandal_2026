@@ -1,0 +1,91 @@
+<div class="module-hero">
+  <div class="hero-left">
+    <div class="hero-icon" style="background:linear-gradient(135deg,#4338CA,#6366F1);box-shadow:0 4px 14px rgba(99,102,241,0.35)">
+      <i class="pi pi-cog"></i>
+    </div>
+    <div>
+      <div class="hero-title">Global Settings</div>
+      <div class="hero-subtitle">Configure registration and field validation rules</div>
+    </div>
+  </div>
+  <p-button label="Save Settings" icon="pi pi-save" [loading]="saving" (click)="save()" />
+</div>
+
+<!-- Registration Toggle -->
+<div class="settings-card">
+  <div class="settings-card-header">
+    <i class="pi pi-globe"></i>
+    <span>Public Registration</span>
+  </div>
+  <div class="settings-reg-row">
+    <div class="settings-reg-info">
+      <div class="settings-reg-title">Registration Open for Public</div>
+      <div class="settings-reg-desc">
+        When enabled, members can self-register via the public form.
+        When disabled, the form shows "Registration is currently closed."
+      </div>
+    </div>
+    <div class="settings-toggle-wrap">
+      <button class="reg-toggle" [class.active]="regOpen()" (click)="toggleReg()">
+        <span class="toggle-knob"></span>
+      </button>
+      <span class="toggle-label" [class.open]="regOpen()">
+        {{ regOpen() ? 'Open' : 'Closed' }}
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- Field Configuration -->
+<div class="settings-card">
+  <div class="settings-card-header">
+    <i class="pi pi-list"></i>
+    <span>Registration Field Configuration</span>
+  </div>
+  <p class="settings-card-desc">
+    Configure labels, required status, and maximum character length for each registration field.
+    These settings apply to both frontend validation and backend API validation.
+  </p>
+
+  <div class="field-config-table">
+    <div class="fc-head">
+      <div>Field</div>
+      <div>Label</div>
+      <div class="text-center">Required</div>
+      <div class="text-center">Max Length</div>
+    </div>
+
+    <div class="fc-row" *ngFor="let key of fieldKeys">
+      <div class="fc-name">{{ fieldLabels[key] }}</div>
+      <div>
+        <input pInputText [(ngModel)]="fields[key].label" [placeholder]="fieldLabels[key]"
+               class="fc-input" />
+      </div>
+      <div class="text-center">
+        <button class="fc-req-btn" [class.on]="fields[key].required"
+                (click)="fields[key].required = !fields[key].required">
+          <i class="pi" [class.pi-check-circle]="fields[key].required"
+                        [class.pi-circle]="!fields[key].required"></i>
+          {{ fields[key].required ? 'Yes' : 'No' }}
+        </button>
+      </div>
+      <div class="text-center">
+        <input type="number" [(ngModel)]="fields[key].max_length" min="1" max="5000"
+               class="fc-num-input" />
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Audit Info -->
+<div class="settings-card" style="background:#F9FAFB;border:1.5px dashed #E5E7EB">
+  <div class="settings-card-header" style="color:#9CA3AF">
+    <i class="pi pi-info-circle"></i>
+    <span>Notes</span>
+  </div>
+  <ul style="margin:0;padding-left:18px;color:#6B7280;font-size:0.88rem;line-height:1.8">
+    <li>Field labels apply only to the public registration form display.</li>
+    <li>Required and max-length rules are enforced on submit in both frontend and backend.</li>
+    <li>Closing registration does not affect members already registered.</li>
+  </ul>
+</div>

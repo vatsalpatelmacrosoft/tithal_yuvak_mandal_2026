@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/app/admin/quiz/quiz-list/quiz-list.component.scss"],
+  "sourcesContent": [":host { display: block; }\n\n.text-center { text-align: center; }\n\n.count-badge {\n  display: inline-block;\n  padding: 3px 10px;\n  border-radius: 20px;\n  font-size: 0.78rem;\n  font-weight: 700;\n\n  &.blue  { background: #EFF6FF; color: #1D4ED8; }\n  &.green { background: #ECFDF5; color: #059669; }\n}\n"],
+  "mappings": ";AAAA;AAAQ,WAAA;;AAER,CAAA;AAAe,cAAA;;AAEf,CAAA;AACE,WAAA;AACA,WAAA,IAAA;AACA,iBAAA;AACA,aAAA;AACA,eAAA;;AAEA,CAPF,WAOE,CAAA;AAAU,cAAA;AAAqB,SAAA;;AAC/B,CARF,WAQE,CAAA;AAAU,cAAA;AAAqB,SAAA;;",
+  "names": []
+}

@@ -1,0 +1,178 @@
+:host { display: block; }
+
+.login-bg {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(145deg, #1A237E 0%, #283593 45%, #3949AB 75%, #1565C0 100%);
+  padding: 24px 16px;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute; top: -18%; right: -6%;
+    width: 420px; height: 420px;
+    border-radius: 50%;
+    background: rgba(255, 107, 0, 0.1);
+    pointer-events: none;
+  }
+
+  &::after {
+    content: '';
+    position: absolute; bottom: -14%; left: -4%;
+    width: 360px; height: 360px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    pointer-events: none;
+  }
+}
+
+.login-card {
+  width: 100%;
+  max-width: 460px;
+  background: #fff;
+  border-radius: 22px;
+  padding: 48px 44px 40px;
+  box-shadow: 0 28px 72px rgba(0, 0, 0, 0.38);
+  position: relative;
+  z-index: 1;
+}
+
+.brand-top {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.logo-ring {
+  width: 90px; height: 90px;
+  background: #fff;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px;
+  box-shadow: 0 10px 28px rgba(255, 107, 0, 0.25);
+  border: 3px solid #FF8C38;
+  overflow: hidden;
+}
+
+.logo-img {
+  width: 74px; height: 74px;
+  object-fit: contain;
+}
+
+.brand-top h1 { font-size: 1.45rem; font-weight: 700; color: #1A237E; margin: 0 0 5px; }
+.brand-top p  { font-size: 0.85rem; color: #9CA3AF; margin: 0; }
+
+.divider-line { border: none; border-top: 1px solid #F1F5F9; margin: 0 0 28px; }
+
+.form-label {
+  display: block;
+  font-size: 0.85rem; font-weight: 600; color: #374151;
+  margin-bottom: 8px;
+}
+
+.field { margin-bottom: 20px; }
+
+.input-icon-wrap {
+  position: relative;
+  display: block;
+
+  .field-icon {
+    position: absolute;
+    left: 14px; top: 50%;
+    transform: translateY(-50%);
+    color: #9CA3AF; font-size: 16px;
+    z-index: 2; pointer-events: none;
+  }
+
+  input {
+    width: 100%; height: 50px;
+    padding: 0 14px 0 42px;
+    font-size: 0.95rem;
+    border: 1.5px solid #E5E7EB;
+    border-radius: 10px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background: #FAFAFA;
+    font-family: inherit;
+
+    &:focus {
+      border-color: #3949AB;
+      box-shadow: 0 0 0 3px rgba(57, 73, 171, 0.12);
+      background: #fff;
+    }
+
+    &.ng-invalid.ng-dirty {
+      border-color: #EF4444;
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    }
+  }
+}
+
+::ng-deep .lc-pw { display: block; }
+::ng-deep .lc-pw .p-password { display: block; }
+::ng-deep .lc-pw .p-password input {
+  width: 100%; height: 50px;
+  padding: 0 42px 0 14px;
+  font-size: 0.95rem;
+  border: 1.5px solid #E5E7EB;
+  border-radius: 10px;
+  background: #FAFAFA;
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &:focus {
+    border-color: #3949AB;
+    box-shadow: 0 0 0 3px rgba(57, 73, 171, 0.12);
+    background: #fff;
+    outline: none;
+  }
+}
+::ng-deep .lc-pw .p-password .p-password-toggle-icon {
+  color: #9CA3AF;
+  right: 14px;
+}
+
+.btn-wrap { display: block; margin-bottom: 16px; }
+::ng-deep .btn-wrap .p-button {
+  width: 100%; height: 52px;
+  justify-content: center;
+  background: linear-gradient(135deg, #FF6B00, #FF8C38);
+  border: none; border-radius: 12px;
+  font-size: 1.02rem; font-weight: 700;
+  letter-spacing: 0.01em;
+  box-shadow: 0 8px 20px rgba(255, 107, 0, 0.32);
+  transition: transform 0.15s, box-shadow 0.15s;
+
+  &:hover:not([disabled]) {
+    background: linear-gradient(135deg, #CC5500, #FF6B00);
+    box-shadow: 0 10px 26px rgba(255, 107, 0, 0.45);
+    transform: translateY(-2px);
+  }
+
+  &:active:not([disabled]) { transform: translateY(0); }
+}
+
+.forgot-link {
+  text-align: center; font-size: 0.86rem; color: #6B7280;
+  a { color: #FF6B00; font-weight: 600; text-decoration: none; &:hover { text-decoration: underline; } }
+}
+
+.footer-note {
+  margin-top: 22px; font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.38);
+  text-align: center; position: relative; z-index: 1;
+}
+
+@media (max-width: 500px) {
+  .login-card { padding: 36px 24px 30px; border-radius: 18px; }
+  .logo-ring { width: 68px; height: 68px; }
+  .logo-img  { width: 56px; height: 56px; }
+  .brand-top h1 { font-size: 1.25rem; }
+}
+
+@media (max-width: 360px) {
+  .login-card { padding: 28px 18px 24px; }
+}

@@ -1,0 +1,26 @@
+:host { display: block; }
+
+::ng-deep .field .p-dropdown {
+  height: 40px !important;
+  border: 1.5px solid #E5E7EB !important;
+  border-radius: 8px !important;
+  width: 100% !important;
+  &.err { border-color: #EF4444 !important; }
+}
+
+::ng-deep .field .p-chips .p-chips-multiple-container {
+  border: 1.5px solid #E5E7EB !important;
+  border-radius: 8px !important;
+  min-height: 40px !important;
+  width: 100% !important;
+}
+
+::ng-deep .form-hero-actions .p-button:not(.p-button-outlined) {
+  background: linear-gradient(135deg, #FF6B00, #FF9240) !important;
+  border-color: transparent !important;
+  box-shadow: 0 2px 8px rgba(255, 107, 0, 0.3);
+
+  &:hover {
+    background: linear-gradient(135deg, #CC5500, #FF6B00) !important;
+  }
+}

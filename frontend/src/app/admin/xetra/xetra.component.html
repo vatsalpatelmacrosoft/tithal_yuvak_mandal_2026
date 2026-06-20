@@ -1,0 +1,69 @@
+<div class="module-hero">
+  <div class="hero-left">
+    <div class="hero-icon green"><i class="pi pi-map"></i></div>
+    <div>
+      <div class="hero-title">Xetra Management</div>
+      <div class="hero-subtitle">Manage Xetra regions across the organisation</div>
+      <span class="hero-badge">{{ rows().length }} Xetra</span>
+    </div>
+  </div>
+  <p-button label="Add Xetra" icon="pi pi-plus" (click)="openForm()" *ngIf="canCreate" />
+</div>
+
+<div class="table-card">
+  <p-table [value]="rows()" [tableStyle]="{'min-width':'38rem'}" styleClass="p-datatable-striped">
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="width:3.5rem">#</th>
+        <th>Name</th>
+        <th>Code</th>
+        <th style="width:9rem">Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-x let-i="rowIndex">
+      <tr>
+        <td style="color:var(--gray-400);font-size:0.82rem">{{ i + 1 }}</td>
+        <td style="font-weight:500">{{ x.name }}</td>
+        <td><p-tag [value]="x.code" severity="warning" /></td>
+        <td>
+          <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" size="small"
+            (click)="openForm(x)" *ngIf="canUpdate" pTooltip="Edit" tooltipPosition="top" />
+          <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small"
+            (click)="confirmDelete(x)" *ngIf="canDelete" pTooltip="Archive" tooltipPosition="top" />
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="4" style="text-align:center;padding:3rem;color:#9CA3AF">
+        <i class="pi pi-map-marker" style="font-size:2rem;display:block;margin-bottom:10px;color:#D1D5DB"></i>
+        No Xetra found. Click "Add Xetra" to create one.
+      </td></tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-sidebar [(visible)]="showForm" position="right" [style]="{width:'420px'}" [dismissible]="true">
+  <ng-template pTemplate="header">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex:1;margin-right:8px">
+      <span style="font-weight:700;font-size:1rem;color:#1F2937">{{ editItem ? 'Edit Xetra' : 'Add Xetra' }}</span>
+      <div style="display:flex;gap:8px">
+        <p-button label="Cancel" [outlined]="true" size="small" (click)="closeForm()" />
+        <p-button label="Save" size="small" [loading]="saving" (click)="onSave()" />
+      </div>
+    </div>
+  </ng-template>
+  <form [formGroup]="form" (ngSubmit)="onSave()">
+    <div class="field" style="margin-bottom:18px">
+      <label class="required">Name</label>
+      <input pInputText formControlName="name" placeholder="Xetra name" style="width:100%">
+      <small class="p-error" *ngIf="form.get('name')?.invalid && form.get('name')?.touched">Name is required</small>
+    </div>
+    <div class="field" style="margin-bottom:24px">
+      <label class="required">Code</label>
+      <input pInputText formControlName="code" placeholder="e.g. TIT" style="width:100%;text-transform:uppercase">
+      <small class="p-error" *ngIf="form.get('code')?.invalid && form.get('code')?.touched">Valid code required (2–10 chars)</small>
+    </div>
+  </form>
+</p-sidebar>
+
+<p-confirmDialog [style]="{width:'420px'}" />

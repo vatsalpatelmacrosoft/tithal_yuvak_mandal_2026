@@ -1,0 +1,103 @@
+<div class="back-link" (click)="router.navigate(['/admin/quiz'])">
+  <i class="pi pi-arrow-left"></i> Back to Quiz List
+</div>
+
+<div class="form-hero" style="border-left-color:#BE123C">
+  <div class="form-hero-left">
+    <div class="form-hero-icon" style="background:linear-gradient(135deg,#BE123C,#F43F5E);box-shadow:0 4px 14px rgba(244,63,94,0.35)">
+      <i class="pi pi-question-circle"></i>
+    </div>
+    <div>
+      <div class="form-hero-title">{{ isEdit ? 'Edit Quiz' : 'Create Quiz' }}</div>
+      <div class="form-hero-sub">
+        {{ isEdit ? 'Update quiz details. Manage questions in the next step.' : 'Fill basic info, then add MCQ questions.' }}
+      </div>
+    </div>
+  </div>
+  <div class="form-hero-actions">
+    <p-button label="Cancel" [outlined]="true" (click)="router.navigate(['/admin/quiz'])" />
+    <p-button [label]="isEdit ? 'Save & Continue' : 'Create & Add Questions'"
+              icon="pi pi-arrow-right" iconPos="right"
+              [loading]="saving" (click)="onSubmit()" />
+  </div>
+</div>
+
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+  <!-- Basic Info -->
+  <div class="form-section">
+    <div class="section-title"><i class="pi pi-info-circle"></i> Quiz Details</div>
+    <div class="form-row">
+      <div class="field" style="grid-column:1/-1">
+        <label class="req">Quiz Title</label>
+        <input pInputText formControlName="title" placeholder="e.g. Satsang Quiz – July 2025"
+               [class.ng-invalid]="hasError('title')">
+        <small class="p-error" *ngIf="hasError('title')">Quiz title is required</small>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="field" style="grid-column:1/-1">
+        <label>Description</label>
+        <textarea pInputTextarea formControlName="description" rows="2"
+                  placeholder="Brief description of the quiz (shown to participants)"></textarea>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="field" style="grid-column:1/-1">
+        <label>Instructions</label>
+        <textarea pInputTextarea formControlName="instructions" rows="3"
+                  placeholder="Instructions shown before the quiz starts (e.g. rules, time limit info, etc.)"></textarea>
+      </div>
+    </div>
+    <p *ngIf="quizSlug" style="font-size:0.83rem;color:#9CA3AF;margin-top:4px">
+      <i class="pi pi-link" style="font-size:0.8rem;vertical-align:middle"></i>
+      Slug: <code style="background:#F3F4F6;padding:1px 6px;border-radius:4px">{{ quizSlug }}</code>
+    </p>
+  </div>
+
+  <!-- Schedule -->
+  <div class="form-section">
+    <div class="section-title"><i class="pi pi-calendar"></i> Schedule</div>
+    <div class="form-row">
+      <div class="field">
+        <label>Start Date &amp; Time</label>
+        <p-calendar formControlName="start_datetime" [showTime]="true" hourFormat="12"
+                    placeholder="Select start date/time" [showButtonBar]="true"
+                    dateFormat="dd M yy" styleClass="w-full" />
+      </div>
+      <div class="field">
+        <label>End Date &amp; Time</label>
+        <p-calendar formControlName="end_datetime" [showTime]="true" hourFormat="12"
+                    placeholder="Select end date/time" [showButtonBar]="true"
+                    dateFormat="dd M yy" styleClass="w-full" />
+      </div>
+    </div>
+    <small style="color:#9CA3AF;font-size:0.82rem">
+      Leave blank to allow access at any time (no time restriction).
+    </small>
+  </div>
+
+  <!-- Status -->
+  <div class="form-section">
+    <div class="section-title"><i class="pi pi-sliders-h"></i> Status</div>
+    <div class="form-row">
+      <div class="field">
+        <label>Publication Status</label>
+        <p-dropdown [options]="statusOptions" formControlName="quiz_status"
+                    optionLabel="label" optionValue="value" />
+        <small style="color:#9CA3AF;font-size:0.82rem">
+          Draft = not accessible to public. Published = accessible via public link.
+        </small>
+      </div>
+      <div class="field" style="display:flex;flex-direction:column;justify-content:flex-end;padding-bottom:4px">
+        <div class="active-toggle-row">
+          <label style="margin:0">Active</label>
+          <p-dropdown [options]="[{label:'Active',value:true},{label:'Inactive',value:false}]"
+                      formControlName="is_active" optionLabel="label" optionValue="value" />
+        </div>
+        <small style="color:#9CA3AF;font-size:0.82rem;margin-top:6px">
+          Inactive quizzes cannot be started by participants even if published.
+        </small>
+      </div>
+    </div>
+  </div>
+</form>

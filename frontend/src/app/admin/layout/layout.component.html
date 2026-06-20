@@ -1,0 +1,57 @@
+<div class="app-shell" [class.sidebar-collapsed]="collapsed">
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon-wrap">
+        <img src="assets/Baps_logo.svg.png" alt="BAPS" class="brand-icon">
+      </div>
+      <span class="brand-text">Yuvak Mandal</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a *ngFor="let item of menuItems"
+         [routerLink]="item.path" routerLinkActive="active" class="nav-item"
+         [pTooltip]="collapsed ? item.label : ''" tooltipPosition="right">
+        <i class="pi {{ item.icon }} nav-icon"></i>
+        <span class="nav-label">{{ item.label }}</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <span class="user-avatar">{{ userInitial }}</span>
+        <span class="user-name">{{ user()?.name }}</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Main Wrapper ── -->
+  <div class="main-wrapper">
+
+    <!-- Top Bar -->
+    <header class="top-bar">
+      <button class="topbar-toggle" (click)="toggleSidebar()">
+        <i class="pi pi-bars"></i>
+      </button>
+
+      <div class="topbar-right">
+        <div class="topbar-user">
+          <span class="topbar-avatar">{{ userInitial }}</span>
+          <span class="topbar-name">{{ user()?.name }}</span>
+        </div>
+        <button class="topbar-logout" (click)="logout()" pTooltip="Logout" tooltipPosition="bottom">
+          <i class="pi pi-sign-out"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <main class="main-content">
+      <router-outlet />
+    </main>
+
+  </div>
+</div>
+
+<p-toast position="bottom-right" />

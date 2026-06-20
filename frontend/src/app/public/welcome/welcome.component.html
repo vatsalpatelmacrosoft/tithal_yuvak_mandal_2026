@@ -1,0 +1,54 @@
+<div class="welcome-page">
+  <div class="welcome-card" *ngIf="!loading && !error && member()">
+    <div class="welcome-header">
+      <div class="welcome-logo">
+        <img src="assets/Baps_logo.svg.png" alt="BAPS Logo" class="welcome-logo-img">
+      </div>
+      <div class="org-name">Tithal Yuvak Mandal</div>
+      <div class="org-sub">Tithal Mandir Digital</div>
+    </div>
+
+    <div class="welcome-body">
+      <div class="greeting">Jai Swaminarayan!</div>
+      <div class="member-name">{{ member().full_name }}</div>
+
+      <div class="id-badge" [class.yuvak]="member().type === 'yuvak'" [class.yuvati]="member().type === 'yuvati'">
+        <span class="id-label">{{ member().type === 'yuvak' ? 'Yuvak ID' : 'Yuvati ID' }}</span>
+        <span class="id-value">{{ member().member_id }}</span>
+      </div>
+
+      <div class="info-row">
+        <span class="info-label">Xetra</span>
+        <span class="info-value">{{ member().xetra_name }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Mandal</span>
+        <span class="info-value">{{ member().mandal_name }}</span>
+      </div>
+
+      <div class="qr-section">
+        <div class="qr-title">Your Attendance QR Code</div>
+        <div class="qr-wrapper">
+          <qrcode [qrdata]="qrData" [width]="200" [errorCorrectionLevel]="'M'"
+                  [colorDark]="'#111827'" [colorLight]="'#ffffff'"
+                  [margin]="2" cssClass="qr-canvas" />
+        </div>
+        <div class="qr-hint">Show this QR code at the gate for attendance</div>
+      </div>
+    </div>
+
+    <div class="welcome-footer">
+      <span>Save this page or screenshot for future reference</span>
+    </div>
+  </div>
+
+  <div class="loading-state" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Loading your profile...</p>
+  </div>
+
+  <div class="error-state" *ngIf="!loading && error">
+    <div class="error-icon">⚠️</div>
+    <p>{{ error }}</p>
+  </div>
+</div>

@@ -1,0 +1,60 @@
+<div class="login-bg">
+  <div class="login-card">
+
+    <!-- Brand -->
+    <div class="brand-top">
+      <div class="logo-ring">
+        <img src="assets/Baps_logo.svg.png" alt="BAPS Logo" class="logo-img">
+      </div>
+      <h1>Yuvak Mandal Tithal</h1>
+      <p>Yuvak &amp; Yuvati Admin Portal</p>
+    </div>
+    <hr class="divider-line">
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+
+      <!-- Mobile Number -->
+      <div class="field">
+        <label class="form-label">Mobile Number</label>
+        <div class="input-icon-wrap">
+          <i class="pi pi-mobile field-icon"></i>
+          <input pInputText formControlName="mo_number" type="tel"
+            placeholder="10-digit mobile number"
+            [class.ng-invalid]="f['mo_number'].invalid && f['mo_number'].touched"
+            [class.ng-dirty]="f['mo_number'].invalid && f['mo_number'].touched">
+        </div>
+        <small class="p-error" *ngIf="f['mo_number'].invalid && f['mo_number'].touched">
+          Enter a valid 10-digit mobile number
+        </small>
+      </div>
+
+      <!-- Password -->
+      <div class="field">
+        <label class="form-label">Password</label>
+        <span class="lc-pw">
+          <p-password formControlName="password" [feedback]="false" [toggleMask]="true"
+            placeholder="Enter your password" inputStyleClass="w-full">
+          </p-password>
+        </span>
+        <small class="p-error" *ngIf="f['password'].invalid && f['password'].touched">
+          Password is required
+        </small>
+      </div>
+
+      <!-- Sign In -->
+      <span class="btn-wrap">
+        <p-button type="submit" label="Sign In" icon="pi pi-sign-in" [loading]="loading" />
+      </span>
+
+      <!-- Forgot -->
+      <div class="forgot-link">
+        <a routerLink="/admin/forgot-password">Forgot password?</a>
+      </div>
+
+    </form>
+  </div>
+
+  <div class="footer-note">Yuvak Mandal Tithal &nbsp;•&nbsp; Admin Portal</div>
+</div>
+
+<p-toast position="bottom-right" />

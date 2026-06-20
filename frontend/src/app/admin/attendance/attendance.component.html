@@ -1,0 +1,110 @@
+<div class="module-hero">
+  <div class="hero-left">
+    <div class="hero-icon green"><i class="pi pi-check-square"></i></div>
+    <div>
+      <div class="hero-title">Attendance</div>
+      <div class="hero-subtitle">Mark attendance by QR scan, UUID, or Yuvak/Yuvati ID</div>
+      <span class="hero-badge" style="background:linear-gradient(135deg,#D1FAE5,#A7F3D0);color:#065F46">
+        {{ summary().yuvak + summary().yuvati }} Present Today
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- Stats -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
+  <div style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,0.07);border-left:4px solid #FF8F00;display:flex;align-items:center;gap:16px">
+    <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#FF8F00,#FFA000);display:flex;align-items:center;justify-content:center">
+      <i class="pi pi-user" style="color:#fff;font-size:1.2rem"></i>
+    </div>
+    <div>
+      <div style="font-size:1.8rem;font-weight:700;color:#1F2937;line-height:1">{{ summary().yuvak }}</div>
+      <div style="font-size:0.83rem;color:#6B7280;margin-top:2px">Yuvak Present</div>
+    </div>
+  </div>
+  <div style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,0.07);border-left:4px solid #1E88E5;display:flex;align-items:center;gap:16px">
+    <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#1565C0,#1E88E5);display:flex;align-items:center;justify-content:center">
+      <i class="pi pi-users" style="color:#fff;font-size:1.2rem"></i>
+    </div>
+    <div>
+      <div style="font-size:1.8rem;font-weight:700;color:#1F2937;line-height:1">{{ summary().yuvati }}</div>
+      <div style="font-size:0.83rem;color:#6B7280;margin-top:2px">Yuvati Present</div>
+    </div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+  <!-- Scanner panel -->
+  <div class="table-card">
+    <div style="font-weight:600;color:#1F2937;font-size:1rem;margin-bottom:16px;display:flex;align-items:center;gap:8px">
+      <i class="pi pi-qrcode" style="color:#3949AB"></i> Mark Attendance
+    </div>
+
+    <div class="field" style="margin-bottom:14px">
+      <label style="font-size:0.83rem;color:#6B7280;margin-bottom:6px;display:block">Date</label>
+      <input pInputText type="date" [(ngModel)]="scanDate" style="width:100%;height:40px">
+    </div>
+
+    <!-- Camera scan button -->
+    <button type="button" (click)="openScanner()" class="camera-scan-btn">
+      <i class="pi pi-camera"></i>
+      <span>Open Camera to Scan QR</span>
+    </button>
+
+    <div style="text-align:center;color:#9CA3AF;font-size:0.8rem;margin:12px 0">— or enter manually —</div>
+
+    <div class="field">
+      <label style="font-size:0.83rem;color:#6B7280;margin-bottom:6px;display:block">UUID or Member ID</label>
+      <div style="display:flex;gap:8px">
+        <input pInputText [(ngModel)]="scanInput" placeholder="e.g. TTH01-0001 or paste UUID"
+          (keydown.enter)="markByUuid()" style="flex:1;height:40px">
+        <p-button icon="pi pi-check" (click)="markByUuid()"
+          [disabled]="!scanInput" [loading]="marking" />
+      </div>
+    </div>
+
+    <div *ngIf="lastScanned" style="background:#ECFDF5;border-radius:8px;padding:12px;font-size:0.88rem;margin-top:12px;display:flex;align-items:center;gap:8px">
+      <i class="pi pi-check-circle" style="color:#10B981;font-size:1.1rem"></i>
+      <span><strong>{{ lastScanned }}</strong> marked present</span>
+    </div>
+  </div>
+
+  <!-- Attendance List -->
+  <div class="table-card">
+    <div style="font-weight:600;color:#1F2937;font-size:1rem;margin-bottom:16px;display:flex;align-items:center;gap:8px">
+      <i class="pi pi-list" style="color:#3949AB"></i> Attendance List
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:14px">
+      <input pInputText type="date" [(ngModel)]="filterDate" (change)="loadAttendance()" style="flex:1;height:40px">
+      <p-dropdown [options]="filterOptions" [(ngModel)]="filterType" (ngModelChange)="loadAttendance()"
+        optionLabel="label" optionValue="value" [style]="{width:'130px'}" />
+    </div>
+    <p-table [value]="records()" [scrollable]="true" scrollHeight="320px" styleClass="p-datatable-sm p-datatable-striped">
+      <ng-template pTemplate="header">
+        <tr><th>Name</th><th>ID</th><th style="width:80px">Type</th></tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-a>
+        <tr>
+          <td style="font-weight:500">{{ a.member_name }}</td>
+          <td><code style="font-size:0.78rem;background:#FFF0E0;padding:2px 6px;border-radius:4px">{{ a.member_code }}</code></td>
+          <td><p-tag [value]="a.member_type" [severity]="a.member_type==='yuvak'?'success':'info'" /></td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr><td colspan="3" style="text-align:center;padding:30px;color:#9CA3AF">No records for this date</td></tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<!-- QR Scanner Dialog -->
+<p-dialog header="Scan QR Code" [(visible)]="showScanner" [modal]="true"
+          [style]="{width:'360px'}" [draggable]="false" [resizable]="false"
+          (onHide)="onScannerHide()">
+  <div style="padding:8px 0">
+    <p style="font-size:0.85rem;color:#6B7280;margin:0 0 14px;text-align:center">
+      Point the camera at a member's QR code
+    </p>
+    <div id="qr-scan-region" style="width:100%;border-radius:10px;overflow:hidden"></div>
+  </div>
+</p-dialog>

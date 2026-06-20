@@ -1,0 +1,164 @@
+:host { display: block; }
+
+.report-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.no-quiz-hint {
+  text-align: center;
+  padding: 48px 24px;
+  color: #9CA3AF;
+  font-size: 0.9rem;
+  background: #F9FAFB;
+  border: 2px dashed #E5E7EB;
+  border-radius: 10px;
+}
+
+.text-center { text-align: center; }
+
+.empty-msg {
+  text-align: center;
+  padding: 40px;
+  color: #9CA3AF;
+}
+
+.stat-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 700;
+
+  &.blue   { background: #EFF6FF; color: #1D4ED8; }
+  &.green  { background: #ECFDF5; color: #059669; }
+  &.orange { background: #FFF7ED; color: #D97706; }
+}
+
+.pct-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+
+  &.pass { background: #ECFDF5; color: #059669; }
+  &.fail { background: #FEF2F2; color: #DC2626; }
+}
+
+.correct-opt {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #ECFDF5;
+  color: #059669;
+  font-weight: 800;
+  font-size: 0.85rem;
+}
+
+/* Accuracy bar */
+.acc-bar {
+  position: relative;
+  background: #F3F4F6;
+  border-radius: 4px;
+  height: 22px;
+  overflow: hidden;
+  width: 100%;
+  min-width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .acc-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    background: linear-gradient(90deg, #6EE7B7, #10B981);
+    transition: width 0.4s;
+    border-radius: 4px;
+  }
+
+  span {
+    position: relative;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #1F2937;
+  }
+}
+
+/* Gender summary cards */
+.gender-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+
+  @media (max-width: 640px) { grid-template-columns: repeat(2, 1fr); }
+}
+
+.gender-card {
+  background: #fff;
+  border: 1.5px solid #E5E7EB;
+  border-radius: 12px;
+  padding: 20px 16px;
+  text-align: center;
+  transition: box-shadow 0.2s;
+
+  &:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+
+  &.male   { border-top: 3px solid #3B82F6; }
+  &.female { border-top: 3px solid #EC4899; }
+  &.other  { border-top: 3px solid #8B5CF6; }
+  &.total  { border-top: 3px solid #0D9488; }
+}
+
+.gender-icon {
+  font-size: 1.6rem;
+  margin-bottom: 10px;
+  .male & { color: #3B82F6; }
+  .female & { color: #EC4899; }
+  .other & { color: #8B5CF6; }
+  .total & { color: #0D9488; }
+}
+
+.gender-count {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #1F2937;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.gender-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #9CA3AF;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.gender-section {
+  margin-bottom: 24px;
+}
+
+.gender-section-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #374151;
+  margin-bottom: 10px;
+  padding-left: 4px;
+  border-left: 3px solid #0D9488;
+  padding-left: 10px;
+}
+
+::ng-deep .p-tabview-panels {
+  padding: 20px 0 0 0 !important;
+}

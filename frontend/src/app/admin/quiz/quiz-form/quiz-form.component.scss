@@ -1,0 +1,14 @@
+:host { display: block; }
+
+::ng-deep .form-hero-actions .p-button:not(.p-button-outlined) {
+  background: linear-gradient(135deg, #BE123C, #F43F5E) !important;
+  border-color: transparent !important;
+  box-shadow: 0 2px 8px rgba(244, 63, 94, 0.3);
+  &:hover { background: linear-gradient(135deg, #9F1239, #BE123C) !important; }
+}
+
+.active-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}

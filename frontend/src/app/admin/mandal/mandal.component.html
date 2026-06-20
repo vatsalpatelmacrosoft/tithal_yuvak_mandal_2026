@@ -1,0 +1,93 @@
+<div class="module-hero">
+  <div class="hero-left">
+    <div class="hero-icon indigo"><i class="pi pi-home"></i></div>
+    <div>
+      <div class="hero-title">Mandal Management</div>
+      <div class="hero-subtitle">Manage local Mandal groups under each Xetra</div>
+      <span class="hero-badge">{{ rows().length }} Mandal</span>
+    </div>
+  </div>
+  <p-button label="Add Mandal" icon="pi pi-plus" (click)="openForm()"
+    *ngIf="auth.hasPermission('mandal','can_create')" />
+</div>
+
+<div class="table-card">
+  <div class="filter-bar" style="margin-bottom:16px">
+    <p-dropdown [options]="xetras" [(ngModel)]="xetraFilter" (ngModelChange)="load()"
+      optionLabel="name" optionValue="id" placeholder="All Xetra" [showClear]="true"
+      [style]="{minWidth:'220px'}" />
+  </div>
+
+  <p-table [value]="rows()" [tableStyle]="{'min-width':'48rem'}" styleClass="p-datatable-striped">
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="width:3rem">#</th>
+        <th>Xetra</th>
+        <th>Mandal Name</th>
+        <th>Code</th>
+        <th style="width:9rem">Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-m let-i="rowIndex">
+      <tr>
+        <td style="color:var(--gray-400);font-size:0.82rem">{{ i + 1 }}</td>
+        <td>
+          <span *ngIf="m.xetra_name" style="font-size:0.85rem;color:#6B7280">{{ m.xetra_name }}</span>
+          <span *ngIf="!m.xetra_name" style="color:#D1D5DB;font-size:0.82rem">—</span>
+        </td>
+        <td style="font-weight:500">{{ m.name }}</td>
+        <td><p-tag [value]="m.code" severity="info" /></td>
+        <td>
+          <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" size="small"
+            (click)="openForm(m)" *ngIf="auth.hasPermission('mandal','can_update')"
+            pTooltip="Edit" tooltipPosition="top" />
+          <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small"
+            (click)="confirmDelete(m)" *ngIf="auth.hasPermission('mandal','can_delete')"
+            pTooltip="Archive" tooltipPosition="top" />
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="5" style="text-align:center;padding:3rem;color:#9CA3AF">
+        <i class="pi pi-map" style="font-size:2rem;display:block;margin-bottom:10px;color:#D1D5DB"></i>
+        No Mandal found.
+      </td></tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-sidebar [(visible)]="show" position="right" [style]="{width:'420px'}" [dismissible]="true">
+  <ng-template pTemplate="header">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex:1;margin-right:8px">
+      <span style="font-weight:700;font-size:1rem;color:#1F2937">{{ editing ? 'Edit Mandal' : 'Add Mandal' }}</span>
+      <div style="display:flex;gap:8px">
+        <p-button label="Cancel" [outlined]="true" size="small" (click)="closeForm()" />
+        <p-button label="Save" size="small" [loading]="saving" (click)="save()" />
+      </div>
+    </div>
+  </ng-template>
+  <form [formGroup]="form" (ngSubmit)="save()">
+    <div class="field" style="margin-bottom:18px">
+      <label class="required">Xetra</label>
+      <p-dropdown [options]="xetras" formControlName="xetra_id"
+        optionLabel="name" optionValue="id" placeholder="Select Xetra" styleClass="w-full" />
+      <small class="p-error" *ngIf="form.get('xetra_id')?.invalid && form.get('xetra_id')?.touched">
+        Xetra is required
+      </small>
+    </div>
+    <div class="field" style="margin-bottom:18px">
+      <label class="required">Name</label>
+      <input pInputText formControlName="name" placeholder="Mandal name" style="width:100%">
+      <small class="p-error" *ngIf="form.get('name')?.invalid && form.get('name')?.touched">Name is required</small>
+    </div>
+    <div class="field" style="margin-bottom:24px">
+      <label class="required">Code</label>
+      <input pInputText formControlName="code" placeholder="e.g. TTH01" style="width:100%">
+      <small class="p-error" *ngIf="form.get('code')?.invalid && form.get('code')?.touched">
+        2–10 alphanumeric characters
+      </small>
+    </div>
+  </form>
+</p-sidebar>
+
+<p-confirmDialog [style]="{width:'420px'}" />

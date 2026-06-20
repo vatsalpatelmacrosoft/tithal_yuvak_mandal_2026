@@ -1,0 +1,289 @@
+<div class="quiz-page">
+
+  <!-- ─── Loading ──────────────────────────────────────────── -->
+  <div class="quiz-center" *ngIf="step() === 'loading'">
+    <i class="pi pi-spin pi-spinner" style="font-size:2.5rem;color:#BE123C"></i>
+    <p style="margin-top:12px;color:#6B7280">Loading quiz…</p>
+  </div>
+
+  <!-- ─── Not Found ─────────────────────────────────────────── -->
+  <div class="quiz-center" *ngIf="step() === 'not-found'">
+    <i class="pi pi-question-circle" style="font-size:3.5rem;color:#D1D5DB;display:block;margin-bottom:16px"></i>
+    <h2 style="color:#374151;margin:0 0 8px">Quiz Not Available</h2>
+    <p style="color:#9CA3AF">This quiz does not exist or is not published.</p>
+  </div>
+
+  <!-- ─── Registration Closed ──────────────────────────────── -->
+  <div class="quiz-center" *ngIf="step() === 'closed'">
+    <i class="pi pi-lock" style="font-size:3.5rem;color:#D1D5DB;display:block;margin-bottom:16px"></i>
+    <h2 style="color:#374151;margin:0 0 8px">Quiz Closed</h2>
+    <p style="color:#9CA3AF">This quiz is not currently accepting responses.</p>
+  </div>
+
+  <!-- ─── Not Started Yet ───────────────────────────────────── -->
+  <div class="quiz-card status-card" *ngIf="step() === 'not-started'">
+    <div class="status-icon pending">
+      <i class="pi pi-clock"></i>
+    </div>
+    <div class="status-title">Quiz Not Started Yet</div>
+    <p class="status-desc">This quiz will be available from:</p>
+    <div class="status-time">
+      <i class="pi pi-calendar"></i>
+      {{ formatDateTime(quiz()?.start_datetime) }}
+    </div>
+    <p class="status-hint">Please come back at the scheduled time to attempt this quiz.</p>
+    <div class="status-footer">
+      <p-button label="Back to Quiz Info" icon="pi pi-arrow-left" [outlined]="true"
+                (click)="step.set('landing')" styleClass="w-full" />
+    </div>
+  </div>
+
+  <!-- ─── Quiz Ended ────────────────────────────────────────── -->
+  <div class="quiz-card status-card" *ngIf="step() === 'ended'">
+    <div class="status-icon ended">
+      <i class="pi pi-times-circle"></i>
+    </div>
+    <div class="status-title">Quiz Has Ended</div>
+    <p class="status-desc">Submissions closed on:</p>
+    <div class="status-time">
+      <i class="pi pi-calendar"></i>
+      {{ formatDateTime(quiz()?.end_datetime) }}
+    </div>
+    <p class="status-hint">This quiz is no longer accepting responses.</p>
+  </div>
+
+  <!-- ─── Landing ───────────────────────────────────────────── -->
+  <div class="quiz-card" *ngIf="step() === 'landing'">
+    <div class="quiz-header">
+      <div class="quiz-icon"><i class="pi pi-question-circle"></i></div>
+      <h1>{{ quiz()?.title || quiz()?.name }}</h1>
+    </div>
+    <div class="quiz-body">
+      <p class="quiz-desc" *ngIf="quiz()?.description">{{ quiz()?.description }}</p>
+      <div class="quiz-instructions" *ngIf="quiz()?.instructions">
+        <div class="instr-label"><i class="pi pi-info-circle"></i> Instructions</div>
+        <p>{{ quiz()?.instructions }}</p>
+      </div>
+      <div class="quiz-meta">
+        <span><i class="pi pi-list"></i> {{ quiz()?.questions?.length || 0 }} Questions</span>
+        <span *ngIf="quiz()?.start_datetime">
+          <i class="pi pi-calendar"></i> Starts: {{ quiz()?.start_datetime | slice:0:16 }}
+        </span>
+      </div>
+    </div>
+    <div class="quiz-footer">
+      <p-button label="Start Quiz" icon="pi pi-play" (click)="goSelectType()"
+                styleClass="btn-primary w-full" />
+    </div>
+  </div>
+
+  <!-- ─── Select Participant Type ───────────────────────────── -->
+  <div class="quiz-card" *ngIf="step() === 'select-type'">
+    <div class="quiz-header small">
+      <div class="quiz-icon small"><i class="pi pi-users"></i></div>
+      <h2>Who are you?</h2>
+      <p>Select your participant type to continue</p>
+    </div>
+    <div class="type-grid">
+      <button class="type-card" (click)="selectRegistered()">
+        <i class="pi pi-id-card" style="font-size:2rem;color:#BE123C;margin-bottom:12px"></i>
+        <div class="type-title">Registered Yuvak</div>
+        <div class="type-desc">I have a Yuvak ID issued during registration</div>
+        <span class="type-arrow"><i class="pi pi-arrow-right"></i></span>
+      </button>
+      <button class="type-card" (click)="selectExternal()">
+        <i class="pi pi-user-plus" style="font-size:2rem;color:#059669;margin-bottom:12px"></i>
+        <div class="type-title">External Yuvak</div>
+        <div class="type-desc">I am not registered in the system</div>
+        <span class="type-arrow"><i class="pi pi-arrow-right"></i></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ─── Register: Registered Yuvak ───────────────────────── -->
+  <div class="quiz-card" *ngIf="step() === 'register-yuvak'">
+    <div class="quiz-header small">
+      <div class="quiz-icon small"><i class="pi pi-id-card"></i></div>
+      <h2>Enter Yuvak ID</h2>
+      <p>Your Yuvak ID was issued at the time of registration</p>
+    </div>
+    <div class="quiz-body">
+      <form [formGroup]="yuvakForm" (ngSubmit)="validateYuvak()">
+        <div class="field" style="margin-bottom:16px">
+          <label class="req">Yuvak ID</label>
+          <input pInputText formControlName="yuvak_id" placeholder="e.g. YUVAKAHM000001"
+                 style="width:100%;text-transform:uppercase"
+                 [ngClass]="{'ng-invalid ng-dirty': yuvakForm.get('yuvak_id')?.invalid && yuvakForm.get('yuvak_id')?.touched}">
+          <small class="p-error"
+                 *ngIf="yuvakForm.get('yuvak_id')?.invalid && yuvakForm.get('yuvak_id')?.touched">
+            Yuvak ID is required
+          </small>
+        </div>
+        <p-button type="submit" label="Validate ID" icon="pi pi-search"
+                  [loading]="validating" styleClass="btn-primary w-full" />
+      </form>
+
+      <!-- Yuvak validated info -->
+      <div class="yuvak-found" *ngIf="yuvakInfo">
+        <i class="pi pi-check-circle" style="color:#10B981;font-size:1.4rem"></i>
+        <div>
+          <div style="font-weight:700;color:#1F2937">{{ yuvakInfo.full_name }}</div>
+          <div style="font-size:0.82rem;color:#6B7280">{{ yuvakInfo.xetra_name }} · {{ yuvakInfo.mandal_name }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="quiz-footer quiz-footer-split">
+      <p-button label="Back" icon="pi pi-arrow-left" [outlined]="true"
+                (click)="step.set('select-type')" styleClass="btn-back" />
+      <p-button label="Start Quiz" icon="pi pi-play" [disabled]="!yuvakInfo"
+                [loading]="validating" (click)="startAsRegistered()" styleClass="btn-primary" />
+    </div>
+  </div>
+
+  <!-- ─── Register: External Yuvak ─────────────────────────── -->
+  <div class="quiz-card" *ngIf="step() === 'register-external'">
+    <div class="quiz-header small">
+      <div class="quiz-icon small"><i class="pi pi-user-plus"></i></div>
+      <h2>Your Details</h2>
+      <p>Please fill in your name and gender to continue</p>
+    </div>
+    <div class="quiz-body">
+      <form [formGroup]="externalForm" (ngSubmit)="startAsExternal()">
+        <div class="field" style="margin-bottom:16px">
+          <label class="req">Full Name</label>
+          <input pInputText formControlName="name" placeholder="Enter your full name" style="width:100%"
+                 [ngClass]="{'ng-invalid ng-dirty': externalForm.get('name')?.invalid && externalForm.get('name')?.touched}">
+          <small class="p-error"
+                 *ngIf="externalForm.get('name')?.invalid && externalForm.get('name')?.touched">
+            Full name is required
+          </small>
+        </div>
+        <div class="field" style="margin-bottom:20px">
+          <label class="req">Gender</label>
+          <p-dropdown [options]="genderOptions" formControlName="gender"
+                      optionLabel="label" optionValue="value"
+                      placeholder="Select gender" styleClass="w-full" />
+          <small class="p-error"
+                 *ngIf="externalForm.get('gender')?.invalid && externalForm.get('gender')?.touched">
+            Gender is required
+          </small>
+        </div>
+      </form>
+    </div>
+    <div class="quiz-footer quiz-footer-split">
+      <p-button label="Back" icon="pi pi-arrow-left" [outlined]="true"
+                (click)="step.set('select-type')" styleClass="btn-back" />
+      <p-button label="Start Quiz" icon="pi pi-play" [loading]="validating"
+                (click)="startAsExternal()" styleClass="btn-primary" />
+    </div>
+  </div>
+
+  <!-- ─── Quiz Attempt ──────────────────────────────────────── -->
+  <div class="quiz-attempt" *ngIf="step() === 'quiz'">
+    <div class="attempt-header">
+      <div class="attempt-title">{{ quiz()?.title || quiz()?.name }}</div>
+      <div class="attempt-progress">
+        {{ answeredCount() }} / {{ questions().length }} answered
+      </div>
+    </div>
+
+    <div class="question-list">
+      <div class="q-block" *ngFor="let q of questions(); let i=index">
+        <div class="q-num-row">
+          <span class="q-num-tag" [class.answered]="isAnswered(q.id)">Q{{ i + 1 }}</span>
+          <div class="q-text">{{ q.title }}</div>
+        </div>
+
+        <!-- MCQ: A/B/C/D buttons -->
+        <div class="options-grid" *ngIf="!q.question_type || q.question_type === 'mcq'">
+          <button class="opt-btn" *ngFor="let key of ['a','b','c','d']"
+                  [class.selected]="answers[q.id] === key"
+                  [style.display]="optionText(q,key) ? '' : 'none'"
+                  (click)="selectAnswer(q.id, key)">
+            <span class="opt-key">{{ key.toUpperCase() }}</span>
+            <span class="opt-text">{{ optionText(q, key) }}</span>
+          </button>
+        </div>
+
+        <!-- Radio: custom option buttons -->
+        <div class="options-grid" *ngIf="q.question_type === 'radio'">
+          <button class="opt-btn" *ngFor="let opt of getSelectOptions(q); let oi=index"
+                  [class.selected]="answers[q.id] === opt.value"
+                  (click)="selectAnswer(q.id, opt.value)">
+            <span class="opt-key">{{ oi + 1 }}</span>
+            <span class="opt-text">{{ opt.label }}</span>
+          </button>
+        </div>
+
+        <!-- Select: dropdown -->
+        <div class="select-wrap" *ngIf="q.question_type === 'select'">
+          <p-dropdown [options]="getSelectOptions(q)"
+                      [ngModel]="getAnswer(q.id)"
+                      (ngModelChange)="setAnswer(q.id, $event)"
+                      optionLabel="label" optionValue="value"
+                      placeholder="Choose your answer…" styleClass="w-full" />
+        </div>
+
+        <!-- Input: text field -->
+        <div class="input-wrap" *ngIf="q.question_type === 'input'">
+          <input pInputText [value]="getAnswer(q.id)"
+                 (input)="setAnswer(q.id, $any($event.target).value)"
+                 placeholder="Type your answer here…" style="width:100%" />
+        </div>
+      </div>
+    </div>
+
+    <div class="submit-bar">
+      <div class="submit-info">
+        <strong>{{ answeredCount() }}</strong> of <strong>{{ questions().length }}</strong> answered
+        <span *ngIf="answeredCount() < questions().length" style="color:#D97706;margin-left:8px">
+          ({{ questions().length - answeredCount() }} unanswered)
+        </span>
+      </div>
+      <p-button label="Submit Quiz" icon="pi pi-send" [loading]="submitting"
+                (click)="submitQuiz()" styleClass="btn-submit" />
+    </div>
+  </div>
+
+  <!-- ─── Result ────────────────────────────────────────────── -->
+  <div class="quiz-card result-card" *ngIf="step() === 'result'">
+    <div class="result-icon" [class.pass]="result()?.percentage >= 40">
+      <i class="pi" [class.pi-check-circle]="result()?.percentage >= 40"
+                    [class.pi-times-circle]="result()?.percentage < 40"></i>
+    </div>
+    <div class="result-title" [class.pass]="result()?.percentage >= 40">
+      {{ result()?.percentage >= 40 ? '🎉 Well done!' : 'Better luck next time' }}
+    </div>
+
+    <div class="result-score">
+      <span class="big-score">{{ result()?.percentage | number:'1.1-1' }}%</span>
+      <span class="score-label">{{ result()?.score }} / {{ result()?.total_marks }} marks</span>
+    </div>
+
+    <div class="result-stats">
+      <div class="stat-box">
+        <div class="stat-v">{{ result()?.total_questions }}</div>
+        <div class="stat-l">Total</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-v">{{ result()?.attempted_questions }}</div>
+        <div class="stat-l">Attempted</div>
+      </div>
+      <div class="stat-box correct">
+        <div class="stat-v">{{ result()?.correct_answers }}</div>
+        <div class="stat-l">Correct</div>
+      </div>
+      <div class="stat-box wrong">
+        <div class="stat-v">{{ result()?.incorrect_answers }}</div>
+        <div class="stat-l">Wrong</div>
+      </div>
+    </div>
+
+    <p style="text-align:center;color:#9CA3AF;font-size:0.88rem;margin-top:20px">
+      Your response has been recorded. Thank you for participating!
+    </p>
+  </div>
+
+</div>
+
+<p-toast position="bottom-right" />

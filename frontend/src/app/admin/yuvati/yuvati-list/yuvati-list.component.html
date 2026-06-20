@@ -1,0 +1,82 @@
+<div class="module-hero">
+  <div class="hero-left">
+    <div class="hero-icon blue"><i class="pi pi-users"></i></div>
+    <div>
+      <div class="hero-title">Yuvati Management</div>
+      <div class="hero-subtitle">Browse, filter and manage all Yuvati members</div>
+      <span class="hero-badge">{{ total() }} Yuvati</span>
+    </div>
+  </div>
+  <p-button label="Add Yuvati" icon="pi pi-plus" (click)="router.navigate(['/admin/yuvati/new'])" *ngIf="canCreate" />
+</div>
+
+<div class="table-card">
+  <div class="filter-bar">
+    <span class="p-input-icon-left">
+      <i class="pi pi-search"></i>
+      <input pInputText [(ngModel)]="searchTerm" (ngModelChange)="onSearch($event)"
+        placeholder="Search name, mobile, ID..." style="width:260px">
+    </span>
+    <p-dropdown [options]="xetras" [(ngModel)]="xetraFilter" (ngModelChange)="loadData(1)"
+      optionLabel="name" optionValue="id" placeholder="All Xetra" [showClear]="true" />
+    <p-dropdown [options]="mandals" [(ngModel)]="mandalFilter" (ngModelChange)="loadData(1)"
+      optionLabel="name" optionValue="id" placeholder="All Mandal" [showClear]="true" />
+  </div>
+  <p-table [value]="rows()" [lazy]="true" (onLazyLoad)="onLazyLoad($event)"
+           [totalRecords]="total()" [rows]="perPage" [paginator]="true"
+           [loading]="loading" [tableStyle]="{'min-width':'75rem'}"
+           [showCurrentPageReport]="true" currentPageReportTemplate="{first}-{last} of {totalRecords}"
+           styleClass="p-datatable-striped">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Yuvati ID</th><th>Name</th><th>Mobile</th>
+        <th>Xetra</th><th>Mandal</th><th>Karyakar</th><th>QR</th><th style="width:8rem">Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-y>
+      <tr>
+        <td><code style="background:#E0E7FF;padding:2px 7px;border-radius:4px;font-size:0.82rem">{{ y.yuvati_id }}</code></td>
+        <td style="font-weight:500">{{ y.first_name }} {{ y.middle_name }} {{ y.last_name }}</td>
+        <td>{{ y.mo_number }}</td>
+        <td>{{ y.xetra_name }}</td>
+        <td>{{ y.mandal_name }}</td>
+        <td>
+          <span [class]="y.is_karyakar === 'no' ? 'karyakar-no' : 'karyakar-yes'">
+            {{ y.is_karyakar === 'no' ? 'No' : (y.is_karyakar | titlecase) }}
+          </span>
+        </td>
+        <td>
+          <p-button icon="pi pi-qrcode" [rounded]="true" [text]="true" size="small"
+            (click)="showQr(y)" pTooltip="View QR" tooltipPosition="top" />
+        </td>
+        <td>
+          <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" size="small"
+            (click)="router.navigate(['/admin/yuvati', y.uuid])" *ngIf="canUpdate"
+            pTooltip="Edit" tooltipPosition="top" />
+          <p-button icon="pi pi-send" [rounded]="true" [text]="true" severity="info" size="small"
+            (click)="sendNotification(y)" [loading]="sendingNotify === y.uuid"
+            pTooltip="Send Welcome Message" tooltipPosition="top" />
+          <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small"
+            (click)="confirmDelete(y)" *ngIf="canDelete" pTooltip="Archive" tooltipPosition="top" />
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="8" style="text-align:center;padding:3rem;color:#9CA3AF">
+        <i class="pi pi-users" style="font-size:2rem;display:block;margin-bottom:10px;color:#D1D5DB"></i>
+        No Yuvati records found
+      </td></tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog [header]="'QR Code — ' + (qrTarget?.yuvati_id || '')" [(visible)]="showQrDialog"
+          [modal]="true" [style]="{width:'360px'}" [draggable]="false">
+  <div style="text-align:center;padding:16px">
+    <img *ngIf="qrUrl" [src]="qrUrl" alt="QR Code" style="width:240px;height:240px;border-radius:8px">
+    <p *ngIf="!qrUrl" style="color:#9CA3AF">Loading QR...</p>
+    <p style="margin-top:12px;font-size:0.85rem;color:#6B7280">Show at gate for attendance scan</p>
+  </div>
+</p-dialog>
+
+<p-confirmDialog [style]="{width:'420px'}" />
