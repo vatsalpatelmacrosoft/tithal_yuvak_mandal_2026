@@ -45,8 +45,9 @@ export const routes: Routes = [
       { path: 'roles',      loadComponent: () => import('./admin/roles/roles.component').then(m => m.RolesComponent) },
 
       // Shibir & Attendance
-      { path: 'shibir',     loadComponent: () => import('./admin/shibir/shibir.component').then(m => m.ShibirComponent) },
-      { path: 'attendance', loadComponent: () => import('./admin/attendance/attendance.component').then(m => m.AttendanceComponent) },
+      { path: 'shibir',           loadComponent: () => import('./admin/shibir/shibir.component').then(m => m.ShibirComponent) },
+      { path: 'attendance',       loadComponent: () => import('./admin/attendance/attendance.component').then(m => m.AttendanceComponent) },
+      { path: 'take-attendance',  loadComponent: () => import('./admin/attendance/take-attendance.component').then(m => m.TakeAttendanceComponent) },
 
       // Quiz
       { path: 'quiz',          loadComponent: () => import('./admin/quiz/quiz-list/quiz-list.component').then(m => m.QuizListComponent) },

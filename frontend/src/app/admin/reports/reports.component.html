@@ -1,21 +1,31 @@
 <div class="module-hero">
   <div class="hero-left">
-    <div class="hero-icon" style="background:linear-gradient(135deg,#0D9488,#14B8A6);box-shadow:0 4px 14px rgba(20,184,166,0.35)">
-      <i class="pi pi-chart-bar"></i>
-    </div>
+    <div class="hero-icon teal"><i class="pi pi-chart-bar"></i></div>
     <div>
       <div class="hero-title">Quiz Reports</div>
-      <div class="hero-subtitle">Analytics, participant results and gender-wise breakdowns</div>
+      <div class="hero-subtitle">Analytics, participant results and question-wise breakdowns</div>
     </div>
   </div>
 </div>
 
-<p-tabView>
+<!-- ── Custom Tab Nav ─────────────────────────────────────────── -->
+<div class="report-tabs">
+  <button *ngFor="let t of tabs" class="rtab" [class.active]="activeTab === t.key" (click)="setTab(t.key)">
+    <i [class]="'pi ' + t.icon"></i>
+    <span>{{ t.label }}</span>
+  </button>
+</div>
 
-  <!-- ── Tab 1: Quiz Wise ──────────────────────────────────── -->
-  <p-tabPanel header="Quiz Wise">
+<!-- ── Tab Content ────────────────────────────────────────────── -->
+<div class="table-card tab-body">
+
+  <!-- ══ Quiz Wise ══════════════════════════════════════════════ -->
+  <ng-container *ngIf="activeTab === 'quiz-wise'">
     <div class="report-toolbar">
-      <span style="font-size:0.88rem;color:#6B7280">Overall performance across all quizzes</span>
+      <div class="toolbar-info">
+        <i class="pi pi-info-circle" style="color:#6B7280"></i>
+        Overall performance across all quizzes
+      </div>
       <p-button label="Export CSV" icon="pi pi-download" size="small" [outlined]="true"
                 (click)="export('quiz-wise')" />
     </div>
@@ -38,7 +48,7 @@
       <ng-template pTemplate="body" let-q>
         <tr>
           <td>
-            <div style="font-weight:600">{{ q.title || q.name }}</div>
+            <div style="font-weight:600;color:#1F2937">{{ q.title || q.name }}</div>
             <p-tag [value]="q.is_active ? 'Active' : 'Inactive'"
                    [severity]="$any(q.is_active ? 'success' : 'danger')" />
           </td>
@@ -56,31 +66,33 @@
         <tr><td colspan="9" class="empty-msg">No quiz data available.</td></tr>
       </ng-template>
     </p-table>
-  </p-tabPanel>
+  </ng-container>
 
-  <!-- ── Tab 2: Participant Wise ───────────────────────────── -->
-  <p-tabPanel header="Participant Wise">
+  <!-- ══ Participant Wise ════════════════════════════════════════ -->
+  <ng-container *ngIf="activeTab === 'participant-wise'">
     <div class="report-toolbar">
-      <div style="min-width:260px">
-        <p-dropdown [options]="quizzes()" [(ngModel)]="selectedQuiz"
+      <div class="filter-wrap" style="min-width:280px">
+        <i class="pi pi-question-circle fw-icon"></i>
+        <p-dropdown [options]="quizzes()" [(ngModel)]="selectedQuizModel"
                     placeholder="Select a quiz" [showClear]="false"
-                    (onChange)="onQuizSelect($event.value)" styleClass="w-full" />
+                    (onChange)="onQuizSelect($event.value)" styleClass="fw-dropdown"
+                     />
       </div>
       <p-button label="Export CSV" icon="pi pi-download" size="small" [outlined]="true"
                 [disabled]="!selectedQuiz()" (click)="export('participant-wise')" />
     </div>
 
     <div class="no-quiz-hint" *ngIf="!selectedQuiz()">
-      <i class="pi pi-arrow-up" style="display:block;margin-bottom:8px;font-size:1.4rem;color:#C7D2FE"></i>
-      Select a quiz above to view participant results.
+      <i class="pi pi-arrow-up"></i>
+      Select a quiz above to view participant results
     </div>
 
     <p-table *ngIf="selectedQuiz()" [value]="participants()" [loading]="loadingP"
              styleClass="p-datatable-striped" [tableStyle]="{'min-width':'70rem'}">
       <ng-template pTemplate="header">
         <tr>
-          <th>#</th>
-          <th>Name / Yuvak ID</th>
+          <th style="width:3rem">#</th>
+          <th>Name / ID</th>
           <th>Type</th>
           <th>Gender</th>
           <th class="text-center">Score</th>
@@ -118,45 +130,46 @@
         <tr><td colspan="10" class="empty-msg">No participants found for this quiz.</td></tr>
       </ng-template>
     </p-table>
-  </p-tabPanel>
+  </ng-container>
 
-  <!-- ── Tab 3: Question Analysis ─────────────────────────── -->
-  <p-tabPanel header="Question Analysis">
+  <!-- ══ Question Analysis ═══════════════════════════════════════ -->
+  <ng-container *ngIf="activeTab === 'question-wise'">
     <div class="report-toolbar">
-      <div style="min-width:260px">
-        <p-dropdown [options]="quizzes()" [(ngModel)]="selectedQuiz"
+      <div class="filter-wrap" style="min-width:280px">
+        <i class="pi pi-question-circle fw-icon"></i>
+        <p-dropdown [options]="quizzes()" [(ngModel)]="selectedQuizModel"
                     placeholder="Select a quiz" [showClear]="false"
-                    (onChange)="onQuizSelect($event.value)" styleClass="w-full" />
+                    (onChange)="onQuizSelect($event.value)" styleClass="fw-dropdown"
+                     />
       </div>
       <p-button label="Export CSV" icon="pi pi-download" size="small" [outlined]="true"
                 [disabled]="!selectedQuiz()" (click)="export('question-wise')" />
     </div>
 
     <div class="no-quiz-hint" *ngIf="!selectedQuiz()">
-      Select a quiz above to view question-wise analysis.
+      <i class="pi pi-arrow-up"></i>
+      Select a quiz above to view question analysis
     </div>
 
     <p-table *ngIf="selectedQuiz()" [value]="questions()" [loading]="loadingQs"
              styleClass="p-datatable-striped" [tableStyle]="{'min-width':'60rem'}">
       <ng-template pTemplate="header">
         <tr>
-          <th>#</th>
+          <th style="width:3rem">#</th>
           <th>Question</th>
-          <th>Correct Ans</th>
+          <th>Correct Answer</th>
           <th class="text-center">Marks</th>
           <th class="text-center">Responses</th>
           <th class="text-center">Correct</th>
           <th class="text-center">Wrong</th>
-          <th class="text-center">Accuracy</th>
+          <th class="text-center" style="min-width:120px">Accuracy</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-q let-i="rowIndex">
         <tr>
           <td style="color:#9CA3AF">{{ i + 1 }}</td>
-          <td style="max-width:360px">{{ q.title }}</td>
-          <td>
-            <span class="correct-opt">{{ q.correct_answer?.toUpperCase() }}</span>
-          </td>
+          <td style="max-width:340px">{{ q.title }}</td>
+          <td><span class="correct-opt">{{ q.correct_answer?.toUpperCase() }}</span></td>
           <td class="text-center">{{ q.marks }}</td>
           <td class="text-center">{{ q.total_responses }}</td>
           <td class="text-center" style="color:#10B981;font-weight:600">{{ q.correct_responses }}</td>
@@ -173,51 +186,53 @@
         <tr><td colspan="8" class="empty-msg">No question data available.</td></tr>
       </ng-template>
     </p-table>
-  </p-tabPanel>
+  </ng-container>
 
-  <!-- ── Tab 4: Gender Wise ────────────────────────────────── -->
-  <p-tabPanel header="Gender Wise">
+  <!-- ══ Gender Wise ════════════════════════════════════════════ -->
+  <ng-container *ngIf="activeTab === 'gender-wise'">
     <div class="report-toolbar">
-      <div style="min-width:260px">
-        <p-dropdown [options]="quizzes()" [(ngModel)]="selectedQuiz"
+      <div class="filter-wrap" style="min-width:280px">
+        <i class="pi pi-question-circle fw-icon"></i>
+        <p-dropdown [options]="quizzes()" [(ngModel)]="selectedQuizModel"
                     placeholder="Select a quiz" [showClear]="false"
-                    (onChange)="onQuizSelect($event.value)" styleClass="w-full" />
+                    (onChange)="onQuizSelect($event.value)" styleClass="fw-dropdown"
+                     />
       </div>
       <p-button label="Export CSV" icon="pi pi-download" size="small" [outlined]="true"
                 [disabled]="!selectedQuiz()" (click)="export('gender-wise')" />
     </div>
 
     <div class="no-quiz-hint" *ngIf="!selectedQuiz()">
-      Select a quiz above to view gender-wise breakdown.
+      <i class="pi pi-arrow-up"></i>
+      Select a quiz above to view gender-wise breakdown
     </div>
 
     <div *ngIf="selectedQuiz()">
       <!-- Summary Cards -->
       <div class="gender-summary" *ngIf="!loadingG">
         <div class="gender-card male">
-          <i class="pi pi-user gender-icon"></i>
+          <div class="gender-icon-wrap"><i class="pi pi-user"></i></div>
           <div class="gender-count">{{ getGenderCount('male') }}</div>
           <div class="gender-label">Male</div>
         </div>
         <div class="gender-card female">
-          <i class="pi pi-user gender-icon"></i>
+          <div class="gender-icon-wrap"><i class="pi pi-user"></i></div>
           <div class="gender-count">{{ getGenderCount('female') }}</div>
           <div class="gender-label">Female</div>
         </div>
         <div class="gender-card other">
-          <i class="pi pi-users gender-icon"></i>
+          <div class="gender-icon-wrap"><i class="pi pi-users"></i></div>
           <div class="gender-count">{{ getGenderCount('other') }}</div>
           <div class="gender-label">Other</div>
         </div>
         <div class="gender-card total">
-          <i class="pi pi-chart-pie gender-icon"></i>
+          <div class="gender-icon-wrap"><i class="pi pi-chart-pie"></i></div>
           <div class="gender-count">{{ getGenderCount('male') + getGenderCount('female') + getGenderCount('other') }}</div>
           <div class="gender-label">Total</div>
         </div>
       </div>
 
-      <!-- Performance by Gender Summary -->
-      <div style="margin-bottom:20px">
+      <div style="margin-bottom:24px">
       <p-table [value]="genderSummary()" [loading]="loadingG" styleClass="p-datatable-striped">
         <ng-template pTemplate="header">
           <tr>
@@ -240,17 +255,16 @@
       </p-table>
       </div>
 
-      <!-- Detailed lists per gender -->
       <div *ngFor="let gender of ['male','female','other']">
         <div class="gender-section" *ngIf="genderDetails()[gender]?.length">
-          <div class="gender-section-title">{{ gender | titlecase }} Participants</div>
+          <div class="gender-section-title">
+            <i class="pi pi-user"></i> {{ gender | titlecase }} Participants
+          </div>
           <p-table [value]="genderDetails()[gender]" styleClass="p-datatable-striped"
                    [tableStyle]="{'min-width':'40rem'}">
             <ng-template pTemplate="header">
               <tr>
-                <th>#</th>
-                <th>Name / Yuvak ID</th>
-                <th>Type</th>
+                <th>#</th><th>Name / ID</th><th>Type</th>
                 <th class="text-center">Score</th>
                 <th class="text-center">Total</th>
                 <th class="text-center">%</th>
@@ -277,6 +291,6 @@
         </div>
       </div>
     </div>
-  </p-tabPanel>
+  </ng-container>
 
-</p-tabView>
+</div>

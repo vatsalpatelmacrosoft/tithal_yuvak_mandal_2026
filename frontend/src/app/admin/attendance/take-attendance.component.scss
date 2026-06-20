@@ -1,0 +1,241 @@
+:host { display: block; }
+
+// ── Center wrapper ────────────────────────────────────────────────
+.ta-layout {
+  display: flex;
+  justify-content: center;
+  padding: 0 0 32px;
+}
+
+// ── Scanner card ──────────────────────────────────────────────────
+.scanner-card {
+  width: 100%;
+  max-width: 480px;
+  padding: 22px;
+}
+
+// ── Card header ───────────────────────────────────────────────────
+.sc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #F3F4F6;
+
+  .sc-header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #1F2937;
+  }
+
+  .sc-icon { color: #3949AB; font-size: 1.1rem; }
+}
+
+.flip-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border: 1.5px solid #E5E7EB;
+  border-radius: 8px;
+  background: #F9FAFB;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #6B7280;
+  cursor: pointer;
+  transition: all 0.15s;
+  .pi { font-size: 0.82rem; }
+  &:hover { background: #F3F4F6; color: #374151; border-color: #D1D5DB; }
+}
+
+// ── Date row ──────────────────────────────────────────────────────
+.scan-date-row {
+  margin-bottom: 14px;
+  label { font-size: 0.82rem; }
+}
+
+// ── Camera wrap ───────────────────────────────────────────────────
+.cam-wrap {
+  position: relative;
+  width: 100%;
+  height: 360px;             // desktop fixed height
+  background: #0F0F0F;
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  #ta-qr-region {
+    width: 100% !important;
+    height: 100% !important;
+    ::ng-deep {
+      video  { width: 100% !important; height: 100% !important; object-fit: cover; }
+      canvas { display: none; }
+    }
+  }
+}
+
+// ── Camera loading ────────────────────────────────────────────────
+.cam-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #fff;
+  font-size: 0.9rem;
+  background: rgba(0,0,0,0.75);
+  z-index: 5;
+  .pi { font-size: 2rem; color: #FF8F00; }
+}
+
+// ── Scan hint ─────────────────────────────────────────────────────
+.cam-hint {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  font-size: 0.8rem;
+  padding: 5px 14px;
+  border-radius: 20px;
+  pointer-events: none;
+  z-index: 4;
+  white-space: nowrap;
+  .pi { color: #FF8F00; font-size: 0.9rem; }
+}
+
+// ── Result Overlay ────────────────────────────────────────────────
+.result-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  text-align: center;
+  animation: fadeIn 0.2s ease;
+
+  &.res-success   { background: rgba(5, 150, 105, 0.94); }
+  &.res-duplicate { background: rgba(217, 119, 6, 0.94); }
+  &.res-invalid   { background: rgba(220, 38, 38, 0.92); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.res-icon-ring {
+  width: 66px; height: 66px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+  .pi { font-size: 2.2rem; color: #fff; }
+}
+
+.res-status {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.res-name {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.res-sub {
+  font-size: 0.88rem;
+  color: rgba(255,255,255,0.82);
+}
+
+.res-badges {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+.res-badge {
+  border-radius: 6px;
+  padding: 3px 11px;
+  font-size: 0.83rem;
+  font-weight: 700;
+  color: #fff;
+  &.id      { background: rgba(255,255,255,0.22); }
+  &.saffron { background: rgba(255,143,0,0.45); }
+  &.blue    { background: rgba(59,130,246,0.45); }
+}
+
+.res-time {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: rgba(255,255,255,0.92);
+  font-size: 0.9rem;
+  font-weight: 600;
+  .pi { font-size: 0.85rem; }
+}
+
+// ── Start camera fallback ─────────────────────────────────────────
+.start-cam-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #3949AB, #5C6BC0);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 14px;
+  transition: opacity 0.15s;
+  .pi { font-size: 1.15rem; }
+  &:hover { opacity: 0.88; }
+}
+
+.or-divider {
+  text-align: center;
+  color: #9CA3AF;
+  font-size: 0.8rem;
+  margin: 12px 0;
+}
+
+// ── Mobile: camera covers half the screen ─────────────────────────
+@media (max-width: 640px) {
+  .ta-layout { padding: 0 0 24px; }
+
+  .scanner-card {
+    max-width: 100%;
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  .cam-wrap {
+    height: 50vh;      // half the viewport on mobile
+    border-radius: 12px;
+  }
+}

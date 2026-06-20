@@ -4,18 +4,19 @@ import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { DropdownModule } from 'primeng/dropdown';
-import { TabViewModule } from 'primeng/tabview';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { ApiService } from '../../core/services/api.service';
 import { ToastService } from '../../core/services/toast.service';
 import { environment } from '../../../environments/environment';
 
+type TabKey = 'quiz-wise' | 'participant-wise' | 'question-wise' | 'gender-wise';
+
 @Component({
   selector: 'app-reports',
   standalone: true,
   imports: [FormsModule, NgFor, NgIf, DecimalPipe, DatePipe, TitleCasePipe,
-            ButtonModule, TableModule, DropdownModule, TabViewModule, TagModule, TooltipModule],
+            ButtonModule, TableModule, DropdownModule, TagModule, TooltipModule],
   templateUrl: './reports.component.html',
   styleUrls: ['./reports.component.scss']
 })
@@ -23,14 +24,24 @@ export class ReportsComponent implements OnInit {
   private api   = inject(ApiService);
   private toast = inject(ToastService);
 
-  quizzes        = signal<any[]>([]);
-  selectedQuiz   = signal<any>(null);
+  activeTab: TabKey = 'quiz-wise';
 
-  quizWise       = signal<any[]>([]);
-  participants   = signal<any[]>([]);
-  questions      = signal<any[]>([]);
-  genderSummary  = signal<any[]>([]);
-  genderDetails  = signal<any>({male:[], female:[], other:[]});
+  tabs = [
+    { key: 'quiz-wise'       as TabKey, label: 'Quiz Wise',          icon: 'pi-list-check'    },
+    { key: 'participant-wise'as TabKey, label: 'Participants',        icon: 'pi-users'         },
+    { key: 'question-wise'   as TabKey, label: 'Question Analysis',   icon: 'pi-question-circle'},
+    { key: 'gender-wise'     as TabKey, label: 'Gender Breakdown',    icon: 'pi-chart-pie'     },
+  ];
+
+  quizzes       = signal<any[]>([]);
+  selectedQuiz  = signal<any>(null);
+  selectedQuizModel: any = null;   // two-way binding model for dropdown
+
+  quizWise      = signal<any[]>([]);
+  participants  = signal<any[]>([]);
+  questions     = signal<any[]>([]);
+  genderSummary = signal<any[]>([]);
+  genderDetails = signal<any>({ male: [], female: [], other: [] });
 
   loadingQ  = false;
   loadingP  = false;
@@ -40,6 +51,10 @@ export class ReportsComponent implements OnInit {
   ngOnInit() {
     this.loadQuizList();
     this.loadQuizWise();
+  }
+
+  setTab(key: TabKey) {
+    this.activeTab = key;
   }
 
   loadQuizList() {
@@ -96,28 +111,17 @@ export class ReportsComponent implements OnInit {
   }
 
   export(type: string) {
-    const uuid = this.selectedQuiz();
-    const base = environment.apiUrl.replace('/api', '');
-    const token = localStorage.getItem('token') || '';
-    const url = `${environment.apiUrl}/reports/export?type=${type}&quiz_uuid=${uuid || ''}&format=csv`;
-    // Download via temporary anchor with auth header via fetch+blob
-    fetch(url, { headers: { Authorization: `Bearer ${token}` } })
-      .then(res => res.blob())
-      .then(blob => {
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `${type}-report.csv`;
-        a.click();
-      })
-      .catch(() => this.toast.error('Export failed'));
+    const uuid  = this.selectedQuiz();
+    const token = localStorage.getItem('tdd_token') || '';
+    const url   = `${environment.apiUrl}/reports/export?type=${type}&quiz_uuid=${uuid || ''}&format=csv&token=${encodeURIComponent(token)}`;
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${type}-report.csv`;
+    a.click();
   }
 
   typeLabel(t: string): string {
     return t === 'registered' ? 'Registered' : 'External';
-  }
-
-  genderIcon(g: string): string {
-    return g === 'male' ? 'pi-user' : g === 'female' ? 'pi-user' : 'pi-users';
   }
 
   getGenderCount(gender: string): number {

@@ -1,100 +1,326 @@
+<!-- ── Module Hero ──────────────────────────────────────────────── -->
 <div class="module-hero">
   <div class="hero-left">
     <div class="hero-icon green"><i class="pi pi-check-square"></i></div>
     <div>
       <div class="hero-title">Attendance</div>
-      <div class="hero-subtitle">Mark attendance by QR scan, UUID, or Yuvak/Yuvati ID</div>
-      <span class="hero-badge" style="background:linear-gradient(135deg,#D1FAE5,#A7F3D0);color:#065F46">
-        {{ summary().yuvak + summary().yuvati }} Present Today
-      </span>
+      <div class="hero-subtitle">Mark and track attendance by QR scan or Member ID</div>
+      <span class="hero-badge">{{ summary().total }} Present</span>
     </div>
   </div>
 </div>
 
-<!-- Stats -->
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
-  <div style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,0.07);border-left:4px solid #FF8F00;display:flex;align-items:center;gap:16px">
-    <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#FF8F00,#FFA000);display:flex;align-items:center;justify-content:center">
-      <i class="pi pi-user" style="color:#fff;font-size:1.2rem"></i>
-    </div>
-    <div>
-      <div style="font-size:1.8rem;font-weight:700;color:#1F2937;line-height:1">{{ summary().yuvak }}</div>
-      <div style="font-size:0.83rem;color:#6B7280;margin-top:2px">Yuvak Present</div>
-    </div>
-  </div>
-  <div style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,0.07);border-left:4px solid #1E88E5;display:flex;align-items:center;gap:16px">
-    <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#1565C0,#1E88E5);display:flex;align-items:center;justify-content:center">
-      <i class="pi pi-users" style="color:#fff;font-size:1.2rem"></i>
-    </div>
-    <div>
-      <div style="font-size:1.8rem;font-weight:700;color:#1F2937;line-height:1">{{ summary().yuvati }}</div>
-      <div style="font-size:0.83rem;color:#6B7280;margin-top:2px">Yuvati Present</div>
-    </div>
-  </div>
-</div>
+<!-- ── Top Layout: Mark panel (left) + Stats & Filters (right) ── -->
+<div class="att-top">
 
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-  <!-- Scanner panel -->
-  <div class="table-card">
-    <div style="font-weight:600;color:#1F2937;font-size:1rem;margin-bottom:16px;display:flex;align-items:center;gap:8px">
-      <i class="pi pi-qrcode" style="color:#3949AB"></i> Mark Attendance
+  <!-- Mark Attendance panel -->
+  <div class="table-card mark-panel">
+    <div class="panel-header">
+      <i class="pi pi-qrcode"></i> Mark Attendance
     </div>
 
     <div class="field" style="margin-bottom:14px">
-      <label style="font-size:0.83rem;color:#6B7280;margin-bottom:6px;display:block">Date</label>
-      <input pInputText type="date" [(ngModel)]="scanDate" style="width:100%;height:40px">
+      <label>Attendance Date</label>
+      <input pInputText type="date" [(ngModel)]="scanDate" [max]="today">
     </div>
 
-    <!-- Camera scan button -->
     <button type="button" (click)="openScanner()" class="camera-scan-btn">
       <i class="pi pi-camera"></i>
       <span>Open Camera to Scan QR</span>
     </button>
 
-    <div style="text-align:center;color:#9CA3AF;font-size:0.8rem;margin:12px 0">— or enter manually —</div>
+    <div class="or-divider">— or enter manually —</div>
 
     <div class="field">
-      <label style="font-size:0.83rem;color:#6B7280;margin-bottom:6px;display:block">UUID or Member ID</label>
+      <label>UUID or Member ID</label>
       <div style="display:flex;gap:8px">
-        <input pInputText [(ngModel)]="scanInput" placeholder="e.g. TTH01-0001 or paste UUID"
-          (keydown.enter)="markByUuid()" style="flex:1;height:40px">
+        <input pInputText [(ngModel)]="scanInput" placeholder="e.g. TTH01-0001 or UUID"
+               (keydown.enter)="markByUuid()" style="flex:1">
         <p-button icon="pi pi-check" (click)="markByUuid()"
-          [disabled]="!scanInput" [loading]="marking" />
+                  [disabled]="!scanInput" [loading]="marking"
+                  pTooltip="Mark Attendance" />
       </div>
     </div>
 
-    <div *ngIf="lastScanned" style="background:#ECFDF5;border-radius:8px;padding:12px;font-size:0.88rem;margin-top:12px;display:flex;align-items:center;gap:8px">
-      <i class="pi pi-check-circle" style="color:#10B981;font-size:1.1rem"></i>
+    <div class="last-scanned" *ngIf="lastScanned">
+      <i class="pi pi-check-circle"></i>
       <span><strong>{{ lastScanned }}</strong> marked present</span>
     </div>
   </div>
 
-  <!-- Attendance List -->
-  <div class="table-card">
-    <div style="font-weight:600;color:#1F2937;font-size:1rem;margin-bottom:16px;display:flex;align-items:center;gap:8px">
-      <i class="pi pi-list" style="color:#3949AB"></i> Attendance List
+  <!-- Right column: Stats + Filters -->
+  <div class="right-col">
+
+    <!-- Stat cards -->
+    <div class="stat-row">
+      <div class="att-stat saffron">
+        <div class="att-stat-icon"><i class="pi pi-user"></i></div>
+        <div>
+          <div class="att-stat-val">{{ summary().yuvak }}</div>
+          <div class="att-stat-lbl">Yuvak Present</div>
+        </div>
+      </div>
+      <div class="att-stat blue">
+        <div class="att-stat-icon"><i class="pi pi-users"></i></div>
+        <div>
+          <div class="att-stat-val">{{ summary().yuvati }}</div>
+          <div class="att-stat-lbl">Yuvati Present</div>
+        </div>
+      </div>
+      <div class="att-stat green">
+        <div class="att-stat-icon"><i class="pi pi-chart-bar"></i></div>
+        <div>
+          <div class="att-stat-val">{{ summary().total }}</div>
+          <div class="att-stat-lbl">Total Present</div>
+        </div>
+      </div>
     </div>
-    <div style="display:flex;gap:10px;margin-bottom:14px">
-      <input pInputText type="date" [(ngModel)]="filterDate" (change)="loadAttendance()" style="flex:1;height:40px">
-      <p-dropdown [options]="filterOptions" [(ngModel)]="filterType" (ngModelChange)="loadAttendance()"
-        optionLabel="label" optionValue="value" [style]="{width:'130px'}" />
+
+    <!-- Filter card -->
+    <div class="table-card filter-panel">
+      <div class="panel-header">
+        <i class="pi pi-filter"></i> Filter &amp; Export
+      </div>
+
+      <div class="filter-grid">
+        <div class="field">
+          <label>From Date</label>
+          <input pInputText type="date" [(ngModel)]="fromDate" [max]="today">
+        </div>
+        <div class="field">
+          <label>To Date</label>
+          <input pInputText type="date" [(ngModel)]="toDate" [max]="today">
+        </div>
+        <div class="field">
+          <label>Member Type</label>
+          <div class="filter-wrap">
+            <i class="pi pi-users fw-icon"></i>
+            <p-dropdown [options]="filterOptions" [(ngModel)]="filterType"
+                        optionLabel="label" optionValue="value"
+                        styleClass="fw-dropdown" />
+          </div>
+        </div>
+      </div>
+
+      <div class="preset-row">
+        <button class="preset-btn" (click)="setDatePreset(1)">Today</button>
+        <button class="preset-btn" (click)="setDatePreset(7)">7 Days</button>
+        <button class="preset-btn" (click)="setDatePreset(30)">30 Days</button>
+      </div>
+
+      <div class="action-row">
+        <p-button label="Apply" icon="pi pi-search" (click)="load()" styleClass="w-full" />
+        <p-button label="Export CSV" icon="pi pi-download" [outlined]="true"
+                  (click)="exportCsv()" styleClass="w-full" />
+      </div>
     </div>
-    <p-table [value]="records()" [scrollable]="true" scrollHeight="320px" styleClass="p-datatable-sm p-datatable-striped">
+
+  </div>
+</div>
+
+<!-- ── Attendance List / Date-wise / Name-wise Tabs ──────────── -->
+<div class="table-card" style="margin-top:20px">
+
+  <!-- Main tab nav -->
+  <div class="list-tab-nav">
+    <button class="list-tab" [class.active]="activeTab === 'list'" (click)="activeTab = 'list'">
+      <i class="pi pi-list"></i> Attendance List
+      <span class="tab-count">{{ records().length }}</span>
+    </button>
+    <button class="list-tab" [class.active]="activeTab === 'datewise'" (click)="activeTab = 'datewise'">
+      <i class="pi pi-calendar"></i> Date-wise
+      <span class="tab-count">{{ dateWise().length }}</span>
+    </button>
+    <button class="list-tab" [class.active]="activeTab === 'namewise'" (click)="activeTab = 'namewise'">
+      <i class="pi pi-id-card"></i> Name-wise
+      <span class="tab-count">{{ nameWise().length }}</span>
+    </button>
+  </div>
+
+  <!-- Attendance List tab -->
+  <ng-container *ngIf="activeTab === 'list'">
+    <div class="member-tab-nav">
+      <button *ngIf="canViewYuvak"
+              class="member-tab yuvak" [class.active]="memberTab === 'yuvak'"
+              (click)="memberTab = 'yuvak'">
+        <i class="pi pi-user"></i> Yuvak
+        <span class="member-tab-count">{{ yuvakRecords.length }}</span>
+      </button>
+      <button *ngIf="canViewYuvati"
+              class="member-tab yuvati" [class.active]="memberTab === 'yuvati'"
+              (click)="memberTab = 'yuvati'">
+        <i class="pi pi-users"></i> Yuvati
+        <span class="member-tab-count">{{ yuvatiRecords.length }}</span>
+      </button>
+    </div>
+
+    <p-table *ngIf="memberTab === 'yuvak' && canViewYuvak"
+             [value]="yuvakRecords" [paginator]="true" [rows]="20"
+             [showCurrentPageReport]="true" currentPageReportTemplate="{first}-{last} of {totalRecords}"
+             styleClass="p-datatable-striped" [tableStyle]="{'min-width':'46rem'}">
       <ng-template pTemplate="header">
-        <tr><th>Name</th><th>ID</th><th style="width:80px">Type</th></tr>
+        <tr><th>Date</th><th>Name</th><th>Yuvak ID</th></tr>
       </ng-template>
       <ng-template pTemplate="body" let-a>
         <tr>
+          <td style="font-size:0.85rem;color:#6B7280;white-space:nowrap">{{ a.attendance_date | date:'dd MMM yyyy' }}</td>
           <td style="font-weight:500">{{ a.member_name }}</td>
-          <td><code style="font-size:0.78rem;background:#FFF0E0;padding:2px 6px;border-radius:4px">{{ a.member_code }}</code></td>
-          <td><p-tag [value]="a.member_type" [severity]="a.member_type==='yuvak'?'success':'info'" /></td>
+          <td><code class="id-badge-saffron">{{ a.member_code }}</code></td>
         </tr>
       </ng-template>
       <ng-template pTemplate="emptymessage">
-        <tr><td colspan="3" style="text-align:center;padding:30px;color:#9CA3AF">No records for this date</td></tr>
+        <tr><td colspan="3" class="empty-state">
+          <i class="pi pi-user" style="font-size:2rem;display:block;margin-bottom:10px;color:#D1D5DB"></i>
+          No Yuvak attendance for this period
+        </td></tr>
       </ng-template>
     </p-table>
-  </div>
+
+    <p-table *ngIf="memberTab === 'yuvati' && canViewYuvati"
+             [value]="yuvatiRecords" [paginator]="true" [rows]="20"
+             [showCurrentPageReport]="true" currentPageReportTemplate="{first}-{last} of {totalRecords}"
+             styleClass="p-datatable-striped" [tableStyle]="{'min-width':'46rem'}">
+      <ng-template pTemplate="header">
+        <tr><th>Date</th><th>Name</th><th>Yuvati ID</th></tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-a>
+        <tr>
+          <td style="font-size:0.85rem;color:#6B7280;white-space:nowrap">{{ a.attendance_date | date:'dd MMM yyyy' }}</td>
+          <td style="font-weight:500">{{ a.member_name }}</td>
+          <td><code class="id-badge-blue">{{ a.member_code }}</code></td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr><td colspan="3" class="empty-state">
+          <i class="pi pi-users" style="font-size:2rem;display:block;margin-bottom:10px;color:#D1D5DB"></i>
+          No Yuvati attendance for this period
+        </td></tr>
+      </ng-template>
+    </p-table>
+
+    <div *ngIf="!canViewYuvak && !canViewYuvati" class="empty-state">
+      <i class="pi pi-lock" style="font-size:2rem;display:block;margin-bottom:10px;color:#D1D5DB"></i>
+      You do not have permission to view attendance records.
+    </div>
+  </ng-container>
+
+  <!-- Name-wise tab -->
+  <ng-container *ngIf="activeTab === 'namewise'">
+    <div class="nm-toolbar">
+      <div class="member-tab-nav" style="border-bottom:none;padding:0;background:none;flex:1">
+        <button *ngIf="canViewYuvak"
+                class="member-tab yuvak" [class.active]="nmTab === 'yuvak'"
+                (click)="nmTab = 'yuvak'">
+          <i class="pi pi-user"></i> Yuvak
+          <span class="member-tab-count">{{ yuvakNameWise.length }}</span>
+        </button>
+        <button *ngIf="canViewYuvati"
+                class="member-tab yuvati" [class.active]="nmTab === 'yuvati'"
+                (click)="nmTab = 'yuvati'">
+          <i class="pi pi-users"></i> Yuvati
+          <span class="member-tab-count">{{ yuvatiNameWise.length }}</span>
+        </button>
+      </div>
+      <p-button label="Export CSV" icon="pi pi-download" [outlined]="true" size="small"
+                (click)="exportNameWiseCsv(nmTab)" />
+    </div>
+
+    <p-table *ngIf="nmTab === 'yuvak' && canViewYuvak"
+             [value]="yuvakNameWise" [paginator]="true" [rows]="20"
+             [showCurrentPageReport]="true" currentPageReportTemplate="{first}-{last} of {totalRecords}"
+             [sortField]="'total_present'" [sortOrder]="-1"
+             styleClass="p-datatable-striped" [tableStyle]="{'min-width':'38rem'}">
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width:3rem">#</th>
+          <th pSortableColumn="member_name">Name <p-sortIcon field="member_name" /></th>
+          <th style="width:120px">Yuvak ID</th>
+          <th style="width:130px;text-align:center" pSortableColumn="total_present">
+            Total Present <p-sortIcon field="total_present" />
+          </th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-r let-i="rowIndex">
+        <tr>
+          <td style="color:#9CA3AF;font-size:0.82rem">{{ i + 1 }}</td>
+          <td style="font-weight:500">{{ r.member_name }}</td>
+          <td><code class="id-badge-saffron">{{ r.member_code }}</code></td>
+          <td style="text-align:center"><span class="nm-count-badge saffron">{{ r.total_present }}</span></td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr><td colspan="4" class="empty-state">
+          <i class="pi pi-user" style="font-size:2rem;display:block;margin-bottom:10px;color:#D1D5DB"></i>
+          No Yuvak attendance in this period
+        </td></tr>
+      </ng-template>
+    </p-table>
+
+    <p-table *ngIf="nmTab === 'yuvati' && canViewYuvati"
+             [value]="yuvatiNameWise" [paginator]="true" [rows]="20"
+             [showCurrentPageReport]="true" currentPageReportTemplate="{first}-{last} of {totalRecords}"
+             [sortField]="'total_present'" [sortOrder]="-1"
+             styleClass="p-datatable-striped" [tableStyle]="{'min-width':'38rem'}">
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width:3rem">#</th>
+          <th pSortableColumn="member_name">Name <p-sortIcon field="member_name" /></th>
+          <th style="width:120px">Yuvati ID</th>
+          <th style="width:130px;text-align:center" pSortableColumn="total_present">
+            Total Present <p-sortIcon field="total_present" />
+          </th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-r let-i="rowIndex">
+        <tr>
+          <td style="color:#9CA3AF;font-size:0.82rem">{{ i + 1 }}</td>
+          <td style="font-weight:500">{{ r.member_name }}</td>
+          <td><code class="id-badge-blue">{{ r.member_code }}</code></td>
+          <td style="text-align:center"><span class="nm-count-badge blue">{{ r.total_present }}</span></td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr><td colspan="4" class="empty-state">
+          <i class="pi pi-users" style="font-size:2rem;display:block;margin-bottom:10px;color:#D1D5DB"></i>
+          No Yuvati attendance in this period
+        </td></tr>
+      </ng-template>
+    </p-table>
+
+    <div *ngIf="!canViewYuvak && !canViewYuvati" class="empty-state">
+      <i class="pi pi-lock" style="font-size:2rem;display:block;margin-bottom:10px;color:#D1D5DB"></i>
+      You do not have permission to view attendance records.
+    </div>
+  </ng-container>
+
+  <!-- Date-wise tab -->
+  <p-table *ngIf="activeTab === 'datewise'"
+           [value]="dateWise()" [paginator]="true" [rows]="20"
+           styleClass="p-datatable-striped" [tableStyle]="{'min-width':'40rem'}">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Date</th>
+        <th class="text-center">Yuvak</th>
+        <th class="text-center">Yuvati</th>
+        <th class="text-center">Total</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-d>
+      <tr>
+        <td style="font-weight:500">{{ d.attendance_date | date:'EEE, dd MMM yyyy' }}</td>
+        <td class="text-center"><span class="count-badge saffron">{{ d.yuvak_count }}</span></td>
+        <td class="text-center"><span class="count-badge blue">{{ d.yuvati_count }}</span></td>
+        <td class="text-center"><span class="count-badge green">{{ d.total }}</span></td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="4" class="empty-state">
+        <i class="pi pi-calendar" style="font-size:2rem;display:block;margin-bottom:10px;color:#D1D5DB"></i>
+        No data for this date range
+      </td></tr>
+    </ng-template>
+  </p-table>
+
 </div>
 
 <!-- QR Scanner Dialog -->

@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/app/admin/yuvak/yuvak-list/yuvak-list.component.scss"],
+  "sourcesContent": [":host { display: block; }\n\n.id-badge {\n  background: #FFF0E0;\n  color: #CC5500;\n  padding: 2px 8px;\n  border-radius: 5px;\n  font-size: 0.78rem;\n  font-weight: 600;\n  letter-spacing: 0.03em;\n}\n"],
+  "mappings": ";AAAA;AAAQ,WAAA;;AAER,CAAA;AACE,cAAA;AACA,SAAA;AACA,WAAA,IAAA;AACA,iBAAA;AACA,aAAA;AACA,eAAA;AACA,kBAAA;;",
+  "names": []
+}

@@ -1,24 +1,92 @@
 :host { display: block; }
 
+// ── Custom tab navigation ─────────────────────────────────────────
+.report-tabs {
+  display: flex;
+  background: #fff;
+  border-radius: 12px 12px 0 0;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  border-bottom: 2px solid #F3F4F6;
+  overflow: hidden;
+  margin-bottom: 0;
+}
+
+.rtab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 22px;
+  border: none;
+  background: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6B7280;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  white-space: nowrap;
+
+  .pi { font-size: 0.9rem; }
+
+  &.active {
+    color: #FF6B00;
+    border-bottom-color: #FF6B00;
+    background: #FFF9F5;
+    .pi { color: #FF6B00; }
+  }
+
+  &:hover:not(.active) {
+    color: #374151;
+    background: #F9FAFB;
+  }
+}
+
+// ── Tab body card ─────────────────────────────────────────────────
+.tab-body {
+  border-radius: 0 0 12px 12px;
+  padding: 20px;
+}
+
+// ── Report toolbar (filter row inside each tab) ───────────────────
 .report-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
   flex-wrap: wrap;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #F3F4F6;
 }
 
+.report-toolbar .filter-wrap { min-width: 280px; }
+
+.toolbar-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: #6B7280;
+}
+
+// ── No quiz hint ──────────────────────────────────────────────────
 .no-quiz-hint {
   text-align: center;
-  padding: 48px 24px;
+  padding: 56px 24px;
   color: #9CA3AF;
   font-size: 0.9rem;
   background: #F9FAFB;
   border: 2px dashed #E5E7EB;
   border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  .pi { font-size: 1.6rem; color: #C7D2FE; }
 }
 
+// ── Table utilities ───────────────────────────────────────────────
 .text-center { text-align: center; }
 
 .empty-msg {
@@ -52,18 +120,19 @@
 
 .correct-opt {
   display: inline-flex;
-  width: 28px;
+  min-width: 32px;
   height: 28px;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
+  border-radius: 6px;
   background: #ECFDF5;
   color: #059669;
   font-weight: 800;
   font-size: 0.85rem;
+  padding: 0 6px;
 }
 
-/* Accuracy bar */
+// ── Accuracy bar ──────────────────────────────────────────────────
 .acc-bar {
   position: relative;
   background: #F3F4F6;
@@ -78,8 +147,7 @@
 
   .acc-fill {
     position: absolute;
-    left: 0;
-    top: 0;
+    left: 0; top: 0;
     height: 100%;
     background: linear-gradient(90deg, #6EE7B7, #10B981);
     transition: width 0.4s;
@@ -94,7 +162,7 @@
   }
 }
 
-/* Gender summary cards */
+// ── Gender summary cards ──────────────────────────────────────────
 .gender-summary {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -114,19 +182,21 @@
 
   &:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
 
-  &.male   { border-top: 3px solid #3B82F6; }
-  &.female { border-top: 3px solid #EC4899; }
-  &.other  { border-top: 3px solid #8B5CF6; }
-  &.total  { border-top: 3px solid #0D9488; }
+  &.male   { border-top: 3px solid #3B82F6; .gender-icon-wrap { background: #EFF6FF; color: #3B82F6; } }
+  &.female { border-top: 3px solid #EC4899; .gender-icon-wrap { background: #FDF2F8; color: #EC4899; } }
+  &.other  { border-top: 3px solid #8B5CF6; .gender-icon-wrap { background: #F5F3FF; color: #8B5CF6; } }
+  &.total  { border-top: 3px solid #0D9488; .gender-icon-wrap { background: #F0FDFA; color: #0D9488; } }
 }
 
-.gender-icon {
-  font-size: 1.6rem;
-  margin-bottom: 10px;
-  .male & { color: #3B82F6; }
-  .female & { color: #EC4899; }
-  .other & { color: #8B5CF6; }
-  .total & { color: #0D9488; }
+.gender-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 10px;
+  .pi { font-size: 1.2rem; }
 }
 
 .gender-count {
@@ -138,27 +208,23 @@
 }
 
 .gender-label {
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   font-weight: 600;
   color: #9CA3AF;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
 }
 
-.gender-section {
-  margin-bottom: 24px;
-}
+.gender-section { margin-bottom: 24px; }
 
 .gender-section-title {
-  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.92rem;
   font-weight: 700;
   color: #374151;
   margin-bottom: 10px;
-  padding-left: 4px;
-  border-left: 3px solid #0D9488;
   padding-left: 10px;
-}
-
-::ng-deep .p-tabview-panels {
-  padding: 20px 0 0 0 !important;
+  border-left: 3px solid #0D9488;
 }

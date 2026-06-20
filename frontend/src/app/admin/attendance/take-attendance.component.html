@@ -1,0 +1,107 @@
+<!-- ── Module Hero ─────────────────────────────────────────────── -->
+<div class="module-hero">
+
+
+  <!-- ── Scanner Layout ─────────────────────────────────────────── -->
+  <div class="ta-layout">
+
+    <!-- Scanner Card -->
+    <div class="table-card scanner-card">
+
+      <!-- Card header -->
+      <div class="sc-header">
+        <div class="sc-header-left">
+          <i class="pi pi-qrcode sc-icon"></i>
+          <span>QR Scanner</span>
+        </div>
+        <div class="sc-header-right">
+          <button type="button" class="flip-btn" (click)="toggleCamera()" title="Flip Camera">
+            <i class="pi pi-sync"></i> Flip
+          </button>
+        </div>
+      </div>
+
+      <!-- Attendance date -->
+      <div class="field scan-date-row">
+        <label>Date</label>
+        <input pInputText type="date" [(ngModel)]="scanDate" [max]="today">
+      </div>
+
+      <!-- Camera area -->
+      <div class="cam-wrap">
+
+        <div class="cam-loading" *ngIf="scannerLoading">
+          <i class="pi pi-spin pi-spinner"></i>
+          <span>Starting camera…</span>
+        </div>
+
+        <div class="cam-hint" *ngIf="scannerActive && !scanResult()">
+          <i class="pi pi-qrcode"></i>
+          <span>Point camera at QR code</span>
+        </div>
+
+        <!-- html5-qrcode mount point -->
+        <div id="ta-qr-region"></div>
+
+        <!-- Result overlay -->
+        <div class="result-overlay" *ngIf="scanResult()" [class.res-success]="scanResult()!.type === 'success'"
+          [class.res-duplicate]="scanResult()!.type === 'duplicate'"
+          [class.res-invalid]="scanResult()!.type === 'invalid'">
+
+          <!-- Success -->
+          <ng-container *ngIf="scanResult()!.type === 'success'">
+            <div class="res-icon-ring success"><i class="pi pi-check-circle"></i></div>
+            <div class="res-status">Attendance Marked!</div>
+            <div class="res-name">{{ scanResult()!.data?.name }}</div>
+            <div class="res-badges">
+              <span class="res-badge id">{{ scanResult()!.data?.member_code }}</span>
+              <span class="res-badge type" [class.saffron]="scanResult()!.data?.member_type === 'yuvak'"
+                [class.blue]="scanResult()!.data?.member_type === 'yuvati'">
+                {{ scanResult()!.data?.member_type | titlecase }}
+              </span>
+            </div>
+            <div class="res-time"><i class="pi pi-clock"></i> {{ scanResult()!.data?.attendance_time }}</div>
+          </ng-container>
+
+          <!-- Duplicate -->
+          <ng-container *ngIf="scanResult()!.type === 'duplicate'">
+            <div class="res-icon-ring duplicate"><i class="pi pi-clock"></i></div>
+            <div class="res-status">Already Marked</div>
+            <div class="res-name">{{ scanResult()!.data?.name }}</div>
+            <div class="res-badges">
+              <span class="res-badge id">{{ scanResult()!.data?.member_code }}</span>
+            </div>
+            <div class="res-time"><i class="pi pi-clock"></i> {{ scanResult()!.data?.attendance_time }}</div>
+          </ng-container>
+
+          <!-- Invalid -->
+          <ng-container *ngIf="scanResult()!.type === 'invalid'">
+            <div class="res-icon-ring invalid"><i class="pi pi-times-circle"></i></div>
+            <div class="res-status">Invalid QR Code</div>
+            <div class="res-sub">Not recognised. Try again.</div>
+          </ng-container>
+
+        </div><!-- /result-overlay -->
+      </div><!-- /cam-wrap -->
+
+      <!-- Camera start fallback -->
+      <button type="button" class="start-cam-btn" *ngIf="!scannerActive && !scannerLoading" (click)="startScanner()">
+        <i class="pi pi-camera"></i> Start Camera
+      </button>
+
+      <!-- Manual entry -->
+      <div class="or-divider">— or enter manually —</div>
+
+      <div class="field">
+        <label>UUID or Member ID</label>
+        <div style="display:flex;gap:8px">
+          <input pInputText [(ngModel)]="scanInput" placeholder="e.g. TTH01-0001 or UUID" (keydown.enter)="markByUuid()"
+            style="flex:1">
+          <p-button icon="pi pi-check" (click)="markByUuid()" [disabled]="!scanInput" [loading]="marking"
+            pTooltip="Mark Attendance" />
+        </div>
+      </div>
+
+    </div><!-- /scanner-card -->
+
+  </div>

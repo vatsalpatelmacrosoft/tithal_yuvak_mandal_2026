@@ -4,7 +4,13 @@
 function requireAuth(): array
 {
     global $pdo;
+
+    // Prefer Authorization header; fall back to ?token= query param (used for file downloads)
     $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+    if (!$authHeader && !empty($_GET['token'])) {
+        $authHeader = 'Bearer ' . $_GET['token'];
+    }
+
     if (!preg_match('/^Bearer\s+(.+)$/i', $authHeader, $m)) {
         sendError(401, 'Unauthorized: No token provided');
     }
