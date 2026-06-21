@@ -12,7 +12,7 @@
   </div>
   <div class="form-hero-actions">
     <p-button label="Cancel" [outlined]="true" (click)="router.navigate(['/admin/yuvak'])" />
-    <p-button [label]="isEdit ? 'Update' : 'Save'" icon="pi pi-save" [loading]="saving" (click)="onSubmit()" />
+    <p-button *ngIf="isEdit ? canUpdate : canCreate" [label]="isEdit ? 'Update' : 'Save'" icon="pi pi-save" [loading]="saving" (click)="onSubmit()" />
   </div>
 </div>
 

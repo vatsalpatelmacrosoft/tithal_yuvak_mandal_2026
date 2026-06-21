@@ -33,8 +33,9 @@
     </div>
     <p class="status-hint">Please come back at the scheduled time to attempt this quiz.</p>
     <div class="status-footer">
-      <p-button label="Back to Quiz Info" icon="pi pi-arrow-left" [outlined]="true"
-                (click)="step.set('landing')" styleClass="w-full" />
+      <button type="button" class="qbtn qbtn-secondary w-full" (click)="step.set('landing')">
+        <i class="pi pi-arrow-left"></i> Back to Quiz Info
+      </button>
     </div>
   </div>
 
@@ -72,8 +73,9 @@
       </div>
     </div>
     <div class="quiz-footer">
-      <p-button label="Start Quiz" icon="pi pi-play" (click)="goSelectType()"
-                styleClass="btn-primary w-full" />
+      <button type="button" class="qbtn qbtn-primary w-full" (click)="goSelectType()">
+        <i class="pi pi-play"></i> Start Quiz
+      </button>
     </div>
   </div>
 
@@ -104,39 +106,75 @@
   <div class="quiz-card" *ngIf="step() === 'register-yuvak'">
     <div class="quiz-header small">
       <div class="quiz-icon small"><i class="pi pi-id-card"></i></div>
-      <h2>Enter Yuvak ID</h2>
-      <p>Your Yuvak ID was issued at the time of registration</p>
+      <h2>Enter Yuvak ID or Mobile Number</h2>
+      <p>Enter your registered Yuvak ID or 10-digit mobile number</p>
     </div>
     <div class="quiz-body">
       <form [formGroup]="yuvakForm" (ngSubmit)="validateYuvak()">
-        <div class="field" style="margin-bottom:16px">
-          <label class="req">Yuvak ID</label>
-          <input pInputText formControlName="yuvak_id" placeholder="e.g. YUVAKAHM000001"
-                 style="width:100%;text-transform:uppercase"
-                 [ngClass]="{'ng-invalid ng-dirty': yuvakForm.get('yuvak_id')?.invalid && yuvakForm.get('yuvak_id')?.touched}">
+        <div class="field" style="margin-bottom:6px">
+          <label class="req">Yuvak ID or Mobile Number</label>
+          <div class="identifier-wrap">
+            <input pInputText formControlName="identifier" placeholder="Enter Yuvak ID or 10-digit Mobile No."
+              style="width:100%"
+              [ngClass]="{'ng-invalid ng-dirty': yuvakForm.get('identifier')?.invalid && yuvakForm.get('identifier')?.touched}">
+            <span class="id-type-badge mobile" *ngIf="identifierType === 'mobile'">
+              <i class="pi pi-mobile"></i> Mobile
+            </span>
+            <span class="id-type-badge yuvak" *ngIf="identifierType === 'yuvak'">
+              <i class="pi pi-id-card"></i> Yuvak ID
+            </span>
+          </div>
+          <!-- Phone-specific errors -->
           <small class="p-error"
-                 *ngIf="yuvakForm.get('yuvak_id')?.invalid && yuvakForm.get('yuvak_id')?.touched">
-            Yuvak ID is required
+            *ngIf="yuvakForm.get('identifier')?.errors?.['phoneLength'] && yuvakForm.get('identifier')?.touched">
+            Mobile number must be exactly 10 digits
+          </small>
+          <small class="p-error"
+            *ngIf="yuvakForm.get('identifier')?.errors?.['phoneStart'] && yuvakForm.get('identifier')?.touched">
+            Enter a valid mobile number (must start with 6, 7, 8 or 9)
+          </small>
+          <small class="p-error"
+            *ngIf="yuvakForm.get('identifier')?.errors?.['required'] && yuvakForm.get('identifier')?.touched">
+            Yuvak ID or Mobile Number is required
+          </small>
+          <!-- Type hint -->
+          <small class="id-hint" *ngIf="identifierType === 'yuvak' && !yuvakForm.get('identifier')?.invalid">
+            <i class="pi pi-info-circle"></i> Yuvak ID will be verified
           </small>
         </div>
-        <p-button type="submit" label="Validate ID" icon="pi pi-search"
-                  [loading]="validating" styleClass="btn-primary w-full" />
+        <div style="margin-bottom:16px"></div>
+        <button type="submit" class="qbtn qbtn-primary w-full" [disabled]="validating">
+          <i class="pi" [class.pi-search]="!validating" [class.pi-spin]="validating"
+            [class.pi-spinner]="validating"></i>
+          Validate
+        </button>
       </form>
 
-      <!-- Yuvak validated info -->
+      <!-- Validated member info -->
       <div class="yuvak-found" *ngIf="yuvakInfo">
         <i class="pi pi-check-circle" style="color:#10B981;font-size:1.4rem"></i>
-        <div>
+        <div style="flex:1">
           <div style="font-weight:700;color:#1F2937">{{ yuvakInfo.full_name }}</div>
-          <div style="font-size:0.82rem;color:#6B7280">{{ yuvakInfo.xetra_name }} · {{ yuvakInfo.mandal_name }}</div>
+          <div style="font-size:0.82rem;color:#6B7280;margin-top:2px">
+            {{ yuvakInfo.xetra_name }} · {{ yuvakInfo.mandal_name }}
+          </div>
+          <div style="font-size:0.76rem;margin-top:4px">
+            <span style="background:#EEF2FF;color:#3730A3;padding:2px 8px;border-radius:20px;font-weight:700">
+              {{ yuvakInfo.member_type === 'yuvati' ? 'Yuvati' : 'Yuvak' }} · {{ yuvakInfo.member_id }}
+            </span>
+          </div>
         </div>
       </div>
     </div>
     <div class="quiz-footer quiz-footer-split">
-      <p-button label="Back" icon="pi pi-arrow-left" [outlined]="true"
-                (click)="step.set('select-type')" styleClass="btn-back" />
-      <p-button label="Start Quiz" icon="pi pi-play" [disabled]="!yuvakInfo"
-                [loading]="validating" (click)="startAsRegistered()" styleClass="btn-primary" />
+      <button type="button" class="qbtn qbtn-secondary" (click)="step.set('select-type')">
+        <i class="pi pi-arrow-left"></i> Back
+      </button>
+      <button type="button" class="qbtn qbtn-primary" [disabled]="!yuvakInfo || validating"
+        (click)="startAsRegistered()">
+        <i class="pi" [class.pi-play]="!validating" [class.pi-spin]="validating" [class.pi-spinner]="validating"></i>
+        Start Quiz
+      </button>
     </div>
   </div>
 
@@ -152,29 +190,29 @@
         <div class="field" style="margin-bottom:16px">
           <label class="req">Full Name</label>
           <input pInputText formControlName="name" placeholder="Enter your full name" style="width:100%"
-                 [ngClass]="{'ng-invalid ng-dirty': externalForm.get('name')?.invalid && externalForm.get('name')?.touched}">
-          <small class="p-error"
-                 *ngIf="externalForm.get('name')?.invalid && externalForm.get('name')?.touched">
+            [ngClass]="{'ng-invalid ng-dirty': externalForm.get('name')?.invalid && externalForm.get('name')?.touched}">
+          <small class="p-error" *ngIf="externalForm.get('name')?.invalid && externalForm.get('name')?.touched">
             Full name is required
           </small>
         </div>
         <div class="field" style="margin-bottom:20px">
           <label class="req">Gender</label>
-          <p-dropdown [options]="genderOptions" formControlName="gender"
-                      optionLabel="label" optionValue="value"
-                      placeholder="Select gender" styleClass="w-full" />
-          <small class="p-error"
-                 *ngIf="externalForm.get('gender')?.invalid && externalForm.get('gender')?.touched">
+          <p-dropdown [options]="genderOptions" formControlName="gender" optionLabel="label" optionValue="value"
+            placeholder="Select gender" styleClass="w-full" />
+          <small class="p-error" *ngIf="externalForm.get('gender')?.invalid && externalForm.get('gender')?.touched">
             Gender is required
           </small>
         </div>
       </form>
     </div>
     <div class="quiz-footer quiz-footer-split">
-      <p-button label="Back" icon="pi pi-arrow-left" [outlined]="true"
-                (click)="step.set('select-type')" styleClass="btn-back" />
-      <p-button label="Start Quiz" icon="pi pi-play" [loading]="validating"
-                (click)="startAsExternal()" styleClass="btn-primary" />
+      <button type="button" class="qbtn qbtn-secondary" (click)="step.set('select-type')">
+        <i class="pi pi-arrow-left"></i> Back
+      </button>
+      <button type="button" class="qbtn qbtn-primary" [disabled]="validating" (click)="startAsExternal()">
+        <i class="pi" [class.pi-play]="!validating" [class.pi-spin]="validating" [class.pi-spinner]="validating"></i>
+        Start Quiz
+      </button>
     </div>
   </div>
 
@@ -196,10 +234,8 @@
 
         <!-- MCQ: A/B/C/D buttons -->
         <div class="options-grid" *ngIf="!q.question_type || q.question_type === 'mcq'">
-          <button class="opt-btn" *ngFor="let key of ['a','b','c','d']"
-                  [class.selected]="answers[q.id] === key"
-                  [style.display]="optionText(q,key) ? '' : 'none'"
-                  (click)="selectAnswer(q.id, key)">
+          <button class="opt-btn" *ngFor="let key of ['a','b','c','d']" [class.selected]="answers[q.id] === key"
+            [style.display]="optionText(q,key) ? '' : 'none'" (click)="selectAnswer(q.id, key)">
             <span class="opt-key">{{ key.toUpperCase() }}</span>
             <span class="opt-text">{{ optionText(q, key) }}</span>
           </button>
@@ -208,8 +244,7 @@
         <!-- Radio: custom option buttons -->
         <div class="options-grid" *ngIf="q.question_type === 'radio'">
           <button class="opt-btn" *ngFor="let opt of getSelectOptions(q); let oi=index"
-                  [class.selected]="answers[q.id] === opt.value"
-                  (click)="selectAnswer(q.id, opt.value)">
+            [class.selected]="answers[q.id] === opt.value" (click)="selectAnswer(q.id, opt.value)">
             <span class="opt-key">{{ oi + 1 }}</span>
             <span class="opt-text">{{ opt.label }}</span>
           </button>
@@ -217,18 +252,15 @@
 
         <!-- Select: dropdown -->
         <div class="select-wrap" *ngIf="q.question_type === 'select'">
-          <p-dropdown [options]="getSelectOptions(q)"
-                      [ngModel]="getAnswer(q.id)"
-                      (ngModelChange)="setAnswer(q.id, $event)"
-                      optionLabel="label" optionValue="value"
-                      placeholder="Choose your answer…" styleClass="w-full" />
+          <p-dropdown [options]="getSelectOptions(q)" [ngModel]="getAnswer(q.id)"
+            (ngModelChange)="setAnswer(q.id, $event)" optionLabel="label" optionValue="value"
+            placeholder="Choose your answer…" styleClass="w-full" />
         </div>
 
         <!-- Input: text field -->
         <div class="input-wrap" *ngIf="q.question_type === 'input'">
-          <input pInputText [value]="getAnswer(q.id)"
-                 (input)="setAnswer(q.id, $any($event.target).value)"
-                 placeholder="Type your answer here…" style="width:100%" />
+          <input pInputText [value]="getAnswer(q.id)" (input)="setAnswer(q.id, $any($event.target).value)"
+            placeholder="Type your answer here…" style="width:100%" />
         </div>
       </div>
     </div>
@@ -240,8 +272,10 @@
           ({{ questions().length - answeredCount() }} unanswered)
         </span>
       </div>
-      <p-button label="Submit Quiz" icon="pi pi-send" [loading]="submitting"
-                (click)="submitQuiz()" styleClass="btn-submit" />
+      <button type="button" class="qbtn qbtn-primary" [disabled]="submitting" (click)="submitQuiz()">
+        <i class="pi" [class.pi-send]="!submitting" [class.pi-spin]="submitting" [class.pi-spinner]="submitting"></i>
+        Submit Quiz
+      </button>
     </div>
   </div>
 
@@ -249,7 +283,7 @@
   <div class="quiz-card result-card" *ngIf="step() === 'result'">
     <div class="result-icon" [class.pass]="result()?.percentage >= 40">
       <i class="pi" [class.pi-check-circle]="result()?.percentage >= 40"
-                    [class.pi-times-circle]="result()?.percentage < 40"></i>
+        [class.pi-times-circle]="result()?.percentage < 40"></i>
     </div>
     <div class="result-title" [class.pass]="result()?.percentage >= 40">
       {{ result()?.percentage >= 40 ? '🎉 Well done!' : 'Better luck next time' }}

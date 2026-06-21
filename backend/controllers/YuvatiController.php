@@ -146,6 +146,51 @@ class YuvatiController
         sendSuccess([], 'Yuvati archived successfully');
     }
 
+    public function exportCsv(): void
+    {
+        $where = "WHERE y.status = 'active'";
+        $params = [];
+
+        if (!empty($_GET['search'])) {
+            $s = '%' . $_GET['search'] . '%';
+            $where .= " AND (y.first_name LIKE ? OR y.last_name LIKE ? OR y.mo_number LIKE ? OR y.yuvati_id LIKE ?)";
+            $params = [$s, $s, $s, $s];
+        }
+        if (!empty($_GET['xetra_id']))  { $where .= ' AND y.xetra_id = ?';  $params[] = (int)$_GET['xetra_id']; }
+        if (!empty($_GET['mandal_id'])) { $where .= ' AND y.mandal_id = ?'; $params[] = (int)$_GET['mandal_id']; }
+
+        $stmt = $this->pdo->prepare("
+            SELECT y.yuvati_id, y.first_name, y.middle_name, y.last_name,
+                   y.mo_number, y.whatsapp_number, y.email, y.address,
+                   y.is_karyakar, x.name AS xetra_name, m.name AS mandal_name,
+                   DATE(y.created_at) AS joined_on
+            FROM yuvatis y
+            JOIN xetras  x ON x.id = y.xetra_id
+            JOIN mandals m ON m.id = y.mandal_id
+            $where ORDER BY y.first_name, y.last_name
+        ");
+        $stmt->execute($params);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="yuvati_export_' . date('Ymd_His') . '.csv"');
+        header('Cache-Control: no-store, no-cache');
+        header('Pragma: no-cache');
+
+        $out = fopen('php://output', 'w');
+        fputcsv($out, ['Yuvati ID','First Name','Middle Name','Last Name','Mobile','WhatsApp','Email','Address','Karyakar','Xetra','Mandal','Joined On'], ',', '"', '\\');
+        foreach ($rows as $r) {
+            fputcsv($out, [
+                $r['yuvati_id'], $r['first_name'], $r['middle_name'] ?? '',
+                $r['last_name'], $r['mo_number'], $r['whatsapp_number'] ?? '',
+                $r['email'] ?? '', $r['address'] ?? '', $r['is_karyakar'],
+                $r['xetra_name'], $r['mandal_name'], $r['joined_on'],
+            ], ',', '"', '\\');
+        }
+        fclose($out);
+        exit;
+    }
+
     public function qrCode(string $id): void
     {
         $stmt = $this->pdo->prepare("SELECT uuid, yuvati_id FROM yuvatis WHERE uuid = ? AND status = 'active'");

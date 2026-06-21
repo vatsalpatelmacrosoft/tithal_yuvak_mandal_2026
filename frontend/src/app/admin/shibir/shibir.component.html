@@ -7,7 +7,7 @@
       <span class="hero-badge">{{ rows().length }} Shibir</span>
     </div>
   </div>
-  <div class="hero-right">
+  <div class="hero-right" *ngIf="canCreate">
     <p-button label="Add Shibir" icon="pi pi-plus" (click)="openForm()" />
   </div>
 </div>
@@ -31,9 +31,9 @@
         <td>{{ s.date | date:'dd MMM yyyy' }}</td>
         <td><code style="font-size:0.78rem;background:#F3F4F6;padding:2px 8px;border-radius:4px;color:#6B7280">{{ s.slug }}</code></td>
         <td>
-          <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" size="small"
+          <p-button *ngIf="canUpdate" icon="pi pi-pencil" [rounded]="true" [text]="true" size="small"
             (click)="openForm(s)" pTooltip="Edit" tooltipPosition="top" />
-          <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small"
+          <p-button *ngIf="canDelete" icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small"
             (click)="confirmDelete(s)" pTooltip="Archive" tooltipPosition="top" />
         </td>
       </tr>
@@ -52,8 +52,10 @@
     <div style="display:flex;justify-content:space-between;align-items:center;flex:1;margin-right:8px">
       <span style="font-weight:700;font-size:1rem;color:#1F2937">{{ editing ? 'Edit Shibir' : 'Add Shibir' }}</span>
       <div style="display:flex;gap:8px">
-        <p-button label="Cancel" [outlined]="true" size="small" (click)="closeForm()" />
-        <p-button label="Save" size="small" [loading]="saving" (click)="save()" />
+        <button type="button" class="rbtn rbtn-cancel" (click)="closeForm()">Cancel</button>
+        <button type="button" class="rbtn rbtn-save" *ngIf="editing ? canUpdate : canCreate" [disabled]="saving" (click)="save()">
+          <i class="pi" [class.pi-save]="!saving" [class.pi-spin]="saving" [class.pi-spinner]="saving"></i> Save
+        </button>
       </div>
     </div>
   </ng-template>
@@ -74,4 +76,4 @@
   </form>
 </p-sidebar>
 
-<p-confirmDialog [style]="{width:'420px'}" />
+

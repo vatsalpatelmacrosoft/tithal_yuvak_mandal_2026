@@ -1,1 +1,35 @@
 :host { display: block; }
+
+.member-type-radios {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.mtype-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1.5px solid #E5E7EB;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #374151;
+  transition: all 0.18s;
+  user-select: none;
+
+  &:hover { border-color: #9CA3AF; background: #F9FAFB; }
+
+  &.selected {
+    border-color: #1A237E;
+    background: #EEF2FF;
+    color: #1A237E;
+  }
+
+  span { flex: 1; }
+}
+
+.field label.required::after { content: ' *'; color: #EF4444; }

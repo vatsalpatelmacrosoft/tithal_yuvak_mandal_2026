@@ -8,6 +8,7 @@ import { InputTextareaModule } from 'primeng/inputtextarea';
 import { DropdownModule } from 'primeng/dropdown';
 import { ChipsModule } from 'primeng/chips';
 import { ApiService } from '../../../core/services/api.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
@@ -21,9 +22,13 @@ import { ToastService } from '../../../core/services/toast.service';
 export class YuvakFormComponent implements OnInit {
   private fb    = inject(FormBuilder);
   private api   = inject(ApiService);
+  private auth  = inject(AuthService);
   private toast = inject(ToastService);
   readonly router = inject(Router);
   private route = inject(ActivatedRoute);
+
+  get canCreate() { return this.auth.hasPermission('yuvak', 'can_create'); }
+  get canUpdate() { return this.auth.hasPermission('yuvak', 'can_update'); }
 
   karyakarOptions = [
     { label: 'No',       value: 'no' },

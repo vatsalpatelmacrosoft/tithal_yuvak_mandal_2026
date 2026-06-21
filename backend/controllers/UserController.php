@@ -8,14 +8,17 @@ class UserController
     public function index(): void
     {
         $stmt = $this->pdo->query("
-            SELECT u.id, u.uuid, u.mo_number, u.status, u.last_login,
-                   y.first_name, y.last_name, y.yuvak_id,
-                   r.name as role_name
+            SELECT u.id, u.uuid, u.mo_number, u.status, u.last_login, u.member_type,
+                   COALESCE(y.first_name, yt.first_name) AS first_name,
+                   COALESCE(y.last_name,  yt.last_name)  AS last_name,
+                   COALESCE(y.yuvak_id,   yt.yuvati_id)  AS yuvak_id,
+                   r.name AS role_name
             FROM users u
-            JOIN yuvaks y ON y.id = u.yuvak_id
-            JOIN roles  r ON r.id = u.role_id
+            LEFT JOIN yuvaks  y  ON y.id  = u.yuvak_id
+            LEFT JOIN yuvatis yt ON yt.id = u.yuvati_id
+            JOIN roles r ON r.id = u.role_id
             WHERE u.status = 'active'
-            ORDER BY y.first_name
+            ORDER BY COALESCE(y.first_name, yt.first_name)
         ");
         sendSuccess($stmt->fetchAll());
     }
@@ -23,50 +26,75 @@ class UserController
     public function show(string $id): void
     {
         $stmt = $this->pdo->prepare("
-            SELECT u.*, y.first_name, y.last_name, y.yuvak_id, r.name as role_name
-            FROM users u JOIN yuvaks y ON y.id=u.yuvak_id JOIN roles r ON r.id=u.role_id
+            SELECT u.uuid, u.mo_number, u.status, u.last_login, u.member_type,
+                   COALESCE(y.first_name, yt.first_name) AS first_name,
+                   COALESCE(y.last_name,  yt.last_name)  AS last_name,
+                   COALESCE(y.yuvak_id,   yt.yuvati_id)  AS yuvak_id,
+                   r.name AS role_name
+            FROM users u
+            LEFT JOIN yuvaks  y  ON y.id  = u.yuvak_id
+            LEFT JOIN yuvatis yt ON yt.id = u.yuvati_id
+            JOIN roles r ON r.id = u.role_id
             WHERE u.uuid=? AND u.status='active'
         ");
         $stmt->execute([$id]);
         $user = $stmt->fetch();
         if (!$user) sendError(404, 'User not found');
-        unset($user['password']);
         sendSuccess($user);
     }
 
     public function store(array $body): void
     {
         $errors = [];
-        if (empty($body['yuvak_uuid'])) $errors['yuvak_uuid'] = 'Yuvak is required';
-        if (empty($body['role_uuid']))  $errors['role_uuid']  = 'Role is required';
-        if (empty($body['password']))   $errors['password']   = 'Password is required';
+        $mType  = $body['member_type'] ?? 'yuvak';
+        if (!in_array($mType, ['yuvak', 'yuvati'])) $mType = 'yuvak';
+
+        $memberUuid = $body['member_uuid'] ?? $body['yuvak_uuid'] ?? null;
+        if (empty($memberUuid))       $errors['member_uuid'] = 'Member selection is required';
+        if (empty($body['role_uuid'])) $errors['role_uuid']  = 'Role is required';
+        if (empty($body['password']))  $errors['password']   = 'Password is required';
         if (strlen($body['password'] ?? '') < 8) $errors['password'] = 'Password must be at least 8 characters';
         if ($errors) sendValidationError($errors);
 
-        // Get yuvak
-        $yStmt = $this->pdo->prepare("SELECT id, mo_number FROM yuvaks WHERE uuid=? AND status='active'");
-        $yStmt->execute([$body['yuvak_uuid']]);
-        $yuvak = $yStmt->fetch();
-        if (!$yuvak) sendError(422, 'Yuvak not found or inactive');
+        if ($mType === 'yuvati') {
+            $mStmt = $this->pdo->prepare("SELECT id, mo_number FROM yuvatis WHERE uuid=? AND status='active'");
+            $mStmt->execute([$memberUuid]);
+            $member = $mStmt->fetch();
+            if (!$member) sendError(422, 'Yuvati not found or inactive');
 
-        // Get role
-        $rStmt = $this->pdo->prepare("SELECT id FROM roles WHERE uuid=? AND status='active'");
-        $rStmt->execute([$body['role_uuid']]);
-        $role = $rStmt->fetch();
-        if (!$role) sendError(422, 'Role not found');
+            $chk = $this->pdo->prepare("SELECT id FROM users WHERE yuvati_id=? AND status='active'");
+            $chk->execute([$member['id']]);
+            if ($chk->fetch()) sendValidationError(['member_uuid' => 'User already exists for this Yuvati']);
 
-        // Check if user already exists for this yuvak
-        $chk = $this->pdo->prepare("SELECT id FROM users WHERE yuvak_id=? AND status='active'");
-        $chk->execute([$yuvak['id']]);
-        if ($chk->fetch()) sendValidationError(['yuvak_uuid' => 'User already exists for this Yuvak']);
+            $uuid = $this->uuid();
+            $hash = password_hash($body['password'], PASSWORD_BCRYPT, ['cost' => 12]);
+            $this->pdo->prepare("INSERT INTO users (uuid,yuvati_id,member_type,role_id,mo_number,password) VALUES (?,?,'yuvati',?,?,?)")
+                ->execute([$uuid, $member['id'], $this->getRoleId($body['role_uuid']), $member['mo_number'], $hash]);
+        } else {
+            $mStmt = $this->pdo->prepare("SELECT id, mo_number FROM yuvaks WHERE uuid=? AND status='active'");
+            $mStmt->execute([$memberUuid]);
+            $member = $mStmt->fetch();
+            if (!$member) sendError(422, 'Yuvak not found or inactive');
 
-        $uuid = $this->uuid();
-        $hash = password_hash($body['password'], PASSWORD_BCRYPT, ['cost' => 12]);
+            $chk = $this->pdo->prepare("SELECT id FROM users WHERE yuvak_id=? AND status='active'");
+            $chk->execute([$member['id']]);
+            if ($chk->fetch()) sendValidationError(['member_uuid' => 'User already exists for this Yuvak']);
 
-        $this->pdo->prepare("INSERT INTO users (uuid,yuvak_id,role_id,mo_number,password) VALUES (?,?,?,?,?)")
-            ->execute([$uuid, $yuvak['id'], $role['id'], $yuvak['mo_number'], $hash]);
+            $uuid = $this->uuid();
+            $hash = password_hash($body['password'], PASSWORD_BCRYPT, ['cost' => 12]);
+            $this->pdo->prepare("INSERT INTO users (uuid,yuvak_id,member_type,role_id,mo_number,password) VALUES (?,?,'yuvak',?,?,?)")
+                ->execute([$uuid, $member['id'], $this->getRoleId($body['role_uuid']), $member['mo_number'], $hash]);
+        }
 
         $this->show($uuid);
+    }
+
+    private function getRoleId(string $roleUuid): int {
+        $r = $this->pdo->prepare("SELECT id FROM roles WHERE uuid=? AND status='active'");
+        $r->execute([$roleUuid]);
+        $role = $r->fetch();
+        if (!$role) sendError(422, 'Role not found');
+        return (int)$role['id'];
     }
 
     public function update(string $id, array $body): void

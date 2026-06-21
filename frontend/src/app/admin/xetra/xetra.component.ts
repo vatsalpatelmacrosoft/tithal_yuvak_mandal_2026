@@ -5,7 +5,6 @@ import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { SidebarModule } from 'primeng/sidebar';
 import { InputTextModule } from 'primeng/inputtext';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
@@ -17,7 +16,7 @@ import { ToastService } from '../../core/services/toast.service';
   selector: 'app-xetra',
   standalone: true,
   imports: [ReactiveFormsModule, NgIf, TableModule, ButtonModule, SidebarModule,
-            InputTextModule, ConfirmDialogModule, TagModule, TooltipModule],
+            InputTextModule, TagModule, TooltipModule],
   templateUrl: './xetra.component.html',
   styleUrls: ['./xetra.component.scss']
 })
@@ -67,7 +66,7 @@ export class XetraComponent implements OnInit {
       message: `Archive <strong>${x.name}</strong>? This action can be undone by admin.`,
       header: 'Confirm Archive', icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Archive', rejectLabel: 'Cancel',
-      acceptButtonStyleClass: 'p-button-danger', rejectButtonStyleClass: 'p-button-text',
+      defaultFocus: 'reject',
       accept: () => this.api.delete(`xetra/${x.uuid}`).subscribe({
         next: () => { this.toast.success('Xetra archived'); this.load(); }
       })

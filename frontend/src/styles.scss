@@ -619,6 +619,39 @@ button { cursor: pointer; border: none; background: none; font: inherit; }
 .dash-stat-val { font-size: 2rem; font-weight: 700; color: var(--gray-800); line-height: 1; }
 .dash-stat-lbl { font-size: 0.8rem; color: var(--gray-500); }
 
+/* ── Action buttons (native, zero PrimeNG dependency) ───────── */
+.rbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.18s, border-color 0.18s, box-shadow 0.18s;
+  white-space: nowrap;
+
+  &:disabled { opacity: 0.65; cursor: not-allowed; }
+
+  &.rbtn-cancel {
+    background: #fff;
+    border: 1.5px solid #D1D5DB;
+    color: #374151;
+    &:hover:not(:disabled) { background: #F3F4F6; border-color: #9CA3AF; }
+  }
+
+  &.rbtn-save {
+    background: linear-gradient(135deg, #1A237E, #3949AB);
+    border: 1px solid #1A237E;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(26,35,126,0.25);
+    &:hover:not(:disabled) { background: linear-gradient(135deg, #0F1769, #283593); box-shadow: 0 4px 12px rgba(26,35,126,0.35); }
+  }
+}
+
 /* ── Roles Page ──────────────────────────────────────────────── */
 .role-item {
   padding: 13px 16px; cursor: pointer;
@@ -736,33 +769,38 @@ button { cursor: pointer; border: none; background: none; font: inherit; }
 }
 
 /* ── Confirm Dialog ───────────────────────────────────────────── */
-.p-confirmdialog {
+/* PrimeNG v17/18 renders: div.p-dialog.p-confirm-dialog (note the hyphen) */
+
+.p-confirm-dialog.p-dialog {
   border-radius: 14px !important;
   overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.18) !important;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.22) !important;
 
   .p-dialog-header {
     padding: 18px 20px 14px !important;
     border-bottom: 1px solid var(--gray-200) !important;
     background: var(--white) !important;
-    .p-dialog-title { font-size: 1rem; font-weight: 700; color: var(--gray-800); }
-    .p-dialog-header-icons .p-dialog-header-icon { color: var(--gray-400) !important; }
+    .p-dialog-title { font-size: 1rem !important; font-weight: 700 !important; color: var(--gray-800) !important; }
+    .p-dialog-header-icon { color: var(--gray-400) !important; }
   }
 
   .p-dialog-content {
     padding: 20px !important;
     background: var(--white) !important;
-    display: flex; align-items: flex-start; gap: 14px;
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 14px !important;
+
     .p-confirm-dialog-icon {
-      font-size: 24px;
-      color: #F59E0B;
+      font-size: 1.4rem !important;
+      color: #F59E0B !important;
       flex-shrink: 0;
       margin-top: 2px;
     }
     .p-confirm-dialog-message {
-      font-size: 0.92rem;
-      color: var(--gray-700);
-      line-height: 1.55;
+      font-size: 0.92rem !important;
+      color: var(--gray-700) !important;
+      line-height: 1.55 !important;
     }
   }
 
@@ -770,54 +808,56 @@ button { cursor: pointer; border: none; background: none; font: inherit; }
     padding: 14px 20px !important;
     border-top: 1px solid var(--gray-100) !important;
     background: var(--gray-50) !important;
-    display: flex; justify-content: flex-end; gap: 10px;
-
-    /* Cancel / Reject button */
-    .p-button.p-button-text,
-    button.p-button-text {
-      background: transparent !important;
-      border: 1px solid var(--gray-200) !important;
-      color: var(--gray-600) !important;
-      border-radius: 8px !important;
-      height: 38px;
-      font-weight: 600;
-      padding: 0 16px;
-      &:hover { background: var(--gray-100) !important; color: var(--gray-800) !important; }
-    }
-
-    /* Accept (Archive/Confirm) button */
-    .p-button.p-button-danger,
-    button.p-button-danger,
-    .p-confirm-dialog-accept {
-      background: linear-gradient(135deg, #DC2626, #EF4444) !important;
-      border-color: #DC2626 !important;
-      color: white !important;
-      border-radius: 8px !important;
-      height: 38px;
-      font-weight: 600;
-      padding: 0 18px;
-      box-shadow: 0 2px 8px rgba(220,38,38,0.3);
-      .p-button-label { color: white !important; }
-      .p-button-icon  { color: white !important; }
-      &:hover { background: linear-gradient(135deg, #B91C1C, #DC2626) !important; }
-    }
+    display: flex !important;
+    justify-content: flex-end !important;
+    gap: 10px !important;
   }
 }
 
-/* Extra-specific fallback for confirm dialog accept button (wins over PrimeNG Lara theme) */
-body .p-confirmdialog .p-confirm-dialog-accept.p-button,
-body .p-confirmdialog .p-confirm-dialog-accept {
-  background: linear-gradient(135deg, #DC2626, #EF4444) !important;
-  border: 1px solid #DC2626 !important;
-  color: #fff !important;
-  .p-button-label { color: #fff !important; }
-}
-body .p-confirmdialog .p-confirm-dialog-reject.p-button,
-body .p-confirmdialog .p-confirm-dialog-reject {
-  background: transparent !important;
-  border: 1px solid #D1D5DB !important;
+/* Buttons inside the confirm dialog footer — target by class directly */
+.p-confirm-dialog .p-dialog-footer button.p-confirm-dialog-reject {
+  background: #fff !important;
+  border: 1.5px solid #D1D5DB !important;
   color: #374151 !important;
-  .p-button-label { color: #374151 !important; }
+  border-radius: 8px !important;
+  height: 38px !important;
+  min-width: 80px !important;
+  font-weight: 600 !important;
+  padding: 0 16px !important;
+  cursor: pointer;
+}
+.p-confirm-dialog .p-dialog-footer button.p-confirm-dialog-reject .p-button-label,
+.p-confirm-dialog .p-dialog-footer button.p-confirm-dialog-reject span {
+  color: #374151 !important;
+  opacity: 1 !important;
+}
+.p-confirm-dialog .p-dialog-footer button.p-confirm-dialog-reject:hover {
+  background: var(--gray-100) !important;
+}
+
+.p-confirm-dialog .p-dialog-footer button.p-confirm-dialog-accept {
+  background: linear-gradient(135deg, #DC2626, #EF4444) !important;
+  border: 1.5px solid #DC2626 !important;
+  color: #fff !important;
+  border-radius: 8px !important;
+  height: 38px !important;
+  min-width: 80px !important;
+  font-weight: 600 !important;
+  padding: 0 18px !important;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(220,38,38,0.3);
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+.p-confirm-dialog .p-dialog-footer button.p-confirm-dialog-accept .p-button-label,
+.p-confirm-dialog .p-dialog-footer button.p-confirm-dialog-accept span {
+  color: #fff !important;
+  opacity: 1 !important;
+}
+.p-confirm-dialog .p-dialog-footer button.p-confirm-dialog-accept:hover {
+  background: linear-gradient(135deg, #B91C1C, #DC2626) !important;
+  border-color: #B91C1C !important;
 }
 
 /* ── p-tag fixes ─────────────────────────────────────────────── */
@@ -963,6 +1003,86 @@ body .p-confirmdialog .p-confirm-dialog-reject {
 /* ── InputNumber width ───────────────────────────────────────── */
 p-inputNumber { width: 100%; }
 .p-inputnumber { width: 100%; }
+
+/* ── Toast Notifications ─────────────────────────────────────── */
+.p-toast {
+  width: 360px;
+  max-width: calc(100vw - 32px);
+
+  .p-toast-message {
+    background: #fff !important;
+    border: none !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.08) !important;
+    margin-bottom: 10px;
+    overflow: hidden;
+    border-left: 5px solid transparent !important;
+
+    .p-toast-message-content {
+      padding: 14px 16px 14px 14px !important;
+      align-items: flex-start !important;
+      gap: 12px;
+    }
+
+    .p-toast-message-icon {
+      font-size: 1.3rem !important;
+      margin-top: 1px;
+    }
+
+    .p-toast-summary {
+      font-size: 0.88rem !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.01em;
+      color: #1F2937 !important;
+      margin-bottom: 2px !important;
+    }
+
+    .p-toast-detail {
+      font-size: 0.875rem !important;
+      font-weight: 500 !important;
+      color: #374151 !important;
+      margin-top: 0 !important;
+      line-height: 1.45;
+    }
+
+    .p-toast-icon-close {
+      width: 26px !important;
+      height: 26px !important;
+      border-radius: 6px !important;
+      color: #9CA3AF !important;
+      &:hover { background: #F3F4F6 !important; color: #374151 !important; }
+      .p-toast-icon-close-icon { font-size: 0.75rem !important; }
+    }
+
+    /* ── Error ── */
+    &.p-toast-message-error {
+      border-left-color: #DC2626 !important;
+      .p-toast-message-icon { color: #DC2626 !important; }
+      .p-toast-summary       { color: #991B1B !important; }
+    }
+
+    /* ── Success ── */
+    &.p-toast-message-success {
+      border-left-color: #16A34A !important;
+      .p-toast-message-icon { color: #16A34A !important; }
+      .p-toast-summary       { color: #14532D !important; }
+    }
+
+    /* ── Warning ── */
+    &.p-toast-message-warn {
+      border-left-color: #D97706 !important;
+      .p-toast-message-icon { color: #D97706 !important; }
+      .p-toast-summary       { color: #92400E !important; }
+    }
+
+    /* ── Info ── */
+    &.p-toast-message-info {
+      border-left-color: #1D4ED8 !important;
+      .p-toast-message-icon { color: #1D4ED8 !important; }
+      .p-toast-summary       { color: #1E3A8A !important; }
+    }
+  }
+}
 
 /* ── Responsive ──────────────────────────────────────────────── */
 @media (max-width: 768px) {

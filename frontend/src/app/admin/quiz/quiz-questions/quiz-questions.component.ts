@@ -8,7 +8,6 @@ import { InputTextareaModule } from 'primeng/inputtextarea';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { DropdownModule } from 'primeng/dropdown';
 import { SidebarModule } from 'primeng/sidebar';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
 import { TooltipModule } from 'primeng/tooltip';
 import { ApiService } from '../../../core/services/api.service';
@@ -19,10 +18,9 @@ import { ToastService } from '../../../core/services/toast.service';
   standalone: true,
   imports: [ReactiveFormsModule, FormsModule, NgFor, NgIf,
             ButtonModule, InputTextModule, InputTextareaModule, InputNumberModule,
-            DropdownModule, SidebarModule, ConfirmDialogModule, TooltipModule],
+            DropdownModule, SidebarModule, TooltipModule],
   templateUrl: './quiz-questions.component.html',
-  styleUrls: ['./quiz-questions.component.scss'],
-  providers: [ConfirmationService]
+  styleUrls: ['./quiz-questions.component.scss']
 })
 export class QuizQuestionsComponent implements OnInit {
   private api     = inject(ApiService);

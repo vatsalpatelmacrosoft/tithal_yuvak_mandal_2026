@@ -5,25 +5,30 @@ import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { SidebarModule } from 'primeng/sidebar';
 import { InputTextModule } from 'primeng/inputtext';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
 import { TooltipModule } from 'primeng/tooltip';
 import { ApiService } from '../../core/services/api.service';
+import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 
 @Component({
   selector: 'app-shibir',
   standalone: true,
   imports: [ReactiveFormsModule, FormsModule, NgIf, DatePipe, TableModule, ButtonModule,
-            SidebarModule, InputTextModule, ConfirmDialogModule, TooltipModule],
+            SidebarModule, InputTextModule, TooltipModule],
   templateUrl: './shibir.component.html',
   styleUrls: ['./shibir.component.scss']
 })
 export class ShibirComponent implements OnInit {
   private api     = inject(ApiService);
+  private auth    = inject(AuthService);
   private toast   = inject(ToastService);
   private fb      = inject(FormBuilder);
   private confirm = inject(ConfirmationService);
+
+  get canCreate() { return this.auth.hasPermission('shibir', 'can_create'); }
+  get canUpdate() { return this.auth.hasPermission('shibir', 'can_update'); }
+  get canDelete() { return this.auth.hasPermission('shibir', 'can_delete'); }
 
   rows = signal<any[]>([]); show = false; editing: any = null; saving = false;
   searchTerm = '';
@@ -50,7 +55,7 @@ export class ShibirComponent implements OnInit {
     this.confirm.confirm({
       message: `Archive <strong>${s.name}</strong>?`, header: 'Confirm Archive',
       icon: 'pi pi-exclamation-triangle', acceptLabel: 'Archive', rejectLabel: 'Cancel',
-      acceptButtonStyleClass: 'p-button-danger', rejectButtonStyleClass: 'p-button-text',
+      defaultFocus: 'reject',
       accept: () => this.api.delete(`shibir/${s.uuid}`).subscribe({ next: () => { this.toast.success('Shibir archived'); this.load(); } })
     });
   }

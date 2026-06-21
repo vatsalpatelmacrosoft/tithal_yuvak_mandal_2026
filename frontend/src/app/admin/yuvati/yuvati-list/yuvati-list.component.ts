@@ -7,19 +7,19 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { DropdownModule } from 'primeng/dropdown';
 import { DialogModule } from 'primeng/dialog';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
 import { TooltipModule } from 'primeng/tooltip';
 import { ApiService } from '../../../core/services/api.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { environment } from '../../../../environments/environment';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 
 @Component({
   selector: 'app-yuvati-list',
   standalone: true,
   imports: [FormsModule, NgIf, TitleCasePipe, TableModule, ButtonModule, InputTextModule,
-            DropdownModule, DialogModule, ConfirmDialogModule, TooltipModule],
+            DropdownModule, DialogModule, TooltipModule],
   templateUrl: './yuvati-list.component.html',
   styleUrls: ['./yuvati-list.component.scss']
 })
@@ -69,6 +69,17 @@ export class YuvatiListComponent implements OnInit {
 
   onSearch(v: string) { this.search$.next(v); }
 
+  exportCsv() {
+    const token = localStorage.getItem('tdd_token') || '';
+    let url = `${environment.apiUrl}/yuvati/export?token=${encodeURIComponent(token)}`;
+    if (this.searchTerm)    url += `&search=${encodeURIComponent(this.searchTerm)}`;
+    if (this.xetraFilter)   url += `&xetra_id=${this.xetraFilter}`;
+    if (this.mandalFilter)  url += `&mandal_id=${this.mandalFilter}`;
+    const a = document.createElement('a');
+    a.href = url;
+    a.click();
+  }
+
   sendingNotify: string | null = null;
   sendNotification(y: any) {
     this.sendingNotify = y.uuid;
@@ -104,7 +115,7 @@ export class YuvatiListComponent implements OnInit {
       header: 'Confirm Archive',
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Archive', rejectLabel: 'Cancel',
-      acceptButtonStyleClass: 'p-button-danger', rejectButtonStyleClass: 'p-button-text',
+      defaultFocus: 'reject',
       accept: () => {
         this.api.delete(`yuvati/${y.uuid}`).subscribe({
           next: res => { if (res.success) { this.toast.success('Yuvati archived'); this.loadData(1); } }

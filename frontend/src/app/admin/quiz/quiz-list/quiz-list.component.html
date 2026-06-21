@@ -9,7 +9,7 @@
       <span class="hero-badge">{{ quizzes().length }} Quiz{{ quizzes().length !== 1 ? 'zes' : '' }}</span>
     </div>
   </div>
-  <div class="hero-right">
+  <div class="hero-right" *ngIf="canCreate">
     <p-button label="Create Quiz" icon="pi pi-plus" (click)="router.navigate(['/admin/quiz/new'])" />
   </div>
 </div>
@@ -63,11 +63,11 @@
         </td>
         <td>
           <div style="display:flex;gap:2px;flex-wrap:wrap">
-            <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" size="small"
+            <p-button *ngIf="canUpdate" icon="pi pi-pencil" [rounded]="true" [text]="true" size="small"
               (click)="router.navigate(['/admin/quiz', q.uuid])" pTooltip="Edit" tooltipPosition="top" />
             <p-button icon="pi pi-list" [rounded]="true" [text]="true" size="small" severity="secondary"
               (click)="router.navigate(['/admin/quiz', q.uuid, 'questions'])" pTooltip="Questions" tooltipPosition="top" />
-            <p-button [icon]="q.is_active ? 'pi pi-pause-circle' : 'pi pi-play-circle'"
+            <p-button *ngIf="canUpdate" [icon]="q.is_active ? 'pi pi-pause-circle' : 'pi pi-play-circle'"
               [rounded]="true" [text]="true" size="small"
               [severity]="q.is_active ? 'warning' : 'success'"
               (click)="toggleActive(q)"
@@ -75,7 +75,7 @@
             <p-button *ngIf="q.quiz_status==='published'" icon="pi pi-link"
               [rounded]="true" [text]="true" size="small" severity="info"
               (click)="copyLink(q.slug)" pTooltip="Copy Link" tooltipPosition="top" />
-            <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small"
+            <p-button *ngIf="canDelete" icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small"
               (click)="confirmDelete(q)" pTooltip="Archive" tooltipPosition="top" />
           </div>
         </td>
@@ -91,4 +91,4 @@
   </p-table>
 </div>
 
-<p-confirmDialog [style]="{width:'420px'}" />
+

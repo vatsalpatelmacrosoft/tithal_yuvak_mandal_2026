@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["src/app/admin/yuvati/yuvati-form/yuvati-form.component.scss"],
-  "sourcesContent": [":host { display: block; }\n\n.yuvati-hero {\n  border-left-color: #1E88E5 !important;\n}\n\n.form-hero-icon {\n  background: linear-gradient(135deg, #1565C0, #3949AB) !important;\n  box-shadow: 0 4px 14px rgba(57, 73, 171, 0.35) !important;\n}\n"],
-  "mappings": ";AAAA;AAAQ,WAAA;;AAER,CAAA;AACE,qBAAA;;AAGF,CAAA;AACE;IAAA;MAAA,MAAA;MAAA,OAAA;MAAA;AACA,cAAA,EAAA,IAAA,KAAA,KAAA,EAAA,EAAA,EAAA,EAAA,GAAA,EAAA;;",
-  "names": []
-}

@@ -44,7 +44,9 @@ class ReportController
                 qp.uuid AS participant_uuid,
                 qp.participant_type,
                 qp.yuvak_id,
-                qp.name,
+                COALESCE(qp.name,
+                    TRIM(CONCAT(y.first_name,' ',COALESCE(y.middle_name,''),' ',y.last_name))
+                ) AS name,
                 qp.gender,
                 qs.score,
                 qs.total_marks,
@@ -57,6 +59,7 @@ class ReportController
                 q.title AS quiz_title
             FROM quiz_participants qp
             JOIN quizzes q ON q.id = qp.quiz_id
+            LEFT JOIN yuvaks y ON y.id = qp.yuvak_db_id
             LEFT JOIN quiz_submissions qs ON qs.participant_id = qp.id
             WHERE qp.quiz_id=? AND qp.status='active'
             ORDER BY qs.percentage DESC, qp.created_at DESC
@@ -120,12 +123,15 @@ class ReportController
                 qp.uuid AS participant_uuid,
                 qp.participant_type,
                 qp.yuvak_id,
-                qp.name,
+                COALESCE(qp.name,
+                    TRIM(CONCAT(y.first_name,' ',COALESCE(y.middle_name,''),' ',y.last_name))
+                ) AS name,
                 qp.gender,
                 qs.score,
                 qs.total_marks,
                 qs.percentage
             FROM quiz_participants qp
+            LEFT JOIN yuvaks y ON y.id = qp.yuvak_db_id
             LEFT JOIN quiz_submissions qs ON qs.participant_id = qp.id
             WHERE qp.quiz_id=? AND qp.status='active'
             ORDER BY qp.gender, qs.percentage DESC
@@ -188,10 +194,15 @@ class ReportController
     {
         $quiz = $this->findQuiz($quizUuid);
         $stmt = $this->pdo->prepare("
-            SELECT qp.participant_type, qp.yuvak_id, qp.name, qp.gender,
+            SELECT qp.participant_type, qp.yuvak_id,
+                   COALESCE(qp.name,
+                       TRIM(CONCAT(y.first_name,' ',COALESCE(y.middle_name,''),' ',y.last_name))
+                   ) AS name,
+                   qp.gender,
                    qs.score, qs.total_marks, qs.percentage,
                    qs.correct_answers, qs.incorrect_answers, qs.submitted_at
             FROM quiz_participants qp
+            LEFT JOIN yuvaks y ON y.id = qp.yuvak_db_id
             LEFT JOIN quiz_submissions qs ON qs.participant_id=qp.id
             WHERE qp.quiz_id=? AND qp.status='active'
             ORDER BY qs.percentage DESC
@@ -223,9 +234,14 @@ class ReportController
     {
         $quiz = $this->findQuiz($quizUuid);
         $stmt = $this->pdo->prepare("
-            SELECT qp.gender, qp.name, qp.yuvak_id,
+            SELECT qp.gender,
+                   COALESCE(qp.name,
+                       TRIM(CONCAT(y.first_name,' ',COALESCE(y.middle_name,''),' ',y.last_name))
+                   ) AS name,
+                   qp.yuvak_id,
                    qs.score, qs.total_marks, qs.percentage
             FROM quiz_participants qp
+            LEFT JOIN yuvaks y ON y.id = qp.yuvak_db_id
             LEFT JOIN quiz_submissions qs ON qs.participant_id=qp.id
             WHERE qp.quiz_id=? AND qp.status='active'
             ORDER BY qp.gender, qs.percentage DESC

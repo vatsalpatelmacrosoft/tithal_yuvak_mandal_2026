@@ -1,5 +1,5 @@
 # TDD — Technical Design Document
-## TDD Management System (Yuvak & Yuvati Samaj Portal)
+## Yuvak Sabha Management System (Yuvak & Yuvati Samaj Portal)
 
 **Stack:** Angular 17 (Frontend) · PHP 8.1 (Backend) · MySQL 8 (Database)  
 **Version:** 1.0.0 · **Date:** 2025
@@ -29,7 +29,7 @@
 
 ## 1. Project Overview
 
-The TDD Management System manages members (Yuvak/Yuvati) of a Swaminarayan Samaj organization. It provides:
+The Yuvak Sabha Management System manages members (Yuvak/Yuvati) of a Swaminarayan Samaj organization. It provides:
 
 - **Admin Portal** — authenticated CRUD for all entities
 - **Public Portal** — unauthenticated registration & quiz forms (controlled by admin)
@@ -571,7 +571,7 @@ Your *YUVAK ID* is:
 Please save this ID for future reference.
 Your personal QR code is attached — show it at the gate for attendance.
 
-_TDD Management System_
+_Yuvak Sabha Management System_
 ```
 
 ---

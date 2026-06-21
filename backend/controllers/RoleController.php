@@ -104,9 +104,24 @@ class RoleController
 
     public function destroy(string $id): void
     {
-        $this->pdo->prepare("SELECT id FROM roles WHERE uuid=? AND status='active'")->execute([$id]);
-        $this->pdo->prepare("UPDATE roles SET status='archive' WHERE uuid=?")->execute([$id]);
-        sendSuccess([], 'Role archived');
+        $check = $this->pdo->prepare("SELECT id FROM roles WHERE uuid=? AND status='active'");
+        $check->execute([$id]);
+        $role = $check->fetch();
+        if (!$role) sendError(404, 'Role not found');
+
+        // Archive users assigned to this role (they lose access)
+        $this->pdo->prepare("UPDATE users SET status='archive' WHERE role_id=?")
+            ->execute([$role['id']]);
+
+        // Zero out all permissions for this role
+        $this->pdo->prepare("UPDATE permissions SET can_view=0, can_create=0, can_update=0, can_delete=0 WHERE role_id=?")
+            ->execute([$role['id']]);
+
+        // Soft delete the role
+        $this->pdo->prepare("UPDATE roles SET status='archive' WHERE id=?")
+            ->execute([$role['id']]);
+
+        sendSuccess([], 'Role and its users archived');
     }
 
     private function uuid(): string {

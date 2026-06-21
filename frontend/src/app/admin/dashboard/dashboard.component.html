@@ -1,15 +1,18 @@
 <!-- Welcome hero -->
-<div style="background:linear-gradient(135deg,#1A237E,#3949AB,#FF6B00);border-radius:14px;padding:28px 30px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px">
+<div
+  style="background:linear-gradient(135deg,#1A237E,#3949AB,#FF6B00);border-radius:14px;padding:28px 30px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px">
   <div>
     <div style="color:rgba(255,255,255,0.7);font-size:0.85rem;margin-bottom:4px">Good day, Admin</div>
     <div style="color:#fff;font-size:1.5rem;font-weight:700;line-height:1.2">Welcome to Yuvasabha</div>
-    <div style="color:rgba(255,255,255,0.65);font-size:0.88rem;margin-top:6px">TDD Management System</div>
+    <div style="color:rgba(255,255,255,0.65);font-size:0.88rem;margin-top:6px">Yuvak Sabha Management System</div>
   </div>
   <div style="display:flex;gap:10px;flex-wrap:wrap">
-    <a routerLink="/admin/yuvak/new" style="background:rgba(255,255,255,0.15);color:#fff;border-radius:8px;padding:9px 16px;font-size:0.85rem;font-weight:600;backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,0.2);display:flex;align-items:center;gap:6px">
+    <a *ngIf="canAddYuvak" routerLink="/admin/yuvak/new"
+      style="background:rgba(255,255,255,0.15);color:#fff;border-radius:8px;padding:9px 16px;font-size:0.85rem;font-weight:600;backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,0.2);display:flex;align-items:center;gap:6px">
       <i class="pi pi-user-plus"></i> Add Yuvak
     </a>
-    <a routerLink="/admin/attendance" style="background:rgba(255,255,255,0.15);color:#fff;border-radius:8px;padding:9px 16px;font-size:0.85rem;font-weight:600;backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,0.2);display:flex;align-items:center;gap:6px">
+    <a *ngIf="canViewAttendance" routerLink="/admin/attendance"
+      style="background:rgba(255,255,255,0.15);color:#fff;border-radius:8px;padding:9px 16px;font-size:0.85rem;font-weight:600;backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,0.2);display:flex;align-items:center;gap:6px">
       <i class="pi pi-qrcode"></i> Attendance
     </a>
   </div>
@@ -17,35 +20,40 @@
 
 <!-- Stats grid -->
 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:24px">
-  <div class="dash-stat" style="border-left-color:#FF6B00">
-    <div class="dash-stat-icon" style="background:linear-gradient(135deg,#FF6B00,#FF8C38)"><i class="pi pi-user"></i></div>
+  <div *ngIf="canViewYuvak" class="dash-stat" style="border-left-color:#FF6B00">
+    <div class="dash-stat-icon" style="background:linear-gradient(135deg,#FF6B00,#FF8C38)"><i class="pi pi-user"></i>
+    </div>
     <div class="dash-stat-val">{{ stats()?.yuvak_total ?? '—' }}</div>
     <div class="dash-stat-lbl">Total Yuvak</div>
   </div>
-  <div class="dash-stat" style="border-left-color:#3949AB">
-    <div class="dash-stat-icon" style="background:linear-gradient(135deg,#1A237E,#3949AB)"><i class="pi pi-users"></i></div>
+  <div *ngIf="canViewYuvati" class="dash-stat" style="border-left-color:#3949AB">
+    <div class="dash-stat-icon" style="background:linear-gradient(135deg,#1A237E,#3949AB)"><i class="pi pi-users"></i>
+    </div>
     <div class="dash-stat-val">{{ stats()?.yuvati_total ?? '—' }}</div>
     <div class="dash-stat-lbl">Total Yuvati</div>
   </div>
-  <div class="dash-stat" style="border-left-color:#059669">
-    <div class="dash-stat-icon" style="background:linear-gradient(135deg,#059669,#10B981)"><i class="pi pi-check-circle"></i></div>
+  <div *ngIf="canViewAttendance || canViewYuvak" class="dash-stat" style="border-left-color:#059669">
+    <div class="dash-stat-icon" style="background:linear-gradient(135deg,#059669,#10B981)"><i
+        class="pi pi-check-circle"></i></div>
     <div class="dash-stat-val">{{ stats()?.today_attendance?.yuvak ?? '—' }}</div>
     <div class="dash-stat-lbl">Yuvak Present Today</div>
   </div>
-  <div class="dash-stat" style="border-left-color:#D97706">
-    <div class="dash-stat-icon" style="background:linear-gradient(135deg,#D97706,#F59E0B)"><i class="pi pi-check-circle"></i></div>
+  <div *ngIf="canViewAttendance || canViewYuvati" class="dash-stat" style="border-left-color:#D97706">
+    <div class="dash-stat-icon" style="background:linear-gradient(135deg,#D97706,#F59E0B)"><i
+        class="pi pi-check-circle"></i></div>
     <div class="dash-stat-val">{{ stats()?.today_attendance?.yuvati ?? '—' }}</div>
     <div class="dash-stat-lbl">Yuvati Present Today</div>
   </div>
 </div>
 
-<!-- Quick links -->
+<!-- Quick links (filtered by can_view) -->
 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px">
   <a *ngFor="let q of quickLinks" [routerLink]="q.path"
     style="background:#fff;border-radius:12px;padding:20px 16px;box-shadow:0 1px 4px rgba(0,0,0,0.07);text-align:center;transition:all 0.2s;display:flex;flex-direction:column;align-items:center;gap:10px;text-decoration:none"
     onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 16px rgba(0,0,0,0.12)'"
     onmouseout="this.style.transform='';this.style.boxShadow='0 1px 4px rgba(0,0,0,0.07)'">
-    <div [style]="'width:44px;height:44px;border-radius:12px;'+q.iconStyle+';display:flex;align-items:center;justify-content:center'">
+    <div
+      [style]="'width:44px;height:44px;border-radius:12px;'+q.iconStyle+';display:flex;align-items:center;justify-content:center'">
       <i [class]="'pi ' + q.icon" style="color:#fff;font-size:18px"></i>
     </div>
     <div style="font-size:0.85rem;font-weight:600;color:#374151">{{ q.label }}</div>

@@ -200,12 +200,14 @@
   </form>
 
   <ng-template pTemplate="footer">
-    <div style="display:flex;gap:10px;justify-content:flex-end">
-      <p-button label="Cancel" [outlined]="true" (click)="showForm=false" />
-      <p-button [label]="editUuid ? 'Update Question' : 'Add Question'"
-                icon="pi pi-check" [loading]="saving" (click)="saveQuestion()" />
+    <div style="display:flex;gap:10px;justify-content:flex-end;padding:12px 0 4px">
+      <button type="button" class="rbtn rbtn-cancel" (click)="showForm=false">Cancel</button>
+      <button type="button" class="rbtn rbtn-save" [disabled]="saving" (click)="saveQuestion()">
+        <i class="pi" [class.pi-check]="!saving" [class.pi-spin]="saving" [class.pi-spinner]="saving"></i>
+        {{ editUuid ? 'Update Question' : 'Add Question' }}
+      </button>
     </div>
   </ng-template>
 </p-sidebar>
 
-<p-confirmDialog [style]="{width:'400px'}" />
+

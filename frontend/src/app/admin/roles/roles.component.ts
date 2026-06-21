@@ -5,28 +5,42 @@ import { ButtonModule } from 'primeng/button';
 import { SidebarModule } from 'primeng/sidebar';
 import { InputTextModule } from 'primeng/inputtext';
 import { CheckboxModule } from 'primeng/checkbox';
+import { TooltipModule } from 'primeng/tooltip';
+import { ConfirmationService } from 'primeng/api';
 import { ApiService } from '../../core/services/api.service';
+import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 
 @Component({
   selector: 'app-roles',
   standalone: true,
   imports: [ReactiveFormsModule, FormsModule, NgIf, NgFor,
-            ButtonModule, SidebarModule, InputTextModule, CheckboxModule],
+            ButtonModule, SidebarModule, InputTextModule, CheckboxModule, TooltipModule],
   templateUrl: './roles.component.html',
   styleUrls: ['./roles.component.scss']
 })
 export class RolesComponent implements OnInit {
-  private api   = inject(ApiService);
-  private toast = inject(ToastService);
-  private fb    = inject(FormBuilder);
+  private api     = inject(ApiService);
+  private auth    = inject(AuthService);
+  private toast   = inject(ToastService);
+  private fb      = inject(FormBuilder);
+  private confirm = inject(ConfirmationService);
+
+  get canCreate() { return this.auth.hasPermission('roles', 'can_create'); }
+  get canUpdate() { return this.auth.hasPermission('roles', 'can_update'); }
+  get canDelete() { return this.auth.hasPermission('roles', 'can_delete'); }
 
   roles       = signal<any[]>([]);
   selected    = signal<any>(null);
   pending     = signal<any[]>([]);
   private saved: any[] = [];
   dirty       = false;
-  showForm    = false; saving = false; savingPerms = false;
+  showForm    = false;
+  saving      = false;
+  savingPerms = false;
+  isEditRole  = false;
+  editRoleUuid = '';
+
   form = this.fb.group({ name: ['', Validators.required], code: ['', Validators.required] });
 
   permCols = [
@@ -49,6 +63,7 @@ export class RolesComponent implements OnInit {
   markDirty() { this.dirty = true; }
 
   ngOnInit() { this.loadRoles(); }
+
   loadRoles() { this.api.get<any>('roles').subscribe(r => { if (r.success) this.roles.set(r.data); }); }
 
   private normPerms(perms: any[]): any[] {
@@ -81,13 +96,56 @@ export class RolesComponent implements OnInit {
     this.dirty = false;
   }
 
-  openForm() { this.form.reset(); this.showForm = true; }
+  confirmDelete(role: any) {
+    this.confirm.confirm({
+      message: `Delete role <strong>${role.name}</strong>? All users assigned to this role will also be archived and lose access.`,
+      header: 'Delete Role',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Delete', rejectLabel: 'Cancel',
+      defaultFocus: 'reject',
+      accept: () => {
+        this.api.delete(`roles/${role.uuid}`).subscribe({
+          next: res => {
+            if (res.success) {
+              this.toast.success('Role deleted');
+              if (this.selected()?.uuid === role.uuid) this.selected.set(null);
+              this.loadRoles();
+            }
+          },
+          error: err => this.toast.error(err.error?.message || 'Delete failed')
+        });
+      }
+    });
+  }
+
+  openForm(role?: any) {
+    this.form.reset();
+    this.isEditRole = !!role;
+    if (role) {
+      this.editRoleUuid = role.uuid;
+      this.form.patchValue({ name: role.name, code: role.code });
+    }
+    this.showForm = true;
+  }
 
   saveRole() {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.saving = true;
-    this.api.post('roles', this.form.value).subscribe({
-      next: res => { if (res.success) { this.toast.success('Role created'); this.showForm = false; this.loadRoles(); } this.saving = false; },
+    const obs = this.isEditRole
+      ? this.api.put(`roles/${this.editRoleUuid}`, this.form.value)
+      : this.api.post('roles', this.form.value);
+    obs.subscribe({
+      next: res => {
+        if (res.success) {
+          this.toast.success(this.isEditRole ? 'Role updated' : 'Role created');
+          this.showForm = false;
+          this.loadRoles();
+          if (this.isEditRole && this.selected()?.uuid === this.editRoleUuid) {
+            this.selected.update(s => ({ ...s, ...this.form.value }));
+          }
+        }
+        this.saving = false;
+      },
       error: err => { this.saving = false; this.toast.error(err.error?.message || 'Error'); }
     });
   }
@@ -97,8 +155,10 @@ export class RolesComponent implements OnInit {
     this.savingPerms = true;
     const perms = this.pending().map((p: any) => ({
       menu_id: p.menu_id,
-      can_view: p.can_view ? 1 : 0, can_create: p.can_create ? 1 : 0,
-      can_update: p.can_update ? 1 : 0, can_delete: p.can_delete ? 1 : 0,
+      can_view:   p.can_view   ? 1 : 0,
+      can_create: p.can_create ? 1 : 0,
+      can_update: p.can_update ? 1 : 0,
+      can_delete: p.can_delete ? 1 : 0,
     }));
     this.api.put(`roles/${role.uuid}/permissions`, { permissions: perms }).subscribe({
       next: res => {

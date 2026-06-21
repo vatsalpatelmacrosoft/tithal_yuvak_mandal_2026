@@ -7,7 +7,7 @@
       <span class="hero-badge">{{ users().length }} User</span>
     </div>
   </div>
-  <div class="hero-right">
+  <div class="hero-right" *ngIf="canCreate">
     <p-button label="Add User" icon="pi pi-user-plus" (click)="openAddForm()" />
   </div>
 </div>
@@ -36,9 +36,9 @@
         <td><p-tag [value]="u.role_name" severity="info" /></td>
         <td style="font-size:0.85rem;color:#6B7280">{{ u.last_login ? (u.last_login | date:'dd/MM/yy HH:mm') : 'Never' }}</td>
         <td>
-          <p-button icon="pi pi-shield" [rounded]="true" [text]="true" size="small"
+          <p-button *ngIf="canUpdate" icon="pi pi-shield" [rounded]="true" [text]="true" size="small"
             (click)="openChangeRole(u)" pTooltip="Change Role" tooltipPosition="top" />
-          <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small"
+          <p-button *ngIf="canDelete" icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small"
             (click)="confirmDelete(u)" pTooltip="Archive" tooltipPosition="top" />
         </td>
       </tr>
@@ -56,27 +56,57 @@
 <p-sidebar [(visible)]="showAdd" position="right" [style]="{width:'460px'}" [dismissible]="true">
   <ng-template pTemplate="header">
     <div style="display:flex;justify-content:space-between;align-items:center;flex:1;margin-right:8px">
-      <span style="font-weight:700;font-size:1rem;color:#1F2937">Add User from Yuvak</span>
+      <span style="font-weight:700;font-size:1rem;color:#1F2937">Add User</span>
       <div style="display:flex;gap:8px">
-        <p-button label="Cancel" [outlined]="true" size="small" (click)="showAdd=false" />
-        <p-button label="Create User" size="small" [loading]="saving" (click)="createUser()" />
+        <button type="button" class="rbtn rbtn-cancel" (click)="showAdd=false">Cancel</button>
+        <button type="button" class="rbtn rbtn-save" [disabled]="saving" (click)="createUser()">
+          <i class="pi" [class.pi-user-plus]="!saving" [class.pi-spin]="saving" [class.pi-spinner]="saving"></i> Create User
+        </button>
       </div>
     </div>
   </ng-template>
   <form [formGroup]="addForm" (ngSubmit)="createUser()">
+
+    <!-- Member Type Radio -->
     <div class="field" style="margin-bottom:18px">
-      <label class="required">Select Yuvak</label>
-      <p-dropdown [options]="yuvaks" formControlName="yuvak_uuid"
-        optionLabel="display" optionValue="uuid" placeholder="Select Yuvak"
-        [filter]="true" filterBy="display" [style]="{width:'100%'}" />
-      <small class="p-error" *ngIf="addForm.get('yuvak_uuid')?.invalid && addForm.get('yuvak_uuid')?.touched">Select a Yuvak</small>
+      <label class="required">Member Type</label>
+      <div class="member-type-radios">
+        <label class="mtype-option" [class.selected]="memberType === 'yuvak'"
+               (click)="memberType='yuvak'; onMemberTypeChange()">
+          <p-radioButton name="memberType" value="yuvak" [(ngModel)]="memberType"
+                         [ngModelOptions]="{standalone:true}" (onClick)="onMemberTypeChange()" />
+          <i class="pi pi-user" style="color:#1A237E"></i>
+          <span>Yuvak</span>
+        </label>
+        <label class="mtype-option" [class.selected]="memberType === 'yuvati'"
+               (click)="memberType='yuvati'; onMemberTypeChange()">
+          <p-radioButton name="memberType" value="yuvati" [(ngModel)]="memberType"
+                         [ngModelOptions]="{standalone:true}" (onClick)="onMemberTypeChange()" />
+          <i class="pi pi-user" style="color:#BE185D"></i>
+          <span>Yuvati</span>
+        </label>
+      </div>
     </div>
+
+    <!-- Member Selection -->
+    <div class="field" style="margin-bottom:18px">
+      <label class="required">Select {{ memberType === 'yuvati' ? 'Yuvati' : 'Yuvak' }}</label>
+      <p-dropdown [options]="memberList" formControlName="member_uuid"
+        optionLabel="display" optionValue="uuid"
+        [placeholder]="'Select ' + (memberType === 'yuvati' ? 'Yuvati' : 'Yuvak')"
+        [filter]="true" filterBy="display" [style]="{width:'100%'}" />
+      <small class="p-error" *ngIf="addForm.get('member_uuid')?.invalid && addForm.get('member_uuid')?.touched">
+        Select a {{ memberType === 'yuvati' ? 'Yuvati' : 'Yuvak' }}
+      </small>
+    </div>
+
     <div class="field" style="margin-bottom:18px">
       <label class="required">Role</label>
       <p-dropdown [options]="roles" formControlName="role_uuid"
         optionLabel="name" optionValue="uuid" placeholder="Select Role" [style]="{width:'100%'}" />
       <small class="p-error" *ngIf="addForm.get('role_uuid')?.invalid && addForm.get('role_uuid')?.touched">Select a Role</small>
     </div>
+
     <div class="field">
       <label class="required">Password</label>
       <p-password formControlName="password" [feedback]="false" [toggleMask]="true"
@@ -94,8 +124,10 @@
     <div style="display:flex;justify-content:space-between;align-items:center;flex:1;margin-right:8px">
       <span style="font-weight:700;font-size:1rem;color:#1F2937">Change Role</span>
       <div style="display:flex;gap:8px">
-        <p-button label="Cancel" [outlined]="true" size="small" (click)="showChangeRole=false" />
-        <p-button label="Update" size="small" (click)="doChangeRole()" />
+        <button type="button" class="rbtn rbtn-cancel" (click)="showChangeRole=false">Cancel</button>
+        <button type="button" class="rbtn rbtn-save" *ngIf="canUpdate" (click)="doChangeRole()">
+          <i class="pi pi-check"></i> Update
+        </button>
       </div>
     </div>
   </ng-template>
@@ -109,4 +141,4 @@
   </div>
 </p-sidebar>
 
-<p-confirmDialog [style]="{width:'420px'}" />
+

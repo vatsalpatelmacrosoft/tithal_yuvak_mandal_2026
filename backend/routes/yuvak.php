@@ -8,6 +8,7 @@ $user = requireAuth();
 
 match (true) {
     $method === 'GET'    && !$id                 => guard($user, 'yuvak', 'view',   fn() => $ctrl->index()),
+    $method === 'GET'    && $id === 'export'     => guard($user, 'yuvak', 'view',   fn() => $ctrl->exportCsv()),
     $method === 'GET'    && $id && $sub === 'qr' => guard($user, 'yuvak', 'view',   fn() => $ctrl->qrCode($id)),
     $method === 'GET'    && $id                  => guard($user, 'yuvak', 'view',   fn() => $ctrl->show($id)),
     $method === 'POST'   && !$id                 => guard($user, 'yuvak', 'create', fn() => $ctrl->store($body)),

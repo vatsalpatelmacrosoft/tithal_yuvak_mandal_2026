@@ -111,22 +111,47 @@ class PublicController
 
     public function validateYuvak(array $body): void
     {
-        if (empty($body['yuvak_id'])) sendValidationError(['yuvak_id' => 'Yuvak ID is required']);
+        $identifier = trim($body['identifier'] ?? $body['yuvak_id'] ?? '');
+        if (empty($identifier)) sendValidationError(['identifier' => 'Yuvak ID or Mobile Number is required']);
 
-        $stmt = $this->pdo->prepare("
-            SELECT y.yuvak_id,
-                   CONCAT(y.first_name,' ',COALESCE(y.middle_name,''),' ',y.last_name) AS full_name,
-                   x.name AS xetra_name, m.name AS mandal_name
+        $isMobile  = (bool) preg_match('/^\d{10}$/', $identifier);
+        $searchVal = $isMobile ? $identifier : strtoupper($identifier);
+
+        // Search yuvaks first
+        $field = $isMobile ? 'y.mo_number' : 'y.yuvak_id';
+        $stmt  = $this->pdo->prepare("
+            SELECT y.id, y.yuvak_id AS member_id,
+                   TRIM(CONCAT(y.first_name,' ',COALESCE(y.middle_name,''),' ',y.last_name)) AS full_name,
+                   x.name AS xetra_name, m.name AS mandal_name, 'yuvak' AS member_type
             FROM yuvaks y
-            LEFT JOIN xetras x ON x.id = y.xetra_id
+            LEFT JOIN xetras  x ON x.id = y.xetra_id
             LEFT JOIN mandals m ON m.id = y.mandal_id
-            WHERE y.yuvak_id=? AND y.status='active'
+            WHERE {$field}=? AND y.status='active'
         ");
-        $stmt->execute([trim($body['yuvak_id'])]);
-        $yuvak = $stmt->fetch();
+        $stmt->execute([$searchVal]);
+        $member = $stmt->fetch();
 
-        if (!$yuvak) sendError(404, 'Yuvak ID not found. Please check and try again.');
-        sendSuccess($yuvak, 'Yuvak found');
+        // If not in yuvaks, try yuvatis
+        if (!$member) {
+            $field2 = $isMobile ? 'y.mo_number' : 'y.yuvati_id';
+            $stmt2  = $this->pdo->prepare("
+                SELECT y.id, y.yuvati_id AS member_id,
+                       TRIM(CONCAT(y.first_name,' ',COALESCE(y.middle_name,''),' ',y.last_name)) AS full_name,
+                       x.name AS xetra_name, m.name AS mandal_name, 'yuvati' AS member_type
+                FROM yuvatis y
+                LEFT JOIN xetras  x ON x.id = y.xetra_id
+                LEFT JOIN mandals m ON m.id = y.mandal_id
+                WHERE {$field2}=? AND y.status='active'
+            ");
+            $stmt2->execute([$searchVal]);
+            $member = $stmt2->fetch();
+        }
+
+        if (!$member) sendError(404, 'Not found. Please check your ID or Mobile Number.');
+
+        // Expose yuvak_id for backward compat (frontend uses yuvakInfo.yuvak_id)
+        $member['yuvak_id'] = $member['member_id'];
+        sendSuccess($member, 'Member found');
     }
 
     // ── Quiz Public Flow ─────────────────────────────────────────
@@ -179,14 +204,46 @@ class PublicController
         $type = $body['participant_type'] ?? 'external';
         $uuid = $this->uuid();
 
-        $yuvakDbId = null;
+        $memberDbId    = null;
+        $storedMemberId = null;
+        $storedName    = null;
+        $memberType    = 'yuvak';
+
         if ($type === 'registered') {
-            if (empty($body['yuvak_id'])) sendValidationError(['yuvak_id' => 'Yuvak ID is required']);
-            $yStmt = $this->pdo->prepare("SELECT id FROM yuvaks WHERE yuvak_id=? AND status='active'");
-            $yStmt->execute([$body['yuvak_id']]);
-            $yuvak = $yStmt->fetch();
-            if (!$yuvak) sendError(404, 'Yuvak ID not found');
-            $yuvakDbId = $yuvak['id'];
+            $identifier = trim($body['identifier'] ?? $body['yuvak_id'] ?? '');
+            if (empty($identifier)) sendValidationError(['identifier' => 'Yuvak ID or Mobile Number is required']);
+
+            $isMobile  = (bool) preg_match('/^\d{10}$/', $identifier);
+            $searchVal = $isMobile ? $identifier : strtoupper($identifier);
+
+            // Search yuvaks first
+            $wf    = $isMobile ? 'mo_number' : 'yuvak_id';
+            $yStmt = $this->pdo->prepare("
+                SELECT id, yuvak_id AS member_id,
+                       TRIM(CONCAT(first_name,' ',COALESCE(middle_name,''),' ',last_name)) AS full_name
+                FROM yuvaks WHERE {$wf}=? AND status='active'
+            ");
+            $yStmt->execute([$searchVal]);
+            $member = $yStmt->fetch();
+
+            // Fallback to yuvatis
+            if (!$member) {
+                $wf2    = $isMobile ? 'mo_number' : 'yuvati_id';
+                $yStmt2 = $this->pdo->prepare("
+                    SELECT id, yuvati_id AS member_id,
+                           TRIM(CONCAT(first_name,' ',COALESCE(middle_name,''),' ',last_name)) AS full_name
+                    FROM yuvatis WHERE {$wf2}=? AND status='active'
+                ");
+                $yStmt2->execute([$searchVal]);
+                $member = $yStmt2->fetch();
+                if ($member) $memberType = 'yuvati';
+            }
+
+            if (!$member) sendError(404, 'Member not found. Check ID or Mobile Number.');
+
+            $memberDbId    = $member['id'];
+            $storedMemberId = $member['member_id'];
+            $storedName    = $member['full_name'];
         } else {
             if (empty($body['name'])) sendValidationError(['name' => 'Name is required']);
             if (empty($body['gender'])) sendValidationError(['gender' => 'Gender is required']);
@@ -194,14 +251,14 @@ class PublicController
 
         $this->pdo->prepare("
             INSERT INTO quiz_participants
-                (uuid, quiz_id, participant_type, yuvak_id, yuvak_db_id, name, gender)
-            VALUES (?,?,?,?,?,?,?)
+                (uuid, quiz_id, participant_type, member_type, yuvak_id, yuvak_db_id, name, gender)
+            VALUES (?,?,?,?,?,?,?,?)
         ")->execute([
             $uuid, $quiz['id'],
-            $type,
-            $body['yuvak_id'] ?? null,
-            $yuvakDbId,
-            $body['name'] ?? null,
+            $type, $memberType,
+            $storedMemberId,
+            $memberDbId,
+            $storedName ?? ($body['name'] ?? null),
             $body['gender'] ?? null,
         ]);
 

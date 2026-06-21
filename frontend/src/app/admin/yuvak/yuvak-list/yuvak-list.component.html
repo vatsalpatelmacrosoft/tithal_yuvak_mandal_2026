@@ -40,6 +40,9 @@
       </div>
 
     </div>
+    <div class="toolbar-right">
+      <p-button label="Export CSV" icon="pi pi-download" [outlined]="true" size="small" (click)="exportCsv()" />
+    </div>
   </div>
 
   <!-- ── Table ───────────────────────────────────────────── -->
@@ -100,4 +103,3 @@
   </p-table>
 </div>
 
-<p-confirmDialog [style]="{width:'420px'}" />

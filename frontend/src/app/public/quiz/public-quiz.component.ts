@@ -1,14 +1,23 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { FormBuilder, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
+import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators, FormsModule } from '@angular/forms';
 import { NgFor, NgIf, DecimalPipe, SlicePipe, NgClass } from '@angular/common';
-import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { DropdownModule } from 'primeng/dropdown';
 import { ToastModule } from 'primeng/toast';
 import { ApiService } from '../../core/services/api.service';
 import { ToastService } from '../../core/services/toast.service';
+
+function identifierValidator(ctrl: AbstractControl): ValidationErrors | null {
+  const val: string = (ctrl.value || '').trim();
+  if (!val) return { required: true };
+  if (/^\d+$/.test(val)) {
+    if (val.length !== 10) return { phoneLength: true };
+    if (!/^[6-9]/.test(val)) return { phoneStart: true };
+  }
+  return null;
+}
 
 type Step = 'loading' | 'landing' | 'select-type' | 'register-yuvak' | 'register-external'
            | 'quiz' | 'result' | 'closed' | 'not-started' | 'ended' | 'not-found';
@@ -17,7 +26,7 @@ type Step = 'loading' | 'landing' | 'select-type' | 'register-yuvak' | 'register
   selector: 'app-public-quiz',
   standalone: true,
   imports: [ReactiveFormsModule, FormsModule, NgFor, NgIf, DecimalPipe, SlicePipe, NgClass,
-            ButtonModule, InputTextModule, RadioButtonModule, DropdownModule, ToastModule],
+            InputTextModule, RadioButtonModule, DropdownModule, ToastModule],
   templateUrl: './public-quiz.component.html',
   styleUrls: ['./public-quiz.component.scss']
 })
@@ -47,8 +56,14 @@ export class PublicQuizComponent implements OnInit {
   ];
 
   yuvakForm = this.fb.group({
-    yuvak_id: ['', Validators.required],
+    identifier: ['', identifierValidator],
   });
+
+  get identifierType(): 'mobile' | 'yuvak' | null {
+    const val = (this.yuvakForm.value.identifier || '').trim();
+    if (!val) return null;
+    return /^\d+$/.test(val) ? 'mobile' : 'yuvak';
+  }
 
   externalForm = this.fb.group({
     name:   ['', [Validators.required, Validators.minLength(2)]],
@@ -81,14 +96,15 @@ export class PublicQuizComponent implements OnInit {
   validateYuvak() {
     if (this.yuvakForm.invalid) { this.yuvakForm.markAllAsTouched(); return; }
     this.validating = true;
-    this.api.publicPost<any>('validate-yuvak', { yuvak_id: this.yuvakForm.value.yuvak_id }).subscribe({
+    const identifier = (this.yuvakForm.value.identifier || '').trim();
+    this.api.publicPost<any>('validate-yuvak', { identifier }).subscribe({
       next: res => {
         if (res.success) { this.yuvakInfo = res.data; }
-        else { this.toast.error('Yuvak ID not found.'); }
+        else { this.toast.error('Not found. Check Yuvak ID or Mobile Number.'); }
         this.validating = false;
       },
       error: err => {
-        this.toast.error(err.error?.message || 'Yuvak ID not found.');
+        this.toast.error(err.error?.message || 'Not found. Check Yuvak ID or Mobile Number.');
         this.validating = false;
       }
     });
@@ -100,7 +116,7 @@ export class PublicQuizComponent implements OnInit {
     this.validating = true;
     this.api.publicPost<any>(`quiz/${slug}/start`, {
       participant_type: 'registered',
-      yuvak_id: this.yuvakForm.value.yuvak_id,
+      identifier: this.yuvakInfo.member_id || this.yuvakInfo.yuvak_id,
     }).subscribe({
       next: res => {
         if (res.success) {

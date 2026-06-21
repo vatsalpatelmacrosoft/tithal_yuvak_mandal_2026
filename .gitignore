@@ -1,0 +1,25 @@
+# ── OS & Editor ──────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ── Backend ───────────────────────────────────────────────────────────────────
+backend/vendor/
+backend/.env
+backend/config/database.php
+backend/storage/qr/
+backend/*.log
+
+# ── Frontend ──────────────────────────────────────────────────────────────────
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/*.log
+
+# ── Misc ─────────────────────────────────────────────────────────────────────
+*.env
+*.env.local
+*.env.production

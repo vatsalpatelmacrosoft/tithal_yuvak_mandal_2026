@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["src/app/admin/yuvati/yuvati-list/yuvati-list.component.scss"],
-  "sourcesContent": [":host { display: block; }\n\n.id-badge {\n  background: #E0E7FF;\n  color: #3730A3;\n  padding: 2px 8px;\n  border-radius: 5px;\n  font-size: 0.78rem;\n  font-weight: 600;\n  letter-spacing: 0.03em;\n}\n"],
-  "mappings": ";AAAA;AAAQ,WAAA;;AAER,CAAA;AACE,cAAA;AACA,SAAA;AACA,WAAA,IAAA;AACA,iBAAA;AACA,aAAA;AACA,eAAA;AACA,kBAAA;;",
-  "names": []
-}

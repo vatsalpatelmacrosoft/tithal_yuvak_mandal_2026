@@ -6,26 +6,30 @@ import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 import { InputTextModule } from 'primeng/inputtext';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
 import { TooltipModule } from 'primeng/tooltip';
 import { ApiService } from '../../../core/services/api.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-quiz-list',
   standalone: true,
   imports: [FormsModule, NgIf, NgFor, DatePipe, TableModule, ButtonModule, TagModule,
-            InputTextModule, ConfirmDialogModule, TooltipModule],
+            InputTextModule, TooltipModule],
   templateUrl: './quiz-list.component.html',
-  styleUrls: ['./quiz-list.component.scss'],
-  providers: [ConfirmationService]
+  styleUrls: ['./quiz-list.component.scss']
 })
 export class QuizListComponent implements OnInit {
   private api     = inject(ApiService);
+  private auth    = inject(AuthService);
   private toast   = inject(ToastService);
   private confirm = inject(ConfirmationService);
   readonly router = inject(Router);
+
+  get canCreate() { return this.auth.hasPermission('quiz', 'can_create'); }
+  get canUpdate() { return this.auth.hasPermission('quiz', 'can_update'); }
+  get canDelete() { return this.auth.hasPermission('quiz', 'can_delete'); }
 
   quizzes    = signal<any[]>([]);
   searchTerm = '';
@@ -65,8 +69,7 @@ export class QuizListComponent implements OnInit {
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Archive',
       rejectLabel: 'Cancel',
-      acceptButtonStyleClass: 'p-button-danger',
-      rejectButtonStyleClass: 'p-button-text',
+      defaultFocus: 'reject',
       accept: () => this.api.delete(`quiz/${q.uuid}`).subscribe({
         next: () => { this.toast.success('Quiz archived'); this.load(); }
       })

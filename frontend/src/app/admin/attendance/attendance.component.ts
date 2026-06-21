@@ -28,8 +28,9 @@ export class AttendanceComponent implements OnInit, OnDestroy {
   private auth  = inject(AuthService);
   private toast = inject(ToastService);
 
-  get canViewYuvak()  { return this.auth.hasPermission('yuvak',  'can_view'); }
-  get canViewYuvati() { return this.auth.hasPermission('yuvati', 'can_view'); }
+  get canViewAttendance() { return this.auth.hasPermission('attendance', 'can_view'); }
+  get canViewYuvak()  { return this.canViewAttendance || this.auth.hasPermission('yuvak',  'can_view'); }
+  get canViewYuvati() { return this.canViewAttendance || this.auth.hasPermission('yuvati', 'can_view'); }
 
   records   = signal<any[]>([]);
   dateWise  = signal<any[]>([]);

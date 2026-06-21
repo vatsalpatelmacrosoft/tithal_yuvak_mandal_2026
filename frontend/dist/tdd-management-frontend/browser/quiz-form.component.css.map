@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["src/app/admin/quiz/quiz-form/quiz-form.component.scss"],
-  "sourcesContent": [":host { display: block; }\n\n::ng-deep .form-hero-actions .p-button:not(.p-button-outlined) {\n  background: linear-gradient(135deg, #BE123C, #F43F5E) !important;\n  border-color: transparent !important;\n  box-shadow: 0 2px 8px rgba(244, 63, 94, 0.3);\n  &:hover { background: linear-gradient(135deg, #9F1239, #BE123C) !important; }\n}\n\n.active-toggle-row {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n"],
-  "mappings": ";AAAA;AAAQ,WAAA;;AAER,UAAA,CAAA,kBAAA,CAAA,QAAA,KAAA,CAAA;AACE;IAAA;MAAA,MAAA;MAAA,OAAA;MAAA;AACA,gBAAA;AACA,cAAA,EAAA,IAAA,IAAA,KAAA,GAAA,EAAA,EAAA,EAAA,EAAA,EAAA;;AACA,UAAA,CAJF,kBAIE,CAJF,QAIE,KAAA,CAJF,kBAIE;AAAU;IAAA;MAAA,MAAA;MAAA,OAAA;MAAA;;AAGZ,CAAA;AACE,WAAA;AACA,eAAA;AACA,OAAA;;",
-  "names": []
-}

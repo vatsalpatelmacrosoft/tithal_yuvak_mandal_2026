@@ -6,20 +6,20 @@ import { TableModule, TableLazyLoadEvent } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { DropdownModule } from 'primeng/dropdown';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
 import { TooltipModule } from 'primeng/tooltip';
 import { ApiService } from '../../../core/services/api.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Yuvak, PaginatedResponse } from '../../../core/models';
+import { environment } from '../../../../environments/environment';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 
 @Component({
   selector: 'app-yuvak-list',
   standalone: true,
   imports: [FormsModule, NgIf, TitleCasePipe, TableModule, ButtonModule, InputTextModule,
-            DropdownModule, ConfirmDialogModule, TooltipModule],
+            DropdownModule, TooltipModule],
   templateUrl: './yuvak-list.component.html',
   styleUrls: ['./yuvak-list.component.scss']
 })
@@ -73,6 +73,17 @@ export class YuvakListComponent implements OnInit {
   goToCreate() { this.router.navigate(['/admin/yuvak/new']); }
   edit(y: Yuvak) { this.router.navigate(['/admin/yuvak', y.uuid]); }
 
+  exportCsv() {
+    const token = localStorage.getItem('tdd_token') || '';
+    let url = `${environment.apiUrl}/yuvak/export?token=${encodeURIComponent(token)}`;
+    if (this.searchTerm)       url += `&search=${encodeURIComponent(this.searchTerm)}`;
+    if (this.filters.xetra_id)  url += `&xetra_id=${this.filters.xetra_id}`;
+    if (this.filters.mandal_id) url += `&mandal_id=${this.filters.mandal_id}`;
+    const a = document.createElement('a');
+    a.href = url;
+    a.click();
+  }
+
   openWelcomePage(y: Yuvak) {
     const url = `${window.location.origin}/welcome/yuvak/${y.uuid}`;
     window.open(url, '_blank');
@@ -103,7 +114,7 @@ export class YuvakListComponent implements OnInit {
       header: 'Confirm Archive',
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Archive', rejectLabel: 'Cancel',
-      acceptButtonStyleClass: 'p-button-danger', rejectButtonStyleClass: 'p-button-text',
+      defaultFocus: 'reject',
       accept: () => {
         this.api.delete(`yuvak/${y.uuid}`).subscribe({
           next: res => { if (res.success) { this.toast.success('Yuvak archived'); this.loadData(1); } }

@@ -7,7 +7,7 @@
       <span class="hero-badge">{{ roles().length }} Role</span>
     </div>
   </div>
-  <div class="hero-right">
+  <div class="hero-right" *ngIf="canCreate">
     <p-button label="Add Role" icon="pi pi-plus" (click)="openForm()" />
   </div>
 </div>
@@ -18,9 +18,21 @@
     <div style="padding:12px 16px;background:#F8FAFC;border-bottom:1px solid #E5E7EB;font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#6B7280">
       All Roles
     </div>
-    <div *ngFor="let r of roles()" class="role-item" [class.active]="selected()?.uuid===r.uuid" (click)="selectRole(r)">
-      <span class="role-name">{{ r.name }}</span>
-      <span class="role-code">{{ r.code }}</span>
+    <div *ngFor="let r of roles()" class="role-item"
+      [class.active]="selected()?.uuid===r.uuid"
+      (click)="selectRole(r)"
+      style="display:flex;align-items:center;gap:4px">
+      <div style="flex:1;min-width:0">
+        <span class="role-name">{{ r.name }}</span>
+        <span class="role-code">{{ r.code }}</span>
+      </div>
+      <p-button *ngIf="canUpdate" icon="pi pi-pencil" [rounded]="true" [text]="true" size="small"
+        pTooltip="Edit Role" tooltipPosition="top"
+        (click)="openForm(r); $event.stopPropagation()" />
+      <p-button *ngIf="canDelete && r.code !== 'SUPER_ADMIN'" icon="pi pi-trash" [rounded]="true" [text]="true"
+        severity="danger" size="small"
+        pTooltip="Delete Role" tooltipPosition="top"
+        (click)="confirmDelete(r); $event.stopPropagation()" />
     </div>
     <div *ngIf="!roles().length" style="padding:32px;text-align:center;color:#9CA3AF">
       <i class="pi pi-id-card" style="font-size:1.5rem;display:block;margin-bottom:8px"></i>
@@ -30,7 +42,7 @@
 
   <!-- Permissions matrix -->
   <div class="table-card" *ngIf="selected()">
-    <div style="padding:16px 20px;border-bottom:1px solid #F3F4F6;display:flex;justify-content:space-between;align-items:center">
+    <div style="padding:16px 20px;border-bottom:1px solid #F3F4F6;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
       <div>
         <div style="font-weight:700;color:#1F2937;font-size:1rem">{{ selected()?.name }}</div>
         <div style="font-size:0.82rem;color:#6B7280;margin-top:2px">
@@ -38,44 +50,70 @@
           <span *ngIf="selected()?.code==='SUPER_ADMIN'" style="margin-left:8px;background:#FEF3C7;color:#92400E;border-radius:4px;padding:2px 8px;font-size:0.72rem;font-weight:700">SUPER ADMIN</span>
         </div>
       </div>
-      <div style="display:flex;gap:8px" *ngIf="dirty">
-        <p-button label="Cancel" [outlined]="true" size="small" (click)="cancelChanges()" />
-        <p-button label="Save Permissions" icon="pi pi-save" size="small"
-          (click)="savePermissions()" [loading]="savingPerms" />
-      </div>
-      <div *ngIf="!dirty" style="font-size:0.82rem;color:#9CA3AF;display:flex;align-items:center;gap:5px">
-        <i class="pi pi-check-circle" style="color:#10B981"></i> Saved
+      <div style="display:flex;gap:8px;align-items:center">
+        <ng-container *ngIf="dirty && canUpdate">
+          <button type="button" class="rbtn rbtn-cancel" (click)="cancelChanges()">Cancel</button>
+          <button type="button" class="rbtn rbtn-save" [disabled]="savingPerms" (click)="savePermissions()">
+            <i class="pi" [class.pi-save]="!savingPerms" [class.pi-spin]="savingPerms" [class.pi-spinner]="savingPerms"></i>
+            Save Permissions
+          </button>
+        </ng-container>
+        <span *ngIf="!dirty" style="font-size:0.82rem;color:#9CA3AF;display:flex;align-items:center;gap:5px">
+          <i class="pi pi-check-circle" style="color:#10B981"></i> Saved
+        </span>
       </div>
     </div>
 
-    <table style="width:100%;border-collapse:collapse">
-      <thead>
-        <tr style="background:#F8FAFC">
-          <th style="padding:12px 16px;text-align:left;font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#6B7280;border-bottom:2px solid #E5E7EB">Module</th>
-          <th *ngFor="let col of permCols" style="width:110px;padding:12px 8px;border-bottom:2px solid #E5E7EB">
-            <div class="col-header">
-              {{ col.label }}
-              <p-checkbox [ngModel]="allSelected(col.key)" [binary]="true"
-                (ngModelChange)="toggleAll(col.key, $event)" />
-            </div>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr class="perm-row" *ngFor="let p of pending(); let even=even"
-          [style.background]="even ? '#FAFBFF' : '#fff'">
-          <td style="font-weight:500;text-transform:capitalize;color:#374151">{{ p.menu_name }}</td>
-          <td *ngFor="let col of permCols" class="perm-check">
-            <p-checkbox [(ngModel)]="p[col.key]" [binary]="true" (ngModelChange)="markDirty()" />
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;table-layout:fixed">
+        <colgroup>
+          <col style="width:auto">
+          <col style="width:100px">
+          <col style="width:100px">
+          <col style="width:100px">
+          <col style="width:100px">
+        </colgroup>
+        <thead>
+          <tr style="background:#F8FAFC">
+            <th style="padding:12px 16px;text-align:left;font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#6B7280;border-bottom:2px solid #E5E7EB">
+              Module
+            </th>
+            <th *ngFor="let col of permCols"
+              style="padding:10px 8px;border-bottom:2px solid #E5E7EB;text-align:center">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+                <span style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#6B7280">{{ col.label }}</span>
+                <p-checkbox [ngModel]="allSelected(col.key)" [binary]="true"
+                  [disabled]="!canUpdate"
+                  (ngModelChange)="toggleAll(col.key, $event)"
+                  pTooltip="Toggle all" tooltipPosition="top" />
+              </div>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of pending(); let even=even"
+            [style.background]="even ? '#FAFBFF' : '#fff'"
+            style="border-bottom:1px solid #F3F4F6">
+            <td style="padding:12px 16px;font-weight:500;text-transform:capitalize;color:#374151;font-size:0.9rem">
+              {{ p.menu_name }}
+            </td>
+            <td *ngFor="let col of permCols" style="padding:10px 8px;text-align:center;vertical-align:middle">
+              <p-checkbox [(ngModel)]="p[col.key]" [binary]="true"
+                [disabled]="!canUpdate"
+                (ngModelChange)="markDirty()" />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
-    <div style="padding:14px 20px;border-top:1px solid #F3F4F6;background:#F8FAFC;display:flex;justify-content:flex-end;gap:8px" *ngIf="dirty">
-      <p-button label="Cancel" [outlined]="true" size="small" (click)="cancelChanges()" />
-      <p-button label="Save Permissions" icon="pi pi-save" size="small"
-        (click)="savePermissions()" [loading]="savingPerms" />
+    <div *ngIf="dirty && canUpdate"
+      style="padding:14px 20px;border-top:1px solid #F3F4F6;background:#F8FAFC;display:flex;justify-content:flex-end;gap:8px">
+      <button type="button" class="rbtn rbtn-cancel" (click)="cancelChanges()">Cancel</button>
+      <button type="button" class="rbtn rbtn-save" [disabled]="savingPerms" (click)="savePermissions()">
+        <i class="pi" [class.pi-save]="!savingPerms" [class.pi-spin]="savingPerms" [class.pi-spinner]="savingPerms"></i>
+        Save Permissions
+      </button>
     </div>
   </div>
 
@@ -88,14 +126,17 @@
   </div>
 </div>
 
-<!-- Add Role Drawer -->
+<!-- Add / Edit Role Drawer -->
 <p-sidebar [(visible)]="showForm" position="right" [style]="{width:'380px'}" [dismissible]="true">
   <ng-template pTemplate="header">
     <div style="display:flex;justify-content:space-between;align-items:center;flex:1;margin-right:8px">
-      <span style="font-weight:700;font-size:1rem;color:#1F2937">Add Role</span>
+      <span style="font-weight:700;font-size:1rem;color:#1F2937">{{ isEditRole ? 'Edit Role' : 'Add Role' }}</span>
       <div style="display:flex;gap:8px">
-        <p-button label="Cancel" [outlined]="true" size="small" (click)="showForm=false" />
-        <p-button label="Create" size="small" [loading]="saving" (click)="saveRole()" />
+        <button type="button" class="rbtn rbtn-cancel" (click)="showForm=false">Cancel</button>
+        <button type="button" class="rbtn rbtn-save" [disabled]="saving" (click)="saveRole()">
+          <i class="pi" [class.pi-save]="!saving" [class.pi-spin]="saving" [class.pi-spinner]="saving"></i>
+          Save
+        </button>
       </div>
     </div>
   </ng-template>

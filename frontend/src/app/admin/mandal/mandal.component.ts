@@ -6,7 +6,6 @@ import { ButtonModule } from 'primeng/button';
 import { SidebarModule } from 'primeng/sidebar';
 import { InputTextModule } from 'primeng/inputtext';
 import { DropdownModule } from 'primeng/dropdown';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
@@ -18,7 +17,7 @@ import { ToastService } from '../../core/services/toast.service';
   selector: 'app-mandal',
   standalone: true,
   imports: [FormsModule, ReactiveFormsModule, NgIf, TableModule, ButtonModule, SidebarModule,
-            InputTextModule, DropdownModule, ConfirmDialogModule, TagModule, TooltipModule],
+            InputTextModule, DropdownModule, TagModule, TooltipModule],
   templateUrl: './mandal.component.html',
   styleUrls: ['./mandal.component.scss']
 })
@@ -75,7 +74,7 @@ export class MandalComponent implements OnInit {
     this.confirm.confirm({
       message: `Archive <strong>${m.name}</strong>?`, header: 'Confirm Archive',
       icon: 'pi pi-exclamation-triangle', acceptLabel: 'Archive', rejectLabel: 'Cancel',
-      acceptButtonStyleClass: 'p-button-danger', rejectButtonStyleClass: 'p-button-text',
+      defaultFocus: 'reject',
       accept: () => this.api.delete(`mandal/${m.uuid}`).subscribe({ next: () => { this.toast.success('Mandal archived'); this.load(); } })
     });
   }

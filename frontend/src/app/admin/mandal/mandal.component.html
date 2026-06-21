@@ -67,8 +67,10 @@
     <div style="display:flex;justify-content:space-between;align-items:center;flex:1;margin-right:8px">
       <span style="font-weight:700;font-size:1rem;color:#1F2937">{{ editing ? 'Edit Mandal' : 'Add Mandal' }}</span>
       <div style="display:flex;gap:8px">
-        <p-button label="Cancel" [outlined]="true" size="small" (click)="closeForm()" />
-        <p-button label="Save" size="small" [loading]="saving" (click)="save()" />
+        <button type="button" class="rbtn rbtn-cancel" (click)="closeForm()">Cancel</button>
+        <button type="button" class="rbtn rbtn-save" *ngIf="editing ? auth.hasPermission('mandal','can_update') : auth.hasPermission('mandal','can_create')" [disabled]="saving" (click)="save()">
+          <i class="pi" [class.pi-save]="!saving" [class.pi-spin]="saving" [class.pi-spinner]="saving"></i> Save
+        </button>
       </div>
     </div>
   </ng-template>
@@ -96,4 +98,4 @@
   </form>
 </p-sidebar>
 
-<p-confirmDialog [style]="{width:'420px'}" />
+
