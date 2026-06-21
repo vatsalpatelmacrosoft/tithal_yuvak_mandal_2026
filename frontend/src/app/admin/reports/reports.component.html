@@ -195,10 +195,10 @@
         <i class="pi pi-question-circle fw-icon"></i>
         <p-dropdown [options]="quizzes()" [(ngModel)]="selectedQuizModel"
                     placeholder="Select a quiz" [showClear]="false"
-                    (onChange)="onQuizSelect($event.value)" styleClass="fw-dropdown"
-                     />
+                    (onChange)="onQuizSelect($event.value)" styleClass="fw-dropdown" />
       </div>
-      <p-button label="Export CSV" icon="pi pi-download" size="small" [outlined]="true"
+      <!-- Export all genders button -->
+      <p-button label="Export All" icon="pi pi-download" size="small" [outlined]="true"
                 [disabled]="!selectedQuiz()" (click)="export('gender-wise')" />
     </div>
 
@@ -208,7 +208,8 @@
     </div>
 
     <div *ngIf="selectedQuiz()">
-      <!-- Summary Cards -->
+
+      <!-- Summary count cards -->
       <div class="gender-summary" *ngIf="!loadingG">
         <div class="gender-card male">
           <div class="gender-icon-wrap"><i class="pi pi-user"></i></div>
@@ -232,64 +233,68 @@
         </div>
       </div>
 
-      <div style="margin-bottom:24px">
-      <p-table [value]="genderSummary()" [loading]="loadingG" styleClass="p-datatable-striped">
-        <ng-template pTemplate="header">
-          <tr>
-            <th>Gender</th>
-            <th class="text-center">Participants</th>
-            <th class="text-center">Highest %</th>
-            <th class="text-center">Average %</th>
-            <th class="text-center">Lowest %</th>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-s>
-          <tr>
-            <td><strong>{{ s.gender | titlecase }}</strong></td>
-            <td class="text-center">{{ s.total_participants }}</td>
-            <td class="text-center">{{ s.highest_score | number:'1.1-1' }}%</td>
-            <td class="text-center"><strong>{{ s.average_score | number:'1.1-1' }}%</strong></td>
-            <td class="text-center">{{ s.lowest_score | number:'1.1-1' }}%</td>
-          </tr>
-        </ng-template>
-      </p-table>
+      <!-- Gender sub-tabs + per-gender export -->
+      <div class="gender-tab-bar">
+        <div class="gender-tab-pills">
+          <button *ngFor="let gt of genderTabs"
+                  class="gender-pill"
+                  [class.active]="activeGenderTab === gt.key"
+                  [style.--g-color]="gt.color"
+                  [style.--g-bg]="gt.bg"
+                  [style.--g-border]="gt.border"
+                  (click)="activeGenderTab = gt.key">
+            <span class="g-dot" [style.background]="gt.color"></span>
+            {{ gt.label }}
+            <span class="g-count">{{ getGenderCount(gt.key) }}</span>
+          </button>
+        </div>
+        <button class="rbtn rbtn-cancel" style="font-size:0.8rem;height:30px;padding:0 12px"
+                [disabled]="!selectedQuiz()"
+                (click)="export('gender-wise', activeGenderTab)">
+          <i class="pi pi-download"></i>
+          Export {{ activeGenderTab | titlecase }} CSV
+        </button>
       </div>
 
-      <div *ngFor="let gender of ['male','female','other']">
-        <div class="gender-section" *ngIf="genderDetails()[gender]?.length">
-          <div class="gender-section-title">
-            <i class="pi pi-user"></i> {{ gender | titlecase }} Participants
-          </div>
-          <p-table [value]="genderDetails()[gender]" styleClass="p-datatable-striped"
-                   [tableStyle]="{'min-width':'40rem'}">
-            <ng-template pTemplate="header">
-              <tr>
-                <th>#</th><th>Name / ID</th><th>Type</th>
-                <th class="text-center">Score</th>
-                <th class="text-center">Total</th>
-                <th class="text-center">%</th>
-              </tr>
-            </ng-template>
-            <ng-template pTemplate="body" let-p let-i="rowIndex">
-              <tr>
-                <td style="color:#9CA3AF">{{ i + 1 }}</td>
-                <td>
-                  <div style="font-weight:600">{{ p.name || p.yuvak_id || '—' }}</div>
-                  <div *ngIf="p.yuvak_id && p.name" style="font-size:0.78rem;color:#9CA3AF">{{ p.yuvak_id }}</div>
-                </td>
-                <td><p-tag [value]="typeLabel(p.participant_type)" severity="secondary" /></td>
-                <td class="text-center"><strong>{{ p.score }}</strong></td>
-                <td class="text-center">{{ p.total_marks }}</td>
-                <td class="text-center">
-                  <span [class]="'pct-badge ' + (+p.percentage >= 40 ? 'pass' : 'fail')">
-                    {{ p.percentage | number:'1.1-1' }}%
-                  </span>
-                </td>
-              </tr>
-            </ng-template>
-          </p-table>
-        </div>
-      </div>
+      <!-- Active gender participant table -->
+      <p-table [value]="genderDetails()[activeGenderTab] || []" [loading]="loadingG"
+               styleClass="p-datatable-striped" [tableStyle]="{'min-width':'50rem'}">
+        <ng-template pTemplate="header">
+          <tr>
+            <th style="width:3rem">#</th>
+            <th>Name / ID</th>
+            <th>Type</th>
+            <th class="text-center">Score</th>
+            <th class="text-center">Total</th>
+            <th class="text-center">%</th>
+            <th class="text-center">Correct</th>
+            <th class="text-center">Wrong</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-p let-i="rowIndex">
+          <tr>
+            <td style="color:#9CA3AF">{{ i + 1 }}</td>
+            <td>
+              <div style="font-weight:600">{{ p.name || p.yuvak_id || '—' }}</div>
+              <div *ngIf="p.yuvak_id && p.name" style="font-size:0.78rem;color:#9CA3AF">{{ p.yuvak_id }}</div>
+            </td>
+            <td><p-tag [value]="typeLabel(p.participant_type)" severity="secondary" /></td>
+            <td class="text-center"><strong>{{ p.score }}</strong></td>
+            <td class="text-center">{{ p.total_marks }}</td>
+            <td class="text-center">
+              <span [class]="'pct-badge ' + (+p.percentage >= 40 ? 'pass' : 'fail')">
+                {{ p.percentage | number:'1.1-1' }}%
+              </span>
+            </td>
+            <td class="text-center" style="color:#10B981;font-weight:600">{{ p.correct_answers }}</td>
+            <td class="text-center" style="color:#EF4444;font-weight:600">{{ p.incorrect_answers }}</td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="8" class="empty-msg">No {{ activeGenderTab }} participants found.</td></tr>
+        </ng-template>
+      </p-table>
+
     </div>
   </ng-container>
 

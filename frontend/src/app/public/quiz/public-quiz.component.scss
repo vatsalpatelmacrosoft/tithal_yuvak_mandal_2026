@@ -414,8 +414,9 @@
   justify-content: center;
   i { font-size: 2rem; color: #fff; }
 
-  &.pending { background: linear-gradient(135deg, #F59E0B, #FBBF24); }
-  &.ended   { background: linear-gradient(135deg, #6B7280, #9CA3AF); }
+  &.pending  { background: linear-gradient(135deg, #F59E0B, #FBBF24); }
+  &.ended    { background: linear-gradient(135deg, #6B7280, #9CA3AF); }
+  &.success  { background: linear-gradient(135deg, #10B981, #34D399); }
 }
 .status-title {
   font-size: 1.25rem;
@@ -448,6 +449,21 @@
   margin-bottom: 24px;
 }
 .status-footer { margin-top: 8px; }
+
+.thankyou-attempts {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #ECFDF5;
+  border: 1px solid #6EE7B7;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-size: 1rem;
+  color: #065F46;
+  margin-bottom: 16px;
+  i { color: #10B981; font-size: 1rem; }
+  strong { font-size: 1.5rem; font-weight: 800; color: #047857; }
+}
 
 /* ── Select / Input answer wrappers ─────────────────────── */
 .select-wrap,

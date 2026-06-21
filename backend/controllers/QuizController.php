@@ -44,8 +44,8 @@ class QuizController
         $this->pdo->prepare("
             INSERT INTO quizzes
                 (uuid, name, title, slug, description, instructions,
-                 start_datetime, end_datetime, quiz_status, is_active)
-            VALUES (?,?,?,?,?,?,?,?,?,?)
+                 start_datetime, end_datetime, quiz_status, is_active, show_result)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?)
         ")->execute([
             $uuid,
             $body['title'],
@@ -57,6 +57,7 @@ class QuizController
             $body['end_datetime']   ?? null,
             $body['quiz_status']    ?? 'draft',
             isset($body['is_active']) ? (int)(bool)$body['is_active'] : 1,
+            isset($body['show_result']) ? (int)(bool)$body['show_result'] : 1,
         ]);
 
         $this->show($uuid);
@@ -72,7 +73,7 @@ class QuizController
         $this->pdo->prepare("
             UPDATE quizzes SET
                 name=?, title=?, description=?, instructions=?,
-                start_datetime=?, end_datetime=?, quiz_status=?, is_active=?
+                start_datetime=?, end_datetime=?, quiz_status=?, is_active=?, show_result=?
             WHERE uuid=?
         ")->execute([
             $body['title']        ?? $quiz['title'] ?? $quiz['name'],
@@ -83,6 +84,7 @@ class QuizController
             $body['end_datetime']   ?? $quiz['end_datetime'],
             $body['quiz_status']    ?? $quiz['quiz_status'],
             isset($body['is_active']) ? (int)(bool)$body['is_active'] : $quiz['is_active'],
+            isset($body['show_result']) ? (int)(bool)$body['show_result'] : $quiz['show_result'],
             $uuid,
         ]);
 

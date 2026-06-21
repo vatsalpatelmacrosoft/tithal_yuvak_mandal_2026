@@ -129,7 +129,9 @@ class ReportController
                 qp.gender,
                 qs.score,
                 qs.total_marks,
-                qs.percentage
+                qs.percentage,
+                qs.correct_answers,
+                qs.incorrect_answers
             FROM quiz_participants qp
             LEFT JOIN yuvaks y ON y.id = qp.yuvak_db_id
             LEFT JOIN quiz_submissions qs ON qs.participant_id = qp.id
@@ -162,7 +164,9 @@ class ReportController
                 $this->exportQuestionWise($quizUuid);
                 break;
             case 'gender-wise':
-                $this->exportGenderWise($quizUuid);
+                $gender = in_array($_GET['gender'] ?? '', ['male','female','other'])
+                          ? $_GET['gender'] : null;
+                $this->exportGenderWise($quizUuid, $gender);
                 break;
             default:
                 sendError(400, 'Invalid export type');
@@ -230,25 +234,31 @@ class ReportController
         $this->outputCsv('question-analysis', $headers, $stmt->fetchAll());
     }
 
-    private function exportGenderWise(string $quizUuid): void
+    private function exportGenderWise(string $quizUuid, ?string $gender = null): void
     {
-        $quiz = $this->findQuiz($quizUuid);
+        $quiz   = $this->findQuiz($quizUuid);
+        $where  = "qp.quiz_id=? AND qp.status='active'";
+        $params = [$quiz['id']];
+        if ($gender) { $where .= " AND qp.gender=?"; $params[] = $gender; }
+
         $stmt = $this->pdo->prepare("
             SELECT qp.gender,
                    COALESCE(qp.name,
                        TRIM(CONCAT(y.first_name,' ',COALESCE(y.middle_name,''),' ',y.last_name))
                    ) AS name,
-                   qp.yuvak_id,
-                   qs.score, qs.total_marks, qs.percentage
+                   qp.yuvak_id, qp.participant_type,
+                   qs.score, qs.total_marks, qs.percentage,
+                   qs.correct_answers, qs.incorrect_answers
             FROM quiz_participants qp
             LEFT JOIN yuvaks y ON y.id = qp.yuvak_db_id
             LEFT JOIN quiz_submissions qs ON qs.participant_id=qp.id
-            WHERE qp.quiz_id=? AND qp.status='active'
+            WHERE {$where}
             ORDER BY qp.gender, qs.percentage DESC
         ");
-        $stmt->execute([$quiz['id']]);
-        $headers = ['Gender','Name','Yuvak ID','Score','Total Marks','Percentage %'];
-        $this->outputCsv('gender-wise-report', $headers, $stmt->fetchAll());
+        $stmt->execute($params);
+        $filename = $gender ? "gender-{$gender}-report" : 'gender-wise-report';
+        $headers  = ['Gender','Name','ID','Type','Score','Total Marks','Percentage %','Correct','Incorrect'];
+        $this->outputCsv($filename, $headers, $stmt->fetchAll());
     }
 
     private function outputCsv(string $filename, array $headers, array $rows): void

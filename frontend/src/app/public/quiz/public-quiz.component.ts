@@ -20,7 +20,7 @@ function identifierValidator(ctrl: AbstractControl): ValidationErrors | null {
 }
 
 type Step = 'loading' | 'landing' | 'select-type' | 'register-yuvak' | 'register-external'
-           | 'quiz' | 'result' | 'closed' | 'not-started' | 'ended' | 'not-found';
+           | 'quiz' | 'result' | 'thank-you' | 'closed' | 'not-started' | 'ended' | 'not-found' | 'already-submitted';
 
 @Component({
   selector: 'app-public-quiz',
@@ -66,8 +66,9 @@ export class PublicQuizComponent implements OnInit {
   }
 
   externalForm = this.fb.group({
-    name:   ['', [Validators.required, Validators.minLength(2)]],
-    gender: ['', Validators.required],
+    name:      ['', [Validators.required, Validators.minLength(2)]],
+    mo_number: ['', [Validators.required, Validators.pattern(/^[6-9]\d{9}$/)]],
+    gender:    ['', Validators.required],
   });
 
   ngOnInit() {
@@ -137,8 +138,9 @@ export class PublicQuizComponent implements OnInit {
     this.validating = true;
     this.api.publicPost<any>(`quiz/${slug}/start`, {
       participant_type: 'external',
-      name:   this.externalForm.value.name,
-      gender: this.externalForm.value.gender,
+      name:      this.externalForm.value.name,
+      mo_number: this.externalForm.value.mo_number,
+      gender:    this.externalForm.value.gender,
     }).subscribe({
       next: res => {
         if (res.success) {
@@ -156,7 +158,11 @@ export class PublicQuizComponent implements OnInit {
   private handleStartError(err: any) {
     this.validating = false;
     const msg: string = err.error?.message || '';
-    if (err.status === 403) {
+    if (err.status === 409) {
+      this.step.set('already-submitted');
+    } else if (err.status === 422) {
+      this.toast.error(msg || 'Validation error');
+    } else if (err.status === 403) {
       if (msg.toLowerCase().includes('not started')) {
         this.step.set('not-started');
       } else if (msg.toLowerCase().includes('ended')) {
@@ -196,7 +202,7 @@ export class PublicQuizComponent implements OnInit {
       next: res => {
         if (res.success) {
           this.result.set(res.data);
-          this.step.set('result');
+          this.step.set(res.data.show_result ? 'result' : 'thank-you');
         }
         this.submitting = false;
       },

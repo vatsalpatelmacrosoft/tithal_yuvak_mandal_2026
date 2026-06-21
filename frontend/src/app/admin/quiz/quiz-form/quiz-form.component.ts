@@ -43,6 +43,7 @@ export class QuizFormComponent implements OnInit {
     end_datetime:   [null as Date | null],
     quiz_status:    ['draft'],
     is_active:      [true],
+    show_result:    [true],
   });
 
   ngOnInit() {
@@ -67,6 +68,7 @@ export class QuizFormComponent implements OnInit {
           end_datetime:   q.end_datetime   ? new Date(q.end_datetime)   : null,
           quiz_status:    q.quiz_status,
           is_active:      !!q.is_active,
+          show_result:    q.show_result === undefined ? true : !!q.show_result,
         });
       }
     });

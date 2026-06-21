@@ -99,5 +99,16 @@
         </small>
       </div>
     </div>
+
+    <div class="form-row">
+      <div class="field" style="grid-column:1/-1">
+        <label>Show Result After Submit</label>
+        <p-dropdown [options]="[{label:'Yes — Show full score and stats',value:true},{label:'No — Show thank you message only',value:false}]"
+                    formControlName="show_result" optionLabel="label" optionValue="value" />
+        <small style="color:#9CA3AF;font-size:0.82rem;margin-top:6px;display:block">
+          If set to No, participants will see a thank you screen with total attempt count instead of their score.
+        </small>
+      </div>
+    </div>
   </div>
 </form>

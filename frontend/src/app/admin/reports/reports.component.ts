@@ -48,6 +48,14 @@ export class ReportsComponent implements OnInit {
   loadingQs = false;
   loadingG  = false;
 
+  activeGenderTab: 'male' | 'female' | 'other' = 'male';
+
+  genderTabs = [
+    { key: 'male'   as const, label: 'Male',   color: '#1D4ED8', bg: '#EFF6FF', border: '#BFDBFE' },
+    { key: 'female' as const, label: 'Female', color: '#BE185D', bg: '#FDF2F8', border: '#FBCFE8' },
+    { key: 'other'  as const, label: 'Other',  color: '#6B7280', bg: '#F9FAFB', border: '#E5E7EB' },
+  ];
+
   ngOnInit() {
     this.loadQuizList();
     this.loadQuizWise();
@@ -110,13 +118,14 @@ export class ReportsComponent implements OnInit {
     });
   }
 
-  export(type: string) {
+  export(type: string, gender?: string) {
     const uuid  = this.selectedQuiz();
     const token = localStorage.getItem('tdd_token') || '';
-    const url   = `${environment.apiUrl}/reports/export?type=${type}&quiz_uuid=${uuid || ''}&format=csv&token=${encodeURIComponent(token)}`;
+    const genderParam = gender ? `&gender=${gender}` : '';
+    const url = `${environment.apiUrl}/reports/export?type=${type}&quiz_uuid=${uuid || ''}${genderParam}&format=csv&token=${encodeURIComponent(token)}`;
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${type}-report.csv`;
+    a.download = gender ? `gender-${gender}-report.csv` : `${type}-report.csv`;
     a.click();
   }
 

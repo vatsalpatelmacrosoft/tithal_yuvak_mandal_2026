@@ -228,3 +228,61 @@
   padding-left: 10px;
   border-left: 3px solid #0D9488;
 }
+
+// ── Gender sub-tab bar ────────────────────────────────────────────
+.gender-tab-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 20px 0 16px;
+  flex-wrap: wrap;
+}
+
+.gender-tab-pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.gender-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 16px;
+  border-radius: 24px;
+  border: 1.5px solid #E5E7EB;
+  background: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.18s;
+
+  &:hover {
+    border-color: var(--g-border, #E5E7EB);
+    background: var(--g-bg, #F9FAFB);
+    color: var(--g-color, #374151);
+  }
+
+  &.active {
+    border-color: var(--g-color, #374151);
+    background: var(--g-bg, #F9FAFB);
+    color: var(--g-color, #374151);
+  }
+
+  .g-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .g-count {
+    background: rgba(0,0,0,0.07);
+    border-radius: 10px;
+    padding: 0 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+}

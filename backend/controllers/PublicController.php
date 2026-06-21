@@ -209,6 +209,8 @@ class PublicController
         $storedName    = null;
         $memberType    = 'yuvak';
 
+        $externalMobile = null;
+
         if ($type === 'registered') {
             $identifier = trim($body['identifier'] ?? $body['yuvak_id'] ?? '');
             if (empty($identifier)) sendValidationError(['identifier' => 'Yuvak ID or Mobile Number is required']);
@@ -241,18 +243,60 @@ class PublicController
 
             if (!$member) sendError(404, 'Member not found. Check ID or Mobile Number.');
 
-            $memberDbId    = $member['id'];
+            // ── 1-time submission check for registered members ──
+            $dupCheck = $this->pdo->prepare("
+                SELECT qp.id FROM quiz_participants qp
+                JOIN quiz_submissions qs ON qs.participant_id = qp.id
+                WHERE qp.quiz_id=? AND qp.yuvak_db_id=? AND qp.status='active'
+            ");
+            $dupCheck->execute([$quiz['id'], $member['id']]);
+            if ($dupCheck->fetch()) {
+                sendError(409, 'You have already submitted this quiz. Only one attempt is allowed.');
+            }
+
+            $memberDbId     = $member['id'];
             $storedMemberId = $member['member_id'];
-            $storedName    = $member['full_name'];
+            $storedName     = $member['full_name'];
         } else {
-            if (empty($body['name'])) sendValidationError(['name' => 'Name is required']);
-            if (empty($body['gender'])) sendValidationError(['gender' => 'Gender is required']);
+            // ── External participant validation ──
+            if (empty($body['name']))     sendValidationError(['name'      => 'Full name is required']);
+            if (empty($body['gender']))   sendValidationError(['gender'    => 'Gender is required']);
+            if (empty($body['mo_number'])) sendValidationError(['mo_number' => 'Mobile number is required']);
+
+            $mobile = trim($body['mo_number']);
+            if (!preg_match('/^[6-9]\d{9}$/', $mobile)) {
+                sendValidationError(['mo_number' => 'Enter a valid 10-digit Indian mobile number (starts with 6–9)']);
+            }
+
+            // Check if mobile belongs to a registered Yuvak/Yuvati
+            $regCheck = $this->pdo->prepare("
+                SELECT id FROM yuvaks  WHERE mo_number=? AND status='active'
+                UNION
+                SELECT id FROM yuvatis WHERE mo_number=? AND status='active'
+            ");
+            $regCheck->execute([$mobile, $mobile]);
+            if ($regCheck->fetch()) {
+                sendError(422, 'This mobile number is registered. Please use your Yuvak ID to participate.');
+            }
+
+            // ── 1-time submission check for external by mobile ──
+            $extDup = $this->pdo->prepare("
+                SELECT qp.id FROM quiz_participants qp
+                JOIN quiz_submissions qs ON qs.participant_id = qp.id
+                WHERE qp.quiz_id=? AND qp.mo_number=? AND qp.status='active'
+            ");
+            $extDup->execute([$quiz['id'], $mobile]);
+            if ($extDup->fetch()) {
+                sendError(409, 'You have already submitted this quiz. Only one attempt is allowed.');
+            }
+
+            $externalMobile = $mobile;
         }
 
         $this->pdo->prepare("
             INSERT INTO quiz_participants
-                (uuid, quiz_id, participant_type, member_type, yuvak_id, yuvak_db_id, name, gender)
-            VALUES (?,?,?,?,?,?,?,?)
+                (uuid, quiz_id, participant_type, member_type, yuvak_id, yuvak_db_id, name, gender, mo_number)
+            VALUES (?,?,?,?,?,?,?,?,?)
         ")->execute([
             $uuid, $quiz['id'],
             $type, $memberType,
@@ -260,6 +304,7 @@ class PublicController
             $memberDbId,
             $storedName ?? ($body['name'] ?? null),
             $body['gender'] ?? null,
+            $externalMobile,
         ]);
 
         // Return questions without correct_answer
@@ -285,7 +330,7 @@ class PublicController
 
     public function submitQuiz(string $slug, array $body): void
     {
-        $stmt = $this->pdo->prepare("SELECT id FROM quizzes WHERE slug=? AND quiz_status='published' AND status='active'");
+        $stmt = $this->pdo->prepare("SELECT id, show_result FROM quizzes WHERE slug=? AND quiz_status='published' AND status='active'");
         $stmt->execute([$slug]);
         $quiz = $stmt->fetch();
         if (!$quiz) sendError(404, 'Quiz not found or closed');
@@ -369,6 +414,15 @@ class PublicController
             WHERE id=?
         ")->execute([$attempted, $correct, $incorrect, $score, $percentage, $submissionId]);
 
+        // Count total completed submissions for this quiz (including this one)
+        $cntStmt = $this->pdo->prepare("
+            SELECT COUNT(*) FROM quiz_submissions qs
+            JOIN quiz_participants qp ON qp.id = qs.participant_id
+            WHERE qp.quiz_id = ? AND qp.status = 'active'
+        ");
+        $cntStmt->execute([$quiz['id']]);
+        $totalAttempts = (int)$cntStmt->fetchColumn();
+
         sendSuccess([
             'total_questions'     => $totalQuestions,
             'attempted_questions' => $attempted,
@@ -377,6 +431,8 @@ class PublicController
             'score'               => $score,
             'total_marks'         => $totalMarks,
             'percentage'          => $percentage,
+            'show_result'         => (bool)$quiz['show_result'],
+            'total_attempts'      => $totalAttempts,
         ], 'Quiz submitted successfully');
     }
 
