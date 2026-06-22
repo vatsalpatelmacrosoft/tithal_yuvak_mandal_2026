@@ -54,18 +54,32 @@ class PublicController
         $karyakar = in_array($body['is_karyakar'] ?? '', ['no','bal','yuva','sanyukta'])
                     ? $body['is_karyakar'] : 'no';
 
-        $this->pdo->prepare("
-            INSERT INTO yuvaks (uuid,yuvak_id,first_name,middle_name,last_name,mo_number,
-                whatsapp_number,email,address,xetra_id,mandal_id,is_karyakar)
-            VALUES (?, 'TEMP', ?,?,?,?,?,?,?,?,?,?)
-        ")->execute([$uuid, $body['first_name'], $body['middle_name'] ?? null,
-            $body['last_name'], $body['mo_number'], $body['whatsapp_number'] ?? null,
-            $body['email'] ?? null, $body['address'] ?? null,
-            $body['xetra_id'], $body['mandal_id'], $karyakar]);
+        // Use a UUID-derived temp ID (30 hex chars) so concurrent registrations don't collide
+        // on the UNIQUE yuvak_id column. 'TEMP' would serialize all 300 concurrent inserts.
+        $tempId = substr(str_replace('-', '', $uuid), 0, 30);
 
-        $newId   = (int)$this->pdo->lastInsertId();
-        $yuvakId = buildYuvakId($newId, $xetra['code']);
-        $this->pdo->prepare("UPDATE yuvaks SET yuvak_id=? WHERE id=?")->execute([$yuvakId, $newId]);
+        $this->pdo->beginTransaction();
+        try {
+            $this->pdo->prepare("
+                INSERT INTO yuvaks (uuid,yuvak_id,first_name,middle_name,last_name,mo_number,
+                    whatsapp_number,email,address,xetra_id,mandal_id,is_karyakar)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+            ")->execute([$uuid, $tempId, $body['first_name'], $body['middle_name'] ?? null,
+                $body['last_name'], $body['mo_number'], $body['whatsapp_number'] ?? null,
+                $body['email'] ?? null, $body['address'] ?? null,
+                $body['xetra_id'], $body['mandal_id'], $karyakar]);
+
+            $newId   = (int)$this->pdo->lastInsertId();
+            $yuvakId = buildYuvakId($newId, $xetra['code']);
+            $this->pdo->prepare("UPDATE yuvaks SET yuvak_id=? WHERE id=?")->execute([$yuvakId, $newId]);
+            $this->pdo->commit();
+        } catch (\PDOException $e) {
+            $this->pdo->rollBack();
+            if ($e->getCode() === '23000') {
+                sendValidationError(['mo_number' => 'Mobile number already registered']);
+            }
+            sendError(500, 'Registration failed. Please try again.');
+        }
 
         sendSuccess(['yuvak_id' => $yuvakId, 'uuid' => $uuid], 'Registration successful! Your Yuvak ID: ' . $yuvakId);
     }
@@ -91,18 +105,30 @@ class PublicController
         $karyakar = in_array($body['is_karyakar'] ?? '', ['no','bal','yuva','sanyukta'])
                     ? $body['is_karyakar'] : 'no';
 
-        $this->pdo->prepare("
-            INSERT INTO yuvatis (uuid,yuvati_id,first_name,middle_name,last_name,mo_number,
-                whatsapp_number,email,address,xetra_id,mandal_id,is_karyakar)
-            VALUES (?, 'TEMP', ?,?,?,?,?,?,?,?,?,?)
-        ")->execute([$uuid, $body['first_name'], $body['middle_name'] ?? null,
-            $body['last_name'], $body['mo_number'], $body['whatsapp_number'] ?? null,
-            $body['email'] ?? null, $body['address'] ?? null,
-            $body['xetra_id'], $body['mandal_id'], $karyakar]);
+        $tempId = substr(str_replace('-', '', $uuid), 0, 30);
 
-        $newId    = (int)$this->pdo->lastInsertId();
-        $yuvatiId = buildYuvatiId($newId, $xetra['code']);
-        $this->pdo->prepare("UPDATE yuvatis SET yuvati_id=? WHERE id=?")->execute([$yuvatiId, $newId]);
+        $this->pdo->beginTransaction();
+        try {
+            $this->pdo->prepare("
+                INSERT INTO yuvatis (uuid,yuvati_id,first_name,middle_name,last_name,mo_number,
+                    whatsapp_number,email,address,xetra_id,mandal_id,is_karyakar)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+            ")->execute([$uuid, $tempId, $body['first_name'], $body['middle_name'] ?? null,
+                $body['last_name'], $body['mo_number'], $body['whatsapp_number'] ?? null,
+                $body['email'] ?? null, $body['address'] ?? null,
+                $body['xetra_id'], $body['mandal_id'], $karyakar]);
+
+            $newId    = (int)$this->pdo->lastInsertId();
+            $yuvatiId = buildYuvatiId($newId, $xetra['code']);
+            $this->pdo->prepare("UPDATE yuvatis SET yuvati_id=? WHERE id=?")->execute([$yuvatiId, $newId]);
+            $this->pdo->commit();
+        } catch (\PDOException $e) {
+            $this->pdo->rollBack();
+            if ($e->getCode() === '23000') {
+                sendValidationError(['mo_number' => 'Mobile number already registered']);
+            }
+            sendError(500, 'Registration failed. Please try again.');
+        }
 
         sendSuccess(['yuvati_id' => $yuvatiId, 'uuid' => $uuid], 'Registration successful! Your Yuvati ID: ' . $yuvatiId);
     }
@@ -360,36 +386,24 @@ class PublicController
             $qMap[$q['id']] = $q;
         }
 
-        $answers         = $body['answers'] ?? [];
-        $totalQuestions  = count($qMap);
-        $totalMarks      = array_sum(array_column($questionRows, 'marks'));
-        $score           = 0;
-        $correct         = 0;
-        $incorrect       = 0;
-        $attempted       = 0;
+        $answers        = $body['answers'] ?? [];
+        $totalQuestions = count($qMap);
+        $totalMarks     = array_sum(array_column($questionRows, 'marks'));
+        $score          = 0;
+        $correct        = 0;
+        $incorrect      = 0;
+        $attempted      = 0;
 
-        // Create submission
-        $subUuid = $this->uuid();
-        $this->pdo->prepare("
-            INSERT INTO quiz_submissions
-                (uuid, quiz_id, participant_id, total_questions, total_marks)
-            VALUES (?,?,?,?,?)
-        ")->execute([$subUuid, $quiz['id'], $participant['id'], $totalQuestions, $totalMarks]);
-        $submissionId = (int)$this->pdo->lastInsertId();
-
-        // Save answers + calculate
-        $ansStmt = $this->pdo->prepare("
-            INSERT INTO quiz_answers (submission_id, question_id, selected_answer, is_correct, marks_obtained)
-            VALUES (?,?,?,?,?)
-        ");
-
+        // Score all answers in PHP first — no DB queries inside loop
+        $batchValues      = [];
+        $batchPlaceholders = [];
         foreach ($answers as $ans) {
             $qId = (int)($ans['question_id'] ?? 0);
             if (!isset($qMap[$qId])) continue;
 
-            $selected  = $ans['selected_answer'] ?? null;
-            $qType     = $qMap[$qId]['question_type'] ?? 'mcq';
-            $isCorrect = 0;
+            $selected   = $ans['selected_answer'] ?? null;
+            $qType      = $qMap[$qId]['question_type'] ?? 'mcq';
+            $isCorrect  = 0;
             if ($selected !== null && $selected !== '') {
                 $correctAns = $qMap[$qId]['correct_answer'];
                 $isCorrect  = ($qType === 'input')
@@ -402,24 +416,57 @@ class PublicController
             if ($isCorrect) { $correct++; $score += $obtained; }
             elseif ($selected) $incorrect++;
 
-            $ansStmt->execute([$submissionId, $qId, $selected, $isCorrect, $obtained]);
+            // Collect for batch insert; submission_id placeholder (0) replaced after INSERT
+            $batchValues[]      = [$qId, $selected, $isCorrect, $obtained];
+            $batchPlaceholders[] = '(?,?,?,?,?)';
         }
 
         $percentage = $totalMarks > 0 ? round($score / $totalMarks * 100, 2) : 0;
+        $subUuid    = $this->uuid();
 
-        $this->pdo->prepare("
-            UPDATE quiz_submissions SET
-                attempted_questions=?, correct_answers=?, incorrect_answers=?,
-                score=?, percentage=?
-            WHERE id=?
-        ")->execute([$attempted, $correct, $incorrect, $score, $percentage, $submissionId]);
+        // Single transaction: submission row + all answers + totals update
+        $this->pdo->beginTransaction();
+        try {
+            $this->pdo->prepare("
+                INSERT INTO quiz_submissions
+                    (uuid, quiz_id, participant_id, total_questions, total_marks,
+                     attempted_questions, correct_answers, incorrect_answers, score, percentage)
+                VALUES (?,?,?,?,?,?,?,?,?,?)
+            ")->execute([
+                $subUuid, $quiz['id'], $participant['id'],
+                $totalQuestions, $totalMarks,
+                $attempted, $correct, $incorrect, $score, $percentage,
+            ]);
+            $submissionId = (int)$this->pdo->lastInsertId();
 
-        // Count total completed submissions for this quiz (including this one)
-        $cntStmt = $this->pdo->prepare("
-            SELECT COUNT(*) FROM quiz_submissions qs
-            JOIN quiz_participants qp ON qp.id = qs.participant_id
-            WHERE qp.quiz_id = ? AND qp.status = 'active'
-        ");
+            // Batch insert all answers in one query instead of one per answer
+            if ($batchPlaceholders) {
+                $flatParams = [];
+                foreach ($batchValues as [$qId, $selected, $isCorrect, $obtained]) {
+                    $flatParams[] = $submissionId;
+                    $flatParams[] = $qId;
+                    $flatParams[] = $selected;
+                    $flatParams[] = $isCorrect;
+                    $flatParams[] = $obtained;
+                }
+                $this->pdo->prepare(
+                    "INSERT INTO quiz_answers (submission_id, question_id, selected_answer, is_correct, marks_obtained) VALUES "
+                    . implode(',', $batchPlaceholders)
+                )->execute($flatParams);
+            }
+
+            $this->pdo->commit();
+        } catch (\Throwable $e) {
+            $this->pdo->rollBack();
+            error_log('[submitQuiz] transaction failed: ' . $e->getMessage());
+            sendError(500, 'Failed to save quiz submission. Please try again.');
+        }
+
+        $cntStmt = $this->pdo->prepare(
+            "SELECT COUNT(*) FROM quiz_submissions qs
+             JOIN quiz_participants qp ON qp.id = qs.participant_id
+             WHERE qp.quiz_id = ? AND qp.status = 'active'"
+        );
         $cntStmt->execute([$quiz['id']]);
         $totalAttempts = (int)$cntStmt->fetchColumn();
 

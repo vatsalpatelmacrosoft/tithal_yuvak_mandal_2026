@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>TDD API Docs</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" />
+  <style>
+    body { margin: 0; background: #fafafa; }
+    .topbar { background: #ff6600 !important; }
+    .topbar-wrapper img { content: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"/>'); width:0; }
+    .topbar-wrapper::after { content: "TDD Management System — API Docs"; color:#fff; font-size:18px; font-weight:600; }
+  </style>
+</head>
+<body>
+<div id="swagger-ui"></div>
+<script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+<script>
+const spec = {
+  openapi: "3.0.0",
+  info: {
+    title: "TDD Management System",
+    version: "1.0.0",
+    description: "Tithal Yuvasabha Digital — backend REST API.\n\n**Auth:** Login via `POST /api/auth/login`, copy the `token` from the response, then click **Authorize** and paste it."
+  },
+  servers: [{ url: "http://localhost:8000", description: "Local dev server" }],
+  components: {
+    securitySchemes: {
+      BearerAuth: { type: "http", scheme: "bearer", bearerFormat: "JWT" }
+    },
+    schemas: {
+      Success: {
+        type: "object",
+        properties: {
+          success: { type: "boolean", example: true },
+          message: { type: "string" },
+          data: { type: "object" }
+        }
+      },
+      Error: {
+        type: "object",
+        properties: {
+          success: { type: "boolean", example: false },
+          message: { type: "string" },
+          errors: { type: "object" }
+        }
+      },
+      Pagination: {
+        type: "object",
+        properties: {
+          data: { type: "array", items: { type: "object" } },
+          total: { type: "integer" },
+          page: { type: "integer" },
+          per_page: { type: "integer" },
+          last_page: { type: "integer" }
+        }
+      },
+      YuvakBody: {
+        type: "object",
+        required: ["first_name", "last_name", "mo_number", "xetra_id", "mandal_id"],
+        properties: {
+          first_name:       { type: "string", example: "Ramesh" },
+          middle_name:      { type: "string", example: "Kumar" },
+          last_name:        { type: "string", example: "Patel" },
+          mo_number:        { type: "string", example: "9876543210", description: "10-digit Indian number (6-9 start)" },
+          whatsapp_number:  { type: "string", example: "9876543210" },
+          email:            { type: "string", format: "email" },
+          address:          { type: "string" },
+          xetra_id:         { type: "integer", example: 1 },
+          mandal_id:        { type: "integer", example: 3 },
+          is_karyakar:      { type: "string", enum: ["no", "bal", "yuva", "sanyukta"], example: "no" },
+          tags:             { type: "array", items: { type: "string" } }
+        }
+      },
+      MandalBody: {
+        type: "object",
+        required: ["name", "xetra_id"],
+        properties: {
+          name:     { type: "string", example: "Tithal Mandal" },
+          xetra_id: { type: "integer", example: 1 }
+        }
+      },
+      XetraBody: {
+        type: "object",
+        required: ["name", "code"],
+        properties: {
+          name: { type: "string", example: "Bardoli Xetra" },
+          code: { type: "string", example: "BDL" }
+        }
+      },
+      ShibirBody: {
+        type: "object",
+        required: ["name"],
+        properties: {
+          name:        { type: "string", example: "Yuva Shibir 2026" },
+          description: { type: "string" },
+          start_date:  { type: "string", format: "date", example: "2026-07-01" },
+          end_date:    { type: "string", format: "date", example: "2026-07-03" }
+        }
+      },
+      QuizBody: {
+        type: "object",
+        required: ["title"],
+        properties: {
+          title:         { type: "string", example: "Satsang Quiz" },
+          slug:          { type: "string", example: "satsang-quiz" },
+          description:   { type: "string" },
+          start_time:    { type: "string", format: "date-time", example: "2026-07-01T09:00:00" },
+          end_time:      { type: "string", format: "date-time", example: "2026-07-01T10:00:00" },
+          time_limit:    { type: "integer", description: "Minutes", example: 30 },
+          is_active:     { type: "boolean" }
+        }
+      },
+      QuestionBody: {
+        type: "object",
+        required: ["question_text", "options", "correct_index"],
+        properties: {
+          question_text:  { type: "string" },
+          options:        { type: "array", items: { type: "string" }, example: ["Option A", "Option B", "Option C", "Option D"] },
+          correct_index:  { type: "integer", description: "0-based index of correct option", example: 2 },
+          explanation:    { type: "string" }
+        }
+      },
+      AttendanceBody: {
+        type: "object",
+        required: ["member_id", "member_type"],
+        properties: {
+          member_id:   { type: "string", example: "YUV-BDL-0001", description: "UUID or Member ID" },
+          member_type: { type: "string", enum: ["yuvak", "yuvati"] }
+        }
+      },
+      UserBody: {
+        type: "object",
+        required: ["name", "email", "role_id"],
+        properties: {
+          name:     { type: "string", example: "Admin User" },
+          email:    { type: "string", format: "email" },
+          password: { type: "string", example: "secret123" },
+          role_id:  { type: "integer" }
+        }
+      },
+      RoleBody: {
+        type: "object",
+        required: ["name", "code"],
+        properties: {
+          name: { type: "string", example: "Manager" },
+          code: { type: "string", example: "MANAGER" }
+        }
+      }
+    }
+  },
+  tags: [
+    { name: "Auth",       description: "Login, logout, password reset" },
+    { name: "Yuvak",      description: "Male member management" },
+    { name: "Yuvati",     description: "Female member management" },
+    { name: "Xetra",      description: "Zone management" },
+    { name: "Mandal",     description: "Local group management" },
+    { name: "Shibir",     description: "Camp / event management" },
+    { name: "Quiz",       description: "Quiz & question management" },
+    { name: "Questions",  description: "Individual question CRUD" },
+    { name: "Attendance", description: "Attendance marking & reports" },
+    { name: "Dashboard",  description: "Summary counts" },
+    { name: "Reports",    description: "Analytical reports" },
+    { name: "Users",      description: "System user management" },
+    { name: "Roles",      description: "Role & permission management" },
+    { name: "Settings",   description: "App settings" },
+    { name: "Public",     description: "No-auth endpoints (registration, welcome card, quiz)" }
+  ],
+  paths: {
+
+    // ── AUTH ──────────────────────────────────────────────────────────
+    "/api/auth/login": {
+      post: {
+        tags: ["Auth"], summary: "Login",
+        requestBody: {
+          required: true,
+          content: { "application/json": { schema: {
+            type: "object", required: ["email","password"],
+            properties: {
+              email:    { type: "string", format: "email", example: "admin@tdd.com" },
+              password: { type: "string", example: "secret123" }
+            }
+          }}}
+        },
+        responses: {
+          200: { description: "Returns JWT token", content: { "application/json": { schema: {
+            properties: {
+              success: { type: "boolean" },
+              data: { properties: { token: { type: "string" }, user: { type: "object" } } }
+            }
+          }}}}
+        }
+      }
+    },
+    "/api/auth/logout": {
+      post: { tags: ["Auth"], summary: "Logout", security: [{BearerAuth:[]}],
+        responses: { 200: { description: "Logged out" } } }
+    },
+    "/api/auth/me": {
+      get: { tags: ["Auth"], summary: "Get current user", security: [{BearerAuth:[]}],
+        responses: { 200: { description: "Current user profile" } } }
+    },
+    "/api/auth/forgot-password": {
+      post: { tags: ["Auth"], summary: "Request password reset",
+        requestBody: { required: true, content: { "application/json": { schema: {
+          properties: { email: { type: "string", format: "email" } }
+        }}}},
+        responses: { 200: { description: "Reset link sent" } }
+      }
+    },
+    "/api/auth/reset-password": {
+      post: { tags: ["Auth"], summary: "Reset password with token",
+        requestBody: { required: true, content: { "application/json": { schema: {
+          properties: {
+            token:    { type: "string" },
+            password: { type: "string" }
+          }
+        }}}},
+        responses: { 200: { description: "Password updated" } }
+      }
+    },
+
+    // ── YUVAK ─────────────────────────────────────────────────────────
+    "/api/yuvak": {
+      get: {
+        tags: ["Yuvak"], summary: "List all Yuvaks (paginated)", security: [{BearerAuth:[]}],
+        parameters: [
+          { name: "page",      in: "query", schema: { type: "integer", default: 1 } },
+          { name: "limit",     in: "query", schema: { type: "integer", default: 20 } },
+          { name: "search",    in: "query", schema: { type: "string" }, description: "Search name/mobile/ID" },
+          { name: "xetra_id",  in: "query", schema: { type: "integer" } },
+          { name: "mandal_id", in: "query", schema: { type: "integer" } }
+        ],
+        responses: { 200: { description: "Paginated list", content: { "application/json": { schema: { "$ref": "#/components/schemas/Pagination" } } } } }
+      },
+      post: {
+        tags: ["Yuvak"], summary: "Create Yuvak", security: [{BearerAuth:[]}],
+        requestBody: { required: true, content: { "application/json": { schema: { "$ref": "#/components/schemas/YuvakBody" } } } },
+        responses: { 200: { description: "Created yuvak with generated ID" } }
+      }
+    },
+    "/api/yuvak/export": {
+      get: {
+        tags: ["Yuvak"], summary: "Export Yuvaks as CSV", security: [{BearerAuth:[]}],
+        parameters: [
+          { name: "search",    in: "query", schema: { type: "string" } },
+          { name: "xetra_id",  in: "query", schema: { type: "integer" } },
+          { name: "mandal_id", in: "query", schema: { type: "integer" } }
+        ],
+        responses: { 200: { description: "CSV file download", content: { "text/csv": {} } } }
+      }
+    },
+    "/api/yuvak/{uuid}": {
+      get: {
+        tags: ["Yuvak"], summary: "Get single Yuvak", security: [{BearerAuth:[]}],
+        parameters: [{ name: "uuid", in: "path", required: true, schema: { type: "string" } }],
+        responses: { 200: { description: "Yuvak record" } }
+      },
+      put: {
+        tags: ["Yuvak"], summary: "Update Yuvak", security: [{BearerAuth:[]}],
+        parameters: [{ name: "uuid", in: "path", required: true, schema: { type: "string" } }],
+        requestBody: { required: true, content: { "application/json": { schema: { "$ref": "#/components/schemas/YuvakBody" } } } },
+        responses: { 200: { description: "Updated yuvak" } }
+      },
+      delete: {
+        tags: ["Yuvak"], summary: "Archive (soft-delete) Yuvak", security: [{BearerAuth:[]}],
+        parameters: [{ name: "uuid", in: "path", required: true, schema: { type: "string" } }],
+        responses: { 200: { description: "Archived" } }
+      }
+    },
+    "/api/yuvak/{uuid}/qr": {
+      get: {
+        tags: ["Yuvak"], summary: "Get QR code URL for Yuvak", security: [{BearerAuth:[]}],
+        parameters: [{ name: "uuid", in: "path", required: true, schema: { type: "string" } }],
+        responses: { 200: { description: "{ qr_url: string }" } }
+      }
+    },
+    "/api/yuvak/{uuid}/notify": {
+      post: {
+        tags: ["Yuvak"], summary: "Resend welcome SMS to Yuvak", security: [{BearerAuth:[]}],
+        parameters: [{ name: "uuid", in: "path", required: true, schema: { type: "string" } }],
+        responses: { 200: { description: "SMS sent" } }
+      }
+    },
+
+    // ── YUVATI ────────────────────────────────────────────────────────
+    "/api/yuvati": {
+      get: {
+        tags: ["Yuvati"], summary: "List all Yuvatis (paginated)", security: [{BearerAuth:[]}],
+        parameters: [
+          { name: "page",      in: "query", schema: { type: "integer", default: 1 } },
+          { name: "limit",     in: "query", schema: { type: "integer", default: 20 } },
+          { name: "search",    in: "query", schema: { type: "string" } },
+          { name: "xetra_id",  in: "query", schema: { type: "integer" } },
+          { name: "mandal_id", in: "query", schema: { type: "integer" } }
+        ],
+        responses: { 200: { description: "Paginated list" } }
+      },
+      post: {
+        tags: ["Yuvati"], summary: "Create Yuvati", security: [{BearerAuth:[]}],
+        requestBody: { required: true, content: { "application/json": { schema: { "$ref": "#/components/schemas/YuvakBody" } } } },
+        responses: { 200: { description: "Created" } }
+      }
+    },
+    "/api/yuvati/export": {
+      get: { tags: ["Yuvati"], summary: "Export Yuvatis as CSV", security: [{BearerAuth:[]}],
+        parameters: [
+          { name: "search", in: "query", schema: { type: "string" } },
+          { name: "xetra_id", in: "query", schema: { type: "integer" } },
+          { name: "mandal_id", in: "query", schema: { type: "integer" } }
+        ],
+        responses: { 200: { description: "CSV file" } }
+      }
+    },
+    "/api/yuvati/{uuid}": {
+      get:    { tags: ["Yuvati"], summary: "Get single Yuvati", security: [{BearerAuth:[]}], parameters: [{name:"uuid",in:"path",required:true,schema:{type:"string"}}], responses:{200:{description:"Yuvati record"}} },
+      put:    { tags: ["Yuvati"], summary: "Update Yuvati", security: [{BearerAuth:[]}], parameters: [{name:"uuid",in:"path",required:true,schema:{type:"string"}}], requestBody:{required:true,content:{"application/json":{schema:{"$ref":"#/components/schemas/YuvakBody"}}}}, responses:{200:{description:"Updated"}} },
+      delete: { tags: ["Yuvati"], summary: "Archive Yuvati", security: [{BearerAuth:[]}], parameters: [{name:"uuid",in:"path",required:true,schema:{type:"string"}}], responses:{200:{description:"Archived"}} }
+    },
+    "/api/yuvati/{uuid}/qr":     { get:  { tags:["Yuvati"], summary:"Get QR code URL",        security:[{BearerAuth:[]}], parameters:[{name:"uuid",in:"path",required:true,schema:{type:"string"}}], responses:{200:{description:"QR URL"}} } },
+    "/api/yuvati/{uuid}/notify": { post: { tags:["Yuvati"], summary:"Resend welcome SMS",      security:[{BearerAuth:[]}], parameters:[{name:"uuid",in:"path",required:true,schema:{type:"string"}}], responses:{200:{description:"Sent"}} } },
+
+    // ── XETRA ─────────────────────────────────────────────────────────
+    "/api/xetra": {
+      get:  { tags:["Xetra"], summary:"List Xetras", security:[{BearerAuth:[]}], responses:{200:{description:"Array of xetras"}} },
+      post: { tags:["Xetra"], summary:"Create Xetra", security:[{BearerAuth:[]}], requestBody:{required:true,content:{"application/json":{schema:{"$ref":"#/components/schemas/XetraBody"}}}}, responses:{200:{description:"Created"}} }
+    },
+    "/api/xetra/{uuid}": {
+      get:    { tags:["Xetra"], summary:"Get Xetra",    security:[{BearerAuth:[]}], parameters:[{name:"uuid",in:"path",required:true,schema:{type:"string"}}], responses:{200:{description:"Xetra"}} },
+      put:    { tags:["Xetra"], summary:"Update Xetra", security:[{BearerAuth:[]}], parameters:[{name:"uuid",in:"path",required:true,schema:{type:"string"}}], requestBody:{required:true,content:{"application/json":{schema:{"$ref":"#/components/schemas/XetraBody"}}}}, responses:{200:{description:"Updated"}} },
+      delete: { tags:["Xetra"], summary:"Delete Xetra", security:[{BearerAuth:[]}], parameters:[{name:"uuid",in:"path",required:true,schema:{type:"string"}}], responses:{200:{description:"Deleted"}} }
+    },
+
+    // ── MANDAL ────────────────────────────────────────────────────────
+    "/api/mandal": {
+      get:  { tags:["Mandal"], summary:"List Mandals (?xetra_id= to filter)", security:[{BearerAuth:[]}], parameters:[{name:"xetra_id",in:"query",schema:{type:"integer"}}], responses:{200:{description:"Array of mandals"}} },
+      post: { tags:["Mandal"], summary:"Create Mandal", security:[{BearerAuth:[]}], requestBody:{required:true,content:{"application/json":{schema:{"$ref":"#/components/schemas/MandalBody"}}}}, responses:{200:{description:"Created"}} }
+    },
+    "/api/mandal/{uuid}": {
+      get:    { tags:["Mandal"], summary:"Get Mandal",    security:[{BearerAuth:[]}], parameters:[{name:"uuid",in:"path",required:true,schema:{type:"string"}}], responses:{200:{description:"Mandal"}} },
+      put:    { tags:["Mandal"], summary:"Update Mandal", security:[{BearerAuth:[]}], parameters:[{name:"uuid",in:"path",required:true,schema:{type:"string"}}], requestBody:{required:true,content:{"application/json":{schema:{"$ref":"#/components/schemas/MandalBody"}}}}, responses:{200:{description:"Updated"}} },
+      delete: { tags:["Mandal"], summary:"Delete Mandal", security:[{BearerAuth:[]}], parameters:[{name:"uuid",in:"path",required:true,schema:{type:"string"}}], responses:{200:{description:"Deleted"}} }
+    },
+
+    // ── SHIBIR ────────────────────────────────────────────────────────
+    "/api/shibir": {
+      get:  { tags:["Shibir"], summary:"List Shibirs", security:[{BearerAuth:[]}], responses:{200:{description:"Array"}} },
+      post: { tags:["Shibir"], summary:"Create Shibir", security:[{BearerAuth:[]}], requestBody:{required:true,content:{"application/json":{schema:{"$ref":"#/components/schemas/ShibirBody"}}}}, responses:{200:{description:"Created"}} }
+    },
+    "/api/shibir/{uuid}": {
+      get:    { tags:["Shibir"], summary:"Get Shibir",    security:[{BearerAuth:[]}], parameters:[{name:"uuid",in:"path",required:true,schema:{type:"string"}}], responses:{200:{description:"Shibir"}} },
+      put:    { tags:["Shibir"], summary:"Update Shibir", security:[{BearerAuth:[]}], parameters:[{name:"uuid",in:"path",required:true,schema:{type:"string"}}], requestBody:{required:true,content:{"application/json":{schema:{"$ref":"#/components/schemas/ShibirBody"}}}}, responses:{200:{description:"Updated"}} },
+      delete: { tags:["Shibir"], summary:"Delete Shibir", security:[{BearerAuth:[]}], parameters:[{name:"uuid",in:"path",required:true,schema:{type:"string"}}], responses:{200:{description:"Deleted"}} }
+    },
+
+    // ── QUIZ ──────────────────────────────────────────────────────────
+    "/api/quiz": {
+      get:  { tags:["Quiz"], summary:"List Quizzes", security:[{BearerAuth:[]}], responses:{200:{description:"Array of quizzes"}} },
+      post: { tags:["Quiz"], summary:"Create Quiz", security:[{BearerAuth:[]}], requestBody:{required:true,content:{"application/json":{schema:{"$ref":"#/components/schemas/QuizBody"}}}}, responses:{200:{description:"Created"}} }
+    },
+    "/api/quiz/{id}": {
+      get:    { tags:["Quiz"], summary:"Get Quiz by UUID/ID", security:[{BearerAuth:[]}], parameters:[{name:"id",in:"path",required:true,schema:{type:"string"}}], responses:{200:{description:"Quiz"}} },
+      put:    { tags:["Quiz"], summary:"Update Quiz",         security:[{BearerAuth:[]}], parameters:[{name:"id",in:"path",required:true,schema:{type:"string"}}], requestBody:{required:true,content:{"application/json":{schema:{"$ref":"#/components/schemas/QuizBody"}}}}, responses:{200:{description:"Updated"}} },
+      delete: { tags:["Quiz"], summary:"Delete Quiz",         security:[{BearerAuth:[]}], parameters:[{name:"id",in:"path",required:true,schema:{type:"string"}}], responses:{200:{description:"Deleted"}} }
+    },
+    "/api/quiz/{id}/toggle": {
+      put: { tags:["Quiz"], summary:"Toggle quiz active/inactive", security:[{BearerAuth:[]}], parameters:[{name:"id",in:"path",required:true,schema:{type:"string"}}], responses:{200:{description:"Toggled"}} }
+    },
+    "/api/quiz/{id}/questions": {
+      get:  { tags:["Quiz"], summary:"List questions for a quiz", security:[{BearerAuth:[]}], parameters:[{name:"id",in:"path",required:true,schema:{type:"string"}}], responses:{200:{description:"Array of questions"}} },
+      post: { tags:["Quiz"], summary:"Add question to quiz",      security:[{BearerAuth:[]}], parameters:[{name:"id",in:"path",required:true,schema:{type:"string"}}], requestBody:{required:true,content:{"application/json":{schema:{"$ref":"#/components/schemas/QuestionBody"}}}}, responses:{200:{description:"Question added"}} }
+    },
+    "/api/quiz/{id}/reorder": {
+      post: { tags:["Quiz"], summary:"Reorder questions",
+        security:[{BearerAuth:[]}],
+        parameters:[{name:"id",in:"path",required:true,schema:{type:"string"}}],
+        requestBody:{required:true,content:{"application/json":{schema:{
+          properties:{ order:{ type:"array", items:{type:"integer"}, description:"Array of question IDs in new order" } }
+        }}}},
+        responses:{200:{description:"Reordered"}}
+      }
+    },
+
+    // ── QUESTIONS (individual) ────────────────────────────────────────
+    "/api/questions/{id}": {
+      put:    { tags:["Questions"], summary:"Update a question", security:[{BearerAuth:[]}], parameters:[{name:"id",in:"path",required:true,schema:{type:"integer"}}], requestBody:{required:true,content:{"application/json":{schema:{"$ref":"#/components/schemas/QuestionBody"}}}}, responses:{200:{description:"Updated"}} },
+      delete: { tags:["Questions"], summary:"Delete a question", security:[{BearerAuth:[]}], parameters:[{name:"id",in:"path",required:true,schema:{type:"integer"}}], responses:{200:{description:"Deleted"}} }
+    },
+
+    // ── ATTENDANCE ────────────────────────────────────────────────────
+    "/api/attendance": {
+      get: { tags:["Attendance"], summary:"List attendance records", security:[{BearerAuth:[]}],
+        parameters:[
+          {name:"date",       in:"query",schema:{type:"string",format:"date"},description:"Filter by date"},
+          {name:"shibir_id",  in:"query",schema:{type:"integer"}},
+          {name:"member_type",in:"query",schema:{type:"string",enum:["yuvak","yuvati"]}}
+        ],
+        responses:{200:{description:"Attendance list"}}
+      },
+      post: { tags:["Attendance"], summary:"Mark attendance manually", security:[{BearerAuth:[]}],
+        requestBody:{required:true,content:{"application/json":{schema:{"$ref":"#/components/schemas/AttendanceBody"}}}},
+        responses:{200:{description:"Marked"}}
+      }
+    },
+    "/api/attendance/scan": {
+      post: { tags:["Attendance"], summary:"Mark attendance via QR scan (UUID or Member ID)", security:[{BearerAuth:[]}],
+        requestBody:{required:true,content:{"application/json":{schema:{
+          properties:{
+            identifier:  {type:"string",example:"YUV-BDL-0001",description:"UUID or member ID"},
+            member_type: {type:"string",enum:["yuvak","yuvati"]}
+          }
+        }}}},
+        responses:{200:{description:"Marked"}}
+      }
+    },
+    "/api/attendance/today": {
+      get: { tags:["Attendance"], summary:"Today's attendance summary", security:[{BearerAuth:[]}], responses:{200:{description:"Today count + list"}} }
+    },
+    "/api/attendance/date-wise": {
+      get: { tags:["Attendance"], summary:"Date-wise attendance report", security:[{BearerAuth:[]}],
+        parameters:[{name:"from",in:"query",schema:{type:"string",format:"date"}},{name:"to",in:"query",schema:{type:"string",format:"date"}}],
+        responses:{200:{description:"Date-wise data"}}
+      }
+    },
+    "/api/attendance/name-wise": {
+      get: { tags:["Attendance"], summary:"Name-wise attendance report", security:[{BearerAuth:[]}], responses:{200:{description:"Per-member attendance"}} }
+    },
+    "/api/attendance/export": {
+      get: { tags:["Attendance"], summary:"Export attendance as CSV", security:[{BearerAuth:[]}], responses:{200:{description:"CSV file"}} }
+    },
+    "/api/attendance/export-name-wise": {
+      get: { tags:["Attendance"], summary:"Export name-wise attendance as CSV", security:[{BearerAuth:[]}], responses:{200:{description:"CSV file"}} }
+    },
+
+    // ── DASHBOARD ─────────────────────────────────────────────────────
+    "/api/dashboard": {
+      get: { tags:["Dashboard"], summary:"Summary counts (yuvak total, yuvati total, today attendance)", security:[{BearerAuth:[]}],
+        responses:{200:{description:"Dashboard stats",content:{"application/json":{schema:{properties:{
+          data:{properties:{
+            yuvak_total: {type:"integer"},
+            yuvati_total:{type:"integer"},
+            today_attendance:{type:"object",properties:{yuvak:{type:"integer"},yuvati:{type:"integer"},date:{type:"string"}}}
+          }}
+        }}}}}}
+      }
+    },
+
+    // ── REPORTS ───────────────────────────────────────────────────────
+    "/api/reports/quiz-wise": {
+      get: { tags:["Reports"], summary:"Quiz-wise participation summary", security:[{BearerAuth:[]}], responses:{200:{description:"Report data"}} }
+    },
+    "/api/reports/participant-wise": {
+      get: { tags:["Reports"], summary:"Participant-wise scores for a quiz", security:[{BearerAuth:[]}],
+        parameters:[{name:"quiz_uuid",in:"query",required:true,schema:{type:"string"}}],
+        responses:{200:{description:"Scores"}}
+      }
+    },
+    "/api/reports/question-wise": {
+      get: { tags:["Reports"], summary:"Question-wise correct/wrong stats for a quiz", security:[{BearerAuth:[]}],
+        parameters:[{name:"quiz_uuid",in:"query",required:true,schema:{type:"string"}}],
+        responses:{200:{description:"Stats"}}
+      }
+    },
+    "/api/reports/gender-wise": {
+      get: { tags:["Reports"], summary:"Gender-wise participation for a quiz", security:[{BearerAuth:[]}],
+        parameters:[{name:"quiz_uuid",in:"query",required:true,schema:{type:"string"}}],
+        responses:{200:{description:"Gender breakdown"}}
+      }
+    },
+    "/api/reports/export": {
+      get: { tags:["Reports"], summary:"Export report as CSV/Excel", security:[{BearerAuth:[]}],
+        parameters:[
+          {name:"type",      in:"query",required:true,schema:{type:"string",enum:["quiz-wise","participant-wise","question-wise","gender-wise"]}},
+          {name:"quiz_uuid", in:"query",schema:{type:"string"}},
+          {name:"format",    in:"query",schema:{type:"string",enum:["csv","xlsx"],default:"csv"}}
+        ],
+        responses:{200:{description:"File download"}}
+      }
+    },
+
+    // ── USERS ─────────────────────────────────────────────────────────
+    "/api/users": {
+      get:  { tags:["Users"], summary:"List system users", security:[{BearerAuth:[]}], responses:{200:{description:"Array of users"}} },
+      post: { tags:["Users"], summary:"Create user",       security:[{BearerAuth:[]}], requestBody:{required:true,content:{"application/json":{schema:{"$ref":"#/components/schemas/UserBody"}}}}, responses:{200:{description:"Created"}} }
+    },
+    "/api/users/{id}": {
+      get:    { tags:["Users"], summary:"Get user",    security:[{BearerAuth:[]}], parameters:[{name:"id",in:"path",required:true,schema:{type:"integer"}}], responses:{200:{description:"User"}} },
+      put:    { tags:["Users"], summary:"Update user", security:[{BearerAuth:[]}], parameters:[{name:"id",in:"path",required:true,schema:{type:"integer"}}], requestBody:{required:true,content:{"application/json":{schema:{"$ref":"#/components/schemas/UserBody"}}}}, responses:{200:{description:"Updated"}} },
+      delete: { tags:["Users"], summary:"Delete user", security:[{BearerAuth:[]}], parameters:[{name:"id",in:"path",required:true,schema:{type:"integer"}}], responses:{200:{description:"Deleted"}} }
+    },
+
+    // ── ROLES ─────────────────────────────────────────────────────────
+    "/api/roles": {
+      get:  { tags:["Roles"], summary:"List roles", security:[{BearerAuth:[]}], responses:{200:{description:"Array of roles with permissions"}} },
+      post: { tags:["Roles"], summary:"Create role", security:[{BearerAuth:[]}], requestBody:{required:true,content:{"application/json":{schema:{"$ref":"#/components/schemas/RoleBody"}}}}, responses:{200:{description:"Created"}} }
+    },
+    "/api/roles/{id}": {
+      get:    { tags:["Roles"], summary:"Get role",    security:[{BearerAuth:[]}], parameters:[{name:"id",in:"path",required:true,schema:{type:"integer"}}], responses:{200:{description:"Role"}} },
+      put:    { tags:["Roles"], summary:"Update role", security:[{BearerAuth:[]}], parameters:[{name:"id",in:"path",required:true,schema:{type:"integer"}}], requestBody:{required:true,content:{"application/json":{schema:{"$ref":"#/components/schemas/RoleBody"}}}}, responses:{200:{description:"Updated"}} },
+      delete: { tags:["Roles"], summary:"Delete role", security:[{BearerAuth:[]}], parameters:[{name:"id",in:"path",required:true,schema:{type:"integer"}}], responses:{200:{description:"Deleted"}} }
+    },
+    "/api/roles/{id}/permissions": {
+      put: { tags:["Roles"], summary:"Update permissions for a role", security:[{BearerAuth:[]}],
+        parameters:[{name:"id",in:"path",required:true,schema:{type:"integer"}}],
+        requestBody:{required:true,content:{"application/json":{schema:{
+          description:"Object keyed by menu slug, each with can_view/create/update/delete booleans",
+          example:{
+            yuvak:{can_view:true,can_create:true,can_update:true,can_delete:false},
+            reports:{can_view:true,can_create:false,can_update:false,can_delete:false}
+          }
+        }}}},
+        responses:{200:{description:"Updated"}}
+      }
+    },
+
+    // ── SETTINGS ──────────────────────────────────────────────────────
+    "/api/settings": {
+      get: { tags:["Settings"], summary:"Get app settings",    security:[{BearerAuth:[]}], responses:{200:{description:"Settings object"}} },
+      post:{ tags:["Settings"], summary:"Save app settings",   security:[{BearerAuth:[]}], requestBody:{required:true,content:{"application/json":{schema:{type:"object"}}}}, responses:{200:{description:"Saved"}} },
+      put: { tags:["Settings"], summary:"Update app settings", security:[{BearerAuth:[]}], requestBody:{required:true,content:{"application/json":{schema:{type:"object"}}}}, responses:{200:{description:"Updated"}} }
+    },
+
+    // ── PUBLIC (no auth) ──────────────────────────────────────────────
+    "/public/mandal": {
+      get: { tags:["Public"], summary:"Get mandals for a given xetra (registration form)",
+        parameters:[{name:"xetra_id",in:"query",required:true,schema:{type:"integer"}}],
+        responses:{200:{description:"Array of mandals"}}
+      }
+    },
+    "/public/register/yuvak": {
+      post: { tags:["Public"], summary:"Self-register as Yuvak (no auth)",
+        requestBody:{required:true,content:{"application/json":{schema:{"$ref":"#/components/schemas/YuvakBody"}}}},
+        responses:{200:{description:"Registered — SMS sent"}}
+      }
+    },
+    "/public/register/yuvati": {
+      post: { tags:["Public"], summary:"Self-register as Yuvati (no auth)",
+        requestBody:{required:true,content:{"application/json":{schema:{"$ref":"#/components/schemas/YuvakBody"}}}},
+        responses:{200:{description:"Registered — SMS sent"}}
+      }
+    },
+    "/public/validate-yuvak": {
+      post: { tags:["Public"], summary:"Validate a Yuvak ID (for quiz entry)",
+        requestBody:{required:true,content:{"application/json":{schema:{properties:{yuvak_id:{type:"string",example:"YUV-BDL-0001"}}}}}},
+        responses:{200:{description:"Valid or invalid"}}
+      }
+    },
+    "/public/welcome/{type}/{uuid}": {
+      get: { tags:["Public"], summary:"Welcome card data (no auth) — shown after QR scan",
+        parameters:[
+          {name:"type",in:"path",required:true,schema:{type:"string",enum:["yuvak","yuvati"]}},
+          {name:"uuid",in:"path",required:true,schema:{type:"string"}}
+        ],
+        responses:{200:{description:"member_id, full_name, xetra_name, mandal_name"}}
+      }
+    },
+    "/public/quiz/{slug}": {
+      get: { tags:["Public"], summary:"Get quiz info by slug (landing page)",
+        parameters:[{name:"slug",in:"path",required:true,schema:{type:"string",example:"satsang-quiz"}}],
+        responses:{200:{description:"Quiz details"}}
+      }
+    },
+    "/public/quiz/{slug}/start": {
+      post: { tags:["Public"], summary:"Register participant + get questions",
+        parameters:[{name:"slug",in:"path",required:true,schema:{type:"string"}}],
+        requestBody:{required:true,content:{"application/json":{schema:{
+          properties:{
+            yuvak_id:   {type:"string",example:"YUV-BDL-0001"},
+            member_type:{type:"string",enum:["yuvak","yuvati"]}
+          }
+        }}}},
+        responses:{200:{description:"Questions array + attempt token"}}
+      }
+    },
+    "/public/quiz/{slug}/submit": {
+      post: { tags:["Public"], summary:"Submit quiz answers — returns score",
+        parameters:[{name:"slug",in:"path",required:true,schema:{type:"string"}}],
+        requestBody:{required:true,content:{"application/json":{schema:{
+          properties:{
+            attempt_token:{type:"string"},
+            answers:{type:"array",items:{type:"object",properties:{question_id:{type:"integer"},selected_index:{type:"integer"}}}}
+          }
+        }}}},
+        responses:{200:{description:"Score and correct answers"}}
+      }
+    }
+  }
+};
+
+SwaggerUIBundle({
+  spec,
+  dom_id: '#swagger-ui',
+  deepLinking: true,
+  presets: [SwaggerUIBundle.presets.apis, SwaggerUIBundle.SwaggerUIStandalonePreset],
+  layout: "BaseLayout",
+  tryItOutEnabled: true,
+  requestInterceptor: (req) => {
+    // Auto-add token from localStorage if stored by user
+    const token = localStorage.getItem('tdd_token');
+    if (token && !req.headers['Authorization']) {
+      req.headers['Authorization'] = 'Bearer ' + token;
+    }
+    return req;
+  }
+});
+</script>
+</body>
+</html>

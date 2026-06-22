@@ -46,17 +46,30 @@ if (file_exists(__DIR__ . '/../.env')) {
     }
 }
 
-$host     = getenv('DB_HOST')     ?: 'localhost';
-$dbname   = getenv('DB_NAME')     ?: 'tdd_management';
-$username = getenv('DB_USER')     ?: 'root';
-$password = getenv('DB_PASS')     ?: '';
-$charset  = 'utf8mb4';
+$host       = getenv('DB_HOST')            ?: 'localhost';
+$dbname     = getenv('DB_NAME')            ?: 'tdd_management';
+$username   = getenv('DB_USER')            ?: 'root';
+$password   = getenv('DB_PASS')            ?: '';
+$charset    = 'utf8mb4';
+$persistent = filter_var(getenv('DB_PERSISTENT') ?: 'true', FILTER_VALIDATE_BOOLEAN);
+$timeout    = (int)(getenv('DB_CONNECT_TIMEOUT') ?: 10);
 
 $dsn = "mysql:host=$host;dbname=$dbname;charset=$charset";
+
+// PHP 8.4+ introduced Pdo\Mysql::ATTR_INIT_COMMAND; PHP 8.5 deprecated the PDO:: alias.
+$mysqlInitCmd = defined('Pdo\\Mysql::ATTR_INIT_COMMAND')
+    ? \Pdo\Mysql::ATTR_INIT_COMMAND
+    : PDO::MYSQL_ATTR_INIT_COMMAND;
+
 $options = [
     PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
     PDO::ATTR_EMULATE_PREPARES   => false,
+    // Reuse connections across PHP-FPM workers instead of opening a new socket per request
+    PDO::ATTR_PERSISTENT         => $persistent,
+    PDO::ATTR_TIMEOUT            => $timeout,
+    // Reset charset + timezone on every reused persistent connection
+    $mysqlInitCmd                => "SET NAMES utf8mb4, time_zone='+05:30'",
 ];
 
 try {

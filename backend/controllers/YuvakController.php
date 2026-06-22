@@ -75,32 +75,37 @@ class YuvakController
         $xetra = $xStmt->fetch();
         if (!$xetra) sendError(422, 'Invalid Xetra');
 
-        $uuid = $this->generateUuid();
+        $uuid   = $this->generateUuid();
+        $tempId = substr(str_replace('-', '', $uuid), 0, 30);
 
-        $stmt = $this->pdo->prepare("
-            INSERT INTO yuvaks
-                (uuid, yuvak_id, first_name, middle_name, last_name, mo_number, whatsapp_number,
-                 email, address, xetra_id, mandal_id, is_karyakar, tags)
-            VALUES (?, 'TEMP', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ");
-        $stmt->execute([
-            $uuid,
-            $body['first_name'],
-            $body['middle_name'] ?? null,
-            $body['last_name'],
-            $body['mo_number'],
-            $body['whatsapp_number'] ?? null,
-            $body['email'] ?? null,
-            $body['address'] ?? null,
-            $body['xetra_id'],
-            $body['mandal_id'],
-            $body['is_karyakar'] ?? 'no',
-            isset($body['tags']) ? json_encode($body['tags']) : null,
-        ]);
+        $this->pdo->beginTransaction();
+        try {
+            $this->pdo->prepare("
+                INSERT INTO yuvaks
+                    (uuid, yuvak_id, first_name, middle_name, last_name, mo_number, whatsapp_number,
+                     email, address, xetra_id, mandal_id, is_karyakar, tags)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ")->execute([
+                $uuid, $tempId,
+                $body['first_name'], $body['middle_name'] ?? null, $body['last_name'],
+                $body['mo_number'], $body['whatsapp_number'] ?? null,
+                $body['email'] ?? null, $body['address'] ?? null,
+                $body['xetra_id'], $body['mandal_id'],
+                $body['is_karyakar'] ?? 'no',
+                isset($body['tags']) ? json_encode($body['tags']) : null,
+            ]);
 
-        $newId   = (int)$this->pdo->lastInsertId();
-        $yuvakId = buildYuvakId($newId, $xetra['code']);
-        $this->pdo->prepare("UPDATE yuvaks SET yuvak_id = ? WHERE id = ?")->execute([$yuvakId, $newId]);
+            $newId   = (int)$this->pdo->lastInsertId();
+            $yuvakId = buildYuvakId($newId, $xetra['code']);
+            $this->pdo->prepare("UPDATE yuvaks SET yuvak_id = ? WHERE id = ?")->execute([$yuvakId, $newId]);
+            $this->pdo->commit();
+        } catch (\PDOException $e) {
+            $this->pdo->rollBack();
+            if ($e->getCode() === '23000') {
+                sendValidationError(['mo_number' => 'Mobile number already registered']);
+            }
+            sendError(500, 'Registration failed. Please try again.');
+        }
 
         // Async-style: fire notification (non-blocking)
         $notify = new NotificationService();
@@ -120,7 +125,7 @@ class YuvakController
         $existing = $stmt->fetch();
         if (!$existing) sendError(404, 'Yuvak not found');
 
-        $errors = $this->validate($body, $existing['id']);
+        $errors = $this->validate($body);
         if ($errors) sendValidationError($errors);
 
         $chk = $this->pdo->prepare("SELECT id FROM yuvaks WHERE mo_number = ? AND status = 'active' AND id != ?");
@@ -228,7 +233,7 @@ class YuvakController
         sendSuccess([], 'Welcome message sent successfully');
     }
 
-    private function validate(array $body, ?int $excludeId = null): array
+    private function validate(array $body): array
     {
         $errors = [];
         if (empty($body['first_name']))  $errors['first_name']  = 'First name is required';

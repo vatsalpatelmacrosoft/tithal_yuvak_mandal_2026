@@ -1,8 +1,8 @@
 # TDD — Technical Design Document
 ## Yuvak Sabha Management System (Yuvak & Yuvati Samaj Portal)
 
-**Stack:** Angular 17 (Frontend) · PHP 8.1 (Backend) · MySQL 8 (Database)  
-**Version:** 1.0.0 · **Date:** 2025
+**Stack:** Angular 17 (Frontend) · PHP 8.1+ (Backend) · MySQL 8 (Database)  
+**Version:** 1.1.0 · **Date:** 2026-06-22
 
 ---
 
@@ -15,7 +15,7 @@
 5. [Auto-Migration System](#5-auto-migration-system)
 6. [Authentication & Authorization](#6-authentication--authorization)
 7. [Module Breakdown](#7-module-breakdown)
-8. [WhatsApp & QR Code Integration](#8-whatsapp--qr-code-integration)
+8. [SMS & QR Code Integration](#8-sms--qr-code-integration)
 9. [Public Pages](#9-public-pages)
 10. [Validation Rules](#10-validation-rules)
 11. [Soft Delete Policy](#11-soft-delete-policy)
@@ -24,6 +24,7 @@
 14. [File & Folder Structure](#14-file--folder-structure)
 15. [Environment Setup](#15-environment-setup)
 16. [Deployment Checklist](#16-deployment-checklist)
+17. [Implementation Patterns](#17-implementation-patterns)
 
 ---
 
@@ -32,9 +33,10 @@
 The Yuvak Sabha Management System manages members (Yuvak/Yuvati) of a Swaminarayan Samaj organization. It provides:
 
 - **Admin Portal** — authenticated CRUD for all entities
-- **Public Portal** — unauthenticated registration & quiz forms (controlled by admin)
-- **Attendance Tracking** — QR scan-based daily attendance
-- **WhatsApp Notifications** — auto-sends QR code to member on registration
+- **Public Portal** — unauthenticated registration, quiz forms, and welcome card (controlled by admin)
+- **Attendance Tracking** — QR scan-based or Member ID manual attendance
+- **SMS Notifications** — auto-sends welcome SMS (Fast2SMS) to member on registration; admin can resend manually
+- **Welcome Card** — public QR-based member identity card accessible without login
 - **Role-Based Permissions** — menu-wise View/Create/Update/Delete control
 
 ---
@@ -48,6 +50,7 @@ The Yuvak Sabha Management System manages members (Yuvak/Yuvati) of a Swaminaray
 │  │   Admin SPA (Angular)    │  │  Public Pages (Angular)  │ │
 │  │   /admin/*  (auth guard) │  │  /register/:type         │ │
 │  │                          │  │  /quiz/:slug             │ │
+│  │                          │  │  /welcome/:type/:uuid    │ │
 │  └──────────┬───────────────┘  └──────────┬───────────────┘ │
 └─────────────┼────────────────────────────┼─────────────────┘
               │ HTTP (JWT Bearer)           │ HTTP (no auth)
@@ -56,7 +59,7 @@ The Yuvak Sabha Management System manages members (Yuvak/Yuvati) of a Swaminaray
 │                   PHP BACKEND (Apache/Nginx)                  │
 │                                                               │
 │  index.php ─► Router ─► Middleware ─► Controller ─► Service  │
-│                            (Auth)       (CRUD)      (QR/WA)  │
+│                            (Auth)       (CRUD)      (SMS)    │
 │                                                               │
 │  /api/*     → Admin API (JWT required)                        │
 │  /public/*  → Public API (no auth)                            │
@@ -83,9 +86,10 @@ Response JSON
 ### 3.1 Entity Relationship Summary
 
 ```
-xetras ──┬── yuvaks ──── attendances
-         │         └──── users ──── roles ──── permissions ──── menus
-         └── yuvatis ─── attendances
+xetras ──┬── mandals ──── yuvaks ──── attendances
+         │           └─── yuvatis ─── attendances
+         │
+         └── users ──── roles ──── permissions ──── menus
 
 shibirs ──── attendances
 quizzes ──── quiz_questions
@@ -106,7 +110,13 @@ quizzes ──── quiz_questions
 | updated_at | TIMESTAMP    | ON UPDATE NOW()          |
 
 #### `mandals`
-Same structure as `xetras`. Independent table.
+Same structure as `xetras`, **plus** `xetra_id` FK (added in migration 004):
+
+| Column   | Type         | Constraints          |
+|----------|--------------|----------------------|
+| xetra_id | INT UNSIGNED | FK → xetras.id, NULL |
+
+Mandals are now scoped per Xetra. All forms and public dropdowns filter mandals by selected xetra.
 
 #### `yuvaks`
 | Column          | Type         | Constraints                        |
@@ -270,14 +280,15 @@ Tracks which SQL migration files have been applied.
 
 ### 4.2 Yuvak Endpoints
 
-| Method | Endpoint              | Permission     | Description         |
-|--------|-----------------------|----------------|---------------------|
-| GET    | `/api/yuvak`          | yuvak:view     | List (paginated)    |
-| GET    | `/api/yuvak/:uuid`    | yuvak:view     | Get single          |
-| GET    | `/api/yuvak/:uuid/qr` | yuvak:view     | Get QR code URL     |
-| POST   | `/api/yuvak`          | yuvak:create   | Create + send WA    |
-| PUT    | `/api/yuvak/:uuid`    | yuvak:update   | Update              |
-| DELETE | `/api/yuvak/:uuid`    | yuvak:delete   | Soft delete         |
+| Method | Endpoint                   | Permission     | Description                  |
+|--------|----------------------------|----------------|------------------------------|
+| GET    | `/api/yuvak`               | yuvak:view     | List (paginated)             |
+| GET    | `/api/yuvak/:uuid`         | yuvak:view     | Get single                   |
+| GET    | `/api/yuvak/:uuid/qr`      | yuvak:view     | Get QR code URL              |
+| POST   | `/api/yuvak`               | yuvak:create   | Create + send SMS            |
+| PUT    | `/api/yuvak/:uuid`         | yuvak:update   | Update                       |
+| DELETE | `/api/yuvak/:uuid`         | yuvak:delete   | Soft delete                  |
+| POST   | `/api/yuvak/:uuid/notify`  | yuvak:view     | Resend welcome SMS           |
 
 **Query params for GET list:** `?page=1&limit=20&search=ram&xetra_id=1&mandal_id=2`
 
@@ -288,7 +299,12 @@ Tracks which SQL migration files have been applied.
 
 ### 4.3 Yuvati Endpoints
 
-Same as Yuvak but `/api/yuvati` and permission `yuvati:*`.  
+Same as Yuvak but `/api/yuvati` and permission `yuvati:*`, including:
+
+| Method | Endpoint                    | Permission    | Description        |
+|--------|-----------------------------|---------------|--------------------|
+| POST   | `/api/yuvati/:uuid/notify`  | yuvati:view   | Resend welcome SMS |
+
 ID format: `YUVATI` + `{XETRACODE}` + `{BASE32_ENCODED_ID}`
 
 ---
@@ -306,7 +322,12 @@ ID format: `YUVATI` + `{XETRACODE}` + `{BASE32_ENCODED_ID}`
 
 ### 4.5 Mandal Endpoints
 
-Same pattern as Xetra at `/api/mandal`.
+| Method | Endpoint           | Permission     | Notes                              |
+|--------|--------------------|----------------|------------------------------------|
+| GET    | `/api/mandal`      | mandal:view    | Supports `?xetra_id=` filter       |
+| POST   | `/api/mandal`      | mandal:create  | Requires `xetra_id` in body        |
+| PUT    | `/api/mandal/:uuid`| mandal:update  | Requires `xetra_id` in body        |
+| DELETE | `/api/mandal/:uuid`| mandal:delete  |                                    |
 
 ---
 
@@ -384,17 +405,18 @@ Slug is auto-generated: `{kebab-name}-{YYYYMMDD}-{random}`
 
 ### 4.10 Attendance Endpoints
 
-| Method | Endpoint              | Description              |
-|--------|-----------------------|--------------------------|
+| Method | Endpoint              | Description               |
+|--------|-----------------------|---------------------------|
 | GET    | `/api/attendance`     | List (filter by date/type)|
-| GET    | `/api/attendance/today` | Today's counts          |
-| POST   | `/api/attendance`     | Manual mark              |
-| POST   | `/api/attendance/scan`| QR scan mark             |
+| GET    | `/api/attendance/today` | Today's counts           |
+| POST   | `/api/attendance`     | Manual mark               |
+| POST   | `/api/attendance/scan`| QR scan or Member ID mark |
 
-**Scan request:**
+**Scan request** — accepts UUID (from QR camera) or plain Member ID (manual entry):
 ```json
-{ "uuid": "member-uuid-here", "member_type": "yuvak", "date": "2025-01-15" }
+{ "identifier": "YUVAKTIAAAB", "member_type": "yuvak", "date": "2025-01-15" }
 ```
+The backend auto-detects by regex: UUID pattern → lookup by uuid; otherwise → lookup by member_id.
 
 **List query params:** `?date=2025-01-15&member_type=yuvak&shibir_id=1`
 
@@ -410,13 +432,28 @@ Slug is auto-generated: `{kebab-name}-{YYYYMMDD}-{random}`
 
 ### 4.12 Public Endpoints
 
-| Method | Endpoint                         | Description                     |
-|--------|----------------------------------|---------------------------------|
-| GET    | `/public/register/:type`         | Check if form active + dropdowns|
-| POST   | `/public/register/yuvak`         | Submit yuvak registration       |
-| POST   | `/public/register/yuvati`        | Submit yuvati registration      |
-| GET    | `/public/quiz/:slug`             | View published quiz             |
-| POST   | `/public/quiz/:slug/submit`      | Submit quiz answers             |
+| Method | Endpoint                         | Description                          |
+|--------|----------------------------------|--------------------------------------|
+| GET    | `/public/register/:type`         | Check if form active + dropdowns     |
+| POST   | `/public/register/yuvak`         | Submit yuvak registration            |
+| POST   | `/public/register/yuvati`        | Submit yuvati registration           |
+| GET    | `/public/quiz/:slug`             | View published quiz                  |
+| POST   | `/public/quiz/:slug/submit`      | Submit quiz answers                  |
+| GET    | `/public/welcome/:type/:uuid`    | Welcome card data (member_id, name, xetra, mandal) |
+| GET    | `/public/mandal`                 | Mandals list; supports `?xetra_id=` filter |
+
+**Welcome card response:**
+```json
+{
+  "success": true,
+  "data": {
+    "member_id": "YUVAKTIAAAB",
+    "full_name": "Ram Patel",
+    "xetra_name": "Tithal Xetra",
+    "mandal_name": "Main Mandal"
+  }
+}
+```
 
 ---
 
@@ -448,6 +485,19 @@ The runner:
 4. Records them in `migrations` table
 
 **Never** modify an already-applied migration file. Always create a new one.
+
+### Applied Migrations
+| File | Description |
+|------|-------------|
+| `001_initial_schema.sql`         | All core tables |
+| `002_quiz_extended_schema.sql`   | Quiz participants, submissions, answers |
+| `003_question_types.sql`         | Extended question type fields |
+| `004_mandal_xetra.sql`           | Adds `xetra_id FK` to `mandals` table |
+| `005_yuvati_support.sql`         | Yuvati table support |
+| `006_quiz_participant_mobile.sql` | Mobile column on quiz_participants |
+| `007_quiz_show_result.sql`       | `show_result` flag on quizzes |
+| `008_performance_indexes.sql`    | Composite indexes for quiz & attendance high-load |
+| `009_index_cleanup_and_race_fix.sql` | Deduplicate quiz_participants; upgrade to UNIQUE for race protection; compound pagination indexes |
 
 ### Migration examples
 ```sql
@@ -490,7 +540,7 @@ Login → Server returns JWT (8hr expiry)
 - **SUPER_ADMIN** bypasses all permission checks
 - All other roles: checked against `permissions` table per menu/action
 - Frontend: `auth.hasPermission('yuvak', 'can_create')` hides/shows buttons
-- Backend: `requirePermission($user, 'yuvak', 'create')` enforces at API level
+- Backend: `guard($user, 'yuvak', 'create', fn() => ...)` enforces at API level
 
 ### Password Security
 - bcrypt with cost factor 12
@@ -503,18 +553,32 @@ Login → Server returns JWT (8hr expiry)
 
 ### Admin Modules
 
-| Module     | List | Add | Edit | Delete | Special                          |
-|------------|------|-----|------|--------|----------------------------------|
-| Dashboard  | ✅   | ❌  | ❌   | ❌     | Live counts                      |
-| Yuvak      | ✅   | ✅  | ✅   | ✅     | QR view, WhatsApp on add         |
-| Yuvati     | ✅   | ✅  | ✅   | ✅     | QR view, WhatsApp on add         |
-| Xetra      | ✅   | ✅  | ✅   | ✅     | —                                |
-| Mandal     | ✅   | ✅  | ✅   | ✅     | —                                |
-| Users      | ✅   | ✅  | ✅   | ✅     | Add from Yuvak list only         |
-| Roles      | ✅   | ✅  | ❌   | ✅     | Permission matrix per menu       |
-| Shibir     | ✅   | ✅  | ✅   | ✅     | Auto-slug                        |
-| Quiz       | ✅   | ✅  | ✅   | ✅     | Dynamic questions, public link   |
-| Attendance | ✅   | ✅  | ❌   | ❌     | QR scan, date filter, Yuvak/Yuvati|
+| Module     | List | Add | Edit | Delete | Special                                      |
+|------------|------|-----|------|--------|----------------------------------------------|
+| Dashboard  | ✅   | ❌  | ❌   | ❌     | Live counts                                  |
+| Yuvak      | ✅   | ✅  | ✅   | ✅     | QR view, SMS on add, Welcome link copy       |
+| Yuvati     | ✅   | ✅  | ✅   | ✅     | QR view, SMS on add, Welcome link copy       |
+| Xetra      | ✅   | ✅  | ✅   | ✅     | —                                            |
+| Mandal     | ✅   | ✅  | ✅   | ✅     | Scoped to Xetra                              |
+| Users      | ✅   | ✅  | ✅   | ✅     | Add from Yuvak list only                     |
+| Roles      | ✅   | ✅  | ❌   | ✅     | Permission matrix per menu                   |
+| Shibir     | ✅   | ✅  | ✅   | ✅     | Auto-slug                                    |
+| Quiz       | ✅   | ✅  | ✅   | ✅     | Dynamic questions, public link, IST timezone |
+| Attendance | ✅   | ✅  | ❌   | ❌     | QR camera scan or Member ID entry            |
+
+### Toolbar UI Pattern (all list pages)
+All list modules use a unified two-part toolbar layout:
+- **Hero section**: icon + title + subtitle + badge — no Add button
+- **`.toolbar` strip** inside `.table-card`:
+  - `.toolbar-left` — search input + filter dropdowns
+  - `.toolbar-right` — Add button (saffron orange, matches hero button style)
+
+Defined globally in `frontend/src/styles.scss`.
+
+### Welcome Link (Yuvak/Yuvati list)
+Each row in Yuvak and Yuvati list tables has a **Welcome** column with a QR icon button.  
+Click copies `window.location.origin + /welcome/yuvak/{uuid}` to clipboard via `navigator.clipboard.writeText`.  
+Method: `copyWelcomeLink(member)` in both `yuvak-list.component.ts` and `yuvati-list.component.ts`.
 
 ### Yuvak ID Generation Algorithm
 ```
@@ -529,50 +593,54 @@ Reverse: Strip "YUVAK", extract code (known length), decode rest → DB id
 
 ---
 
-## 8. WhatsApp & QR Code Integration
+## 8. SMS & QR Code Integration
 
-### Flow
+WhatsApp has been replaced with **Fast2SMS** (plain SMS, India). The `WhatsAppService.php` is retained but unused.
+
+### SMS Flow
 ```
-Member Registered → QrCodeService::generateForMember()
-                 → Saves PNG to /storage/qr/{type}_{uuid}.png
-                 → Returns public URL
-                 → WhatsAppService::sendRegistrationMessage()
-                 → Sends image + text to member's WhatsApp
-```
+Member Registered → NotificationService::onYuvakRegistered()
+                 → SmsService::send(mo_number, message)
+                 → Fast2SMS API (route=q, Quick SMS)
+                 → SMS sent with Member ID + Welcome link
 
-### WhatsApp Providers
-
-| Provider | Config                            | Best For       |
-|----------|-----------------------------------|----------------|
-| `meta`   | META_WHATSAPP_TOKEN + PHONE_ID    | Production      |
-| `twilio` | TWILIO_ACCOUNT_SID + AUTH_TOKEN   | Sandbox/testing |
-| `log`    | No config needed                  | Local dev       |
-
-Set `WHATSAPP_PROVIDER=log` in development — messages are logged, not sent.
-
-### QR Code Generation
-1. **Primary:** `endroid/qr-code` composer library (local PNG generation)
-2. **Fallback:** Google Charts QR API (no install needed)
-
-Install primary:
-```bash
-composer require endroid/qr-code
+Admin Resend     → POST /api/yuvak/:uuid/notify
+                 → NotificationService::resendWelcome()
+                 → SmsService::send()
 ```
 
-### WhatsApp Message Template
+### SMS Providers
+
+| Provider    | Config                        | Best For       |
+|-------------|-------------------------------|----------------|
+| `fast2sms`  | `FAST2SMS_API_KEY` in `.env`  | Production (India SMS) |
+| `log`       | No config needed              | Local dev (logs to file) |
+
+Set `SMS_PROVIDER=fast2sms` in `.env`. If `FAST2SMS_API_KEY` is missing, falls back to log.
+
+### Welcome Link in SMS
 ```
-🕉️ *TDD Samaj - Registration Successful!*
-
-Jai Swaminarayan, *{Name}*!
-
-Your *YUVAK ID* is:
-📛 `YUVAKTIA1A`
-
-Please save this ID for future reference.
-Your personal QR code is attached — show it at the gate for attendance.
-
-_Yuvak Sabha Management System_
+FRONTEND_URL/welcome/{type}/{uuid}
 ```
+Built from `FRONTEND_URL` in `.env`. On the Angular side built from `window.location.origin`.
+
+### SMS Message Template
+```
+Jai Swaminarayan!
+
+Your TDD Samaj registration is confirmed.
+
+Member ID: YUVAKTIAAAB
+Welcome Card: https://yourdomain.com/welcome/yuvak/{uuid}
+
+Show this link at the gate for attendance.
+- Yuvak Sabha Management System
+```
+
+### QR Code Generation (attendance)
+- Backend still generates QR PNG for member cards via `QrCodeService.php`
+- Stored in `storage/qr/{type}_{uuid}.png`
+- Angular Welcome Card renders a fresh QR using `angularx-qrcode` (client-side, encodes UUID)
 
 ---
 
@@ -582,10 +650,20 @@ _Yuvak Sabha Management System_
 - **URL:** `/register/yuvak` or `/register/yuvati`
 - **Controlled by:** `public_forms` table (`is_active` flag per type)
 - **If inactive:** Shows "Registration Closed" message, returns 403
-- **On success:** Shows member ID + "QR sent to WhatsApp" message
+- **On success:** Shows member ID + "SMS sent" message
+- **Mandal dropdown:** Disabled until Xetra is selected; fetches `GET /public/mandal?xetra_id=` on xetra change
 
-Admin can toggle via DB: `UPDATE public_forms SET is_active=1 WHERE form_type='yuvak';`  
-*(Admin UI toggle for this can be added in a future sprint)*
+Admin can toggle via DB: `UPDATE public_forms SET is_active=1 WHERE form_type='yuvak';`
+
+### Welcome Card (public, no auth)
+- **URL:** `/welcome/:type/:uuid` — e.g. `/welcome/yuvak/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`
+- **Data:** `member_id`, `full_name`, `xetra_name`, `mandal_name`
+- **QR:** Client-side QR code rendered via `QRCodeModule` from `angularx-qrcode@17.0.1` — encodes the UUID
+- **Logo:** BAPS logo image (`assets/Baps_logo.svg.png`)
+- **Route:** `{ path: 'welcome/:type/:uuid', loadComponent: () => import('./public/welcome/welcome.component') }`
+- **Backend:** `GET /public/welcome/:type/:uuid` → `PublicController::welcomeCard()`
+
+> **Important:** Import `QRCodeModule` (not `QRCodeComponent`) from `angularx-qrcode`. The standalone component export does not exist in v17.
 
 ### Public Quiz
 - **URL:** `/quiz/{slug}`
@@ -764,19 +842,20 @@ project/
 │   │   ├── ShibirController.php
 │   │   ├── QuizController.php
 │   │   ├── AttendanceController.php
-│   │   └── PublicController.php
+│   │   └── PublicController.php # welcomeCard(), getMandalsForXetra()
 │   ├── helpers/
 │   │   ├── response.php         # sendSuccess(), sendError()
 │   │   ├── jwt.php              # jwtEncode(), jwtDecode()
 │   │   └── id_encoder.php       # buildYuvakId(), encodeId()
 │   ├── middleware/
-│   │   └── auth.php             # requireAuth(), requirePermission()
+│   │   └── auth.php             # requireAuth(), requirePermission(), guard()
 │   ├── migrations/
-│   │   └── 001_initial_schema.sql
+│   │   ├── 001_initial_schema.sql
+│   │   └── 004_mandal_xetra.sql # adds xetra_id FK to mandals
 │   ├── routes/
 │   │   ├── auth.php
-│   │   ├── yuvak.php
-│   │   ├── yuvati.php
+│   │   ├── yuvak.php            # includes /notify endpoint
+│   │   ├── yuvati.php           # includes /notify endpoint
 │   │   ├── xetra.php
 │   │   ├── mandal.php
 │   │   ├── users.php
@@ -785,11 +864,12 @@ project/
 │   │   ├── quiz.php
 │   │   ├── attendance.php
 │   │   ├── dashboard.php
-│   │   └── public.php
+│   │   └── public.php           # welcome card, mandal filter, register, quiz
 │   ├── services/
-│   │   ├── NotificationService.php  # Orchestrator
+│   │   ├── NotificationService.php  # Orchestrator — uses SmsService
+│   │   ├── SmsService.php           # Fast2SMS / log fallback
 │   │   ├── QrCodeService.php        # QR PNG generation
-│   │   └── WhatsAppService.php      # Meta/Twilio/Log
+│   │   └── WhatsAppService.php      # Kept but unused
 │   ├── storage/
 │   │   └── qr/                      # Generated QR PNGs
 │   ├── tests/
@@ -801,7 +881,7 @@ project/
 │   │       └── ApiTest.php
 │   ├── .env.example
 │   ├── composer.json
-│   ├── index.php               # Front controller
+│   ├── index.php               # Front controller; sets Asia/Kolkata timezone
 │   ├── migrate.php             # Migration runner
 │   └── phpunit.xml
 │
@@ -816,11 +896,11 @@ project/
     │   │   │   ├── layout/
     │   │   │   ├── dashboard/
     │   │   │   ├── yuvak/
-    │   │   │   │   ├── yuvak-list/
-    │   │   │   │   └── yuvak-form/
+    │   │   │   │   ├── yuvak-list/  # copyWelcomeLink(), Welcome column
+    │   │   │   │   └── yuvak-form/  # xetra→mandal cascade filter
     │   │   │   ├── yuvati/
-    │   │   │   │   ├── yuvati-list/
-    │   │   │   │   └── yuvati-form/
+    │   │   │   │   ├── yuvati-list/ # copyWelcomeLink(), Welcome column
+    │   │   │   │   └── yuvati-form/ # xetra→mandal cascade filter
     │   │   │   ├── xetra/
     │   │   │   ├── mandal/
     │   │   │   ├── users/
@@ -829,10 +909,11 @@ project/
     │   │   │   ├── quiz/
     │   │   │   │   ├── quiz-list/
     │   │   │   │   └── quiz-form/
-    │   │   │   └── attendance/
+    │   │   │   └── attendance/      # QR camera + Member ID entry
     │   │   ├── public/
-    │   │   │   ├── register/
-    │   │   │   └── quiz/
+    │   │   │   ├── register/        # xetra→mandal cascade filter
+    │   │   │   ├── quiz/
+    │   │   │   └── welcome/         # welcome.component.* — QR + member info
     │   │   ├── core/
     │   │   │   ├── guards/
     │   │   │   │   └── auth.guard.ts
@@ -841,18 +922,20 @@ project/
     │   │   │   ├── models/
     │   │   │   │   └── index.ts
     │   │   │   └── services/
-    │   │   │       ├── api.service.ts
+    │   │   │       ├── api.service.ts   # get/post/put/delete + publicGet/publicPost
     │   │   │       ├── auth.service.ts
     │   │   │       └── toast.service.ts
     │   │   ├── shared/
     │   │   │   └── components/
     │   │   │       └── toast/
-    │   │   ├── app.routes.ts
+    │   │   ├── app.routes.ts        # welcome/:type/:uuid route added
     │   │   └── app.config.ts
+    │   ├── assets/
+    │   │   └── Baps_logo.svg.png    # BAPS logo (replaces 🕉️ emoji everywhere)
     │   ├── environments/
-    │   │   └── environment.ts
-    │   └── styles.scss
-    └── package.json
+    │   │   └── environment.ts       # apiUrl + publicUrl
+    │   └── styles.scss              # .toolbar, .toolbar-left, .toolbar-right
+    └── package.json                 # angularx-qrcode@17.0.1
 ```
 
 ---
@@ -860,10 +943,35 @@ project/
 ## 15. Environment Setup
 
 ### Prerequisites
-- PHP 8.1+
+- PHP 8.1+ (tested up to PHP 8.5)
 - MySQL 8.0+
 - Node.js 18+
 - Composer
+
+### Backend `.env` Variables
+```dotenv
+# App
+APP_ENV=local
+APP_TIMEZONE=Asia/Kolkata
+FRONTEND_URL=http://localhost:4200
+ALLOWED_ORIGINS=http://localhost:4200
+
+# Database
+DB_HOST=127.0.0.1
+DB_NAME=tdd_samaj
+DB_USER=root
+DB_PASS=
+
+# JWT
+JWT_SECRET=your-32-char-secret-here
+
+# SMS (Fast2SMS)
+SMS_PROVIDER=fast2sms
+FAST2SMS_API_KEY=your-fast2sms-api-key
+
+# Legacy — kept but unused
+WHATSAPP_PROVIDER=log
+```
 
 ### Backend Setup
 ```bash
@@ -871,17 +979,10 @@ cd backend
 cp .env.example .env
 # Edit .env with your DB credentials and secrets
 
-# Install dependencies
 composer install
-
-# Run migrations (creates all tables)
-php migrate.php
-
-# Start dev server
+php migrate.php      # creates all tables
 php -S localhost:8000
-
-# Seed first admin user (run once)
-php seed_admin.php
+php seed_admin.php   # first admin user (run once)
 ```
 
 ### Create First Admin (one-time)
@@ -895,8 +996,8 @@ require_once 'helpers/id_encoder.php';
 $pdo->exec("INSERT IGNORE INTO xetras (uuid,name,code) VALUES (UUID(),'Head Office','HO')");
 $xetraId = $pdo->query("SELECT id FROM xetras WHERE code='HO'")->fetchColumn();
 
-// 2. Create Mandal  
-$pdo->exec("INSERT IGNORE INTO mandals (uuid,name,code) VALUES (UUID(),'Main','MAIN')");
+// 2. Create Mandal
+$pdo->exec("INSERT IGNORE INTO mandals (uuid,name,code,xetra_id) VALUES (UUID(),'Main','MAIN',$xetraId)");
 $mandalId = $pdo->query("SELECT id FROM mandals WHERE code='MAIN'")->fetchColumn();
 
 // 3. Create Yuvak
@@ -924,15 +1025,19 @@ ng serve          # Development: http://localhost:4200
 ng build          # Production build
 ```
 
+### Mobile Testing (Cloudflare Tunnel)
+```bash
+cloudflared tunnel --url http://localhost:8000
+```
+Free, no account needed. Gives a temporary public HTTPS URL.  
+After each restart update `.env`: `APP_URL`, `FRONTEND_URL`, `ALLOWED_ORIGINS`.
+
 ### Apache/Nginx Config for Backend
 ```apache
 # Apache .htaccess (put in backend/)
 RewriteEngine On
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^(.*)$ index.php [QSA,L]
-
-# Add MIME type for JSON
-AddType application/json .json
 ```
 
 ```nginx
@@ -947,9 +1052,11 @@ location /public/ { try_files $uri /public/index.php?$query_string; }
 
 ### Backend
 - [ ] Set `APP_ENV=production` in `.env`
+- [ ] Set `APP_TIMEZONE=Asia/Kolkata`
 - [ ] Set strong `JWT_SECRET` (32+ random chars)
 - [ ] Set `ALLOWED_ORIGINS` to production frontend URL
-- [ ] Set `WHATSAPP_PROVIDER=meta` (or `twilio`) and fill credentials
+- [ ] Set `FRONTEND_URL` to production frontend URL (used in SMS welcome links)
+- [ ] Set `SMS_PROVIDER=fast2sms` and `FAST2SMS_API_KEY`
 - [ ] Run `php migrate.php` on production DB
 - [ ] Set `storage/qr/` directory writable: `chmod 755 storage/qr/`
 - [ ] Configure web server to serve `storage/qr/` as static files
@@ -958,16 +1065,122 @@ location /public/ { try_files $uri /public/index.php?$query_string; }
 
 ### Frontend
 - [ ] Update `environment.ts` → `environment.prod.ts` with production API URLs
+- [ ] Confirm `publicUrl` points to `https://yourdomain.com/public`
 - [ ] Run `ng build --configuration production`
 - [ ] Deploy `dist/` to web server
 - [ ] Configure Angular router fallback (all routes → `index.html`)
+- [ ] Ensure `/welcome/*` routes are included in the fallback (no auth guard)
 
-### WhatsApp (Meta Cloud API) Setup
-1. Create Meta Business account
-2. Set up WhatsApp Business Platform
-3. Get Phone Number ID and Access Token
-4. Add to `.env`: `META_WHATSAPP_TOKEN` and `META_PHONE_NUMBER_ID`
-5. Test with sandbox number before going live
+### Fast2SMS Setup
+1. Register at fast2sms.com (India SMS provider)
+2. Get API key from dashboard
+3. Add to `.env`: `FAST2SMS_API_KEY=<key>`
+4. Uses `route=q` (Quick SMS), 10-digit Indian numbers only
+5. Test with a real mobile number before go-live
+
+---
+
+## 17. Implementation Patterns
+
+### PHP Route `guard()` Helper
+
+All routes use the `guard()` helper from `backend/middleware/auth.php`.  
+PHP's `match()` does **not** support comma-separated conditions — each arm must be a single expression:
+
+```php
+// backend/routes/yuvak.php
+match (true) {
+    $method === 'GET'    && !$id       => guard($user, 'yuvak', 'view',   fn() => $ctrl->index()),
+    $method === 'GET'    && $id        => guard($user, 'yuvak', 'view',   fn() => $ctrl->show($id)),
+    $method === 'POST'   && !$id       => guard($user, 'yuvak', 'create', fn() => $ctrl->store()),
+    $method === 'PUT'    && $id        => guard($user, 'yuvak', 'update', fn() => $ctrl->update($id)),
+    $method === 'DELETE' && $id        => guard($user, 'yuvak', 'delete', fn() => $ctrl->destroy($id)),
+    $method === 'POST'   && $sub==='notify' => guard($user, 'yuvak', 'view', fn() => $ctrl->notify($id)),
+    default => sendError('Not found', 404),
+};
+```
+
+### Xetra → Mandal Cascade Filter
+
+Yuvak/Yuvati forms and the public registration form all filter mandals by the selected xetra:
+
+```typescript
+// In form components
+this.form.get('xetra_id')!.valueChanges.subscribe(xetraId => {
+  if (!xetraId) return;
+  if (!this.isEdit) this.form.get('mandal_id')!.reset();
+  this.api.get(`/mandal?xetra_id=${xetraId}`).subscribe(res => {
+    this.mandals = res.data;
+  });
+});
+```
+
+Public register uses `publicGet('/mandal?xetra_id=...')`. Mandal dropdown is disabled until xetra is chosen.
+
+### BAPS Logo
+
+All instances of the `🕉️` emoji are replaced with the BAPS logo image:
+
+```html
+<img src="assets/Baps_logo.svg.png" class="logo-img" alt="BAPS">
+```
+
+| Location    | CSS classes                              | Size          |
+|-------------|------------------------------------------|---------------|
+| Login page  | `.logo-ring` (white bg, orange border)  | 74×74px       |
+| Sidebar     | `.brand-icon-wrap` (white circle, shadow)| 28×28px      |
+| Welcome card| inline in template                       | as designed   |
+
+### Quiz Timezone Fix
+
+PHP defaults to UTC. Quiz `start_time`/`end_time` are stored in IST, so comparison must also be in IST:
+
+```php
+// backend/index.php — top of file
+date_default_timezone_set('Asia/Kolkata');
+```
+
+Also set `APP_TIMEZONE=Asia/Kolkata` in `.env`. Without this, quizzes show "Not Started Yet" even when they have started.
+
+### PHP 8.5 Compatibility
+
+`curl_close()` is deprecated in PHP 8.5 and throws an `ErrorException` (because `set_error_handler` promotes PHP errors). Removed from `WhatsAppService.php` in both `sendViaTwilio()` and `httpPost()` — curl handles are automatically freed when they go out of scope.
+
+### Attendance Scan — UUID vs Member ID
+
+`AttendanceController::scan()` accepts either format:
+
+```php
+$identifier = $body['identifier'];
+$isUuid = preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $identifier);
+if ($isUuid) {
+    // lookup by uuid
+} else {
+    // lookup by member_id (e.g. YUVAKTIAAAB)
+}
+```
+
+Angular camera scanner uses `html5-qrcode` library (`Html5Qrcode('qr-scan-region')`, `facingMode: 'environment'`). On scan: stops camera, closes dialog, sets identifier in input, calls `markAttendance()`.
+
+### Angular `QRCodeModule` Import
+
+Use `QRCodeModule` (not `QRCodeComponent`) from `angularx-qrcode@17.0.1`:
+
+```typescript
+// welcome.component.ts
+import { QRCodeModule } from 'angularx-qrcode';
+
+@Component({
+  standalone: true,
+  imports: [CommonModule, QRCodeModule],
+  ...
+})
+```
+
+```html
+<!-- welcome.component.html -->
+<qrcode [qrdata]="memberUuid" [width]="200" [errorCorrectionLevel]="'M'"></qrcode>
+```
 
 ---
 

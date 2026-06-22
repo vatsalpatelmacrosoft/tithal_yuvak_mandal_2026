@@ -11,10 +11,13 @@ class QuizController
     {
         $stmt = $this->pdo->query("
             SELECT q.*,
-                   (SELECT COUNT(*) FROM quiz_questions qq WHERE qq.quiz_id=q.id AND qq.status='active') AS question_count,
-                   (SELECT COUNT(*) FROM quiz_participants qp WHERE qp.quiz_id=q.id AND qp.status='active') AS participant_count
+                   COUNT(DISTINCT qq.id) AS question_count,
+                   COUNT(DISTINCT qp.id) AS participant_count
             FROM quizzes q
-            WHERE q.status='active'
+            LEFT JOIN quiz_questions   qq ON qq.quiz_id = q.id AND qq.status   = 'active'
+            LEFT JOIN quiz_participants qp ON qp.quiz_id = q.id AND qp.status = 'active'
+            WHERE q.status = 'active'
+            GROUP BY q.id
             ORDER BY q.created_at DESC
         ");
         sendSuccess($stmt->fetchAll());

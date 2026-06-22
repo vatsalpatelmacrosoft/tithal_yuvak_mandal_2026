@@ -71,6 +71,13 @@ $sub      = $parts[3] ?? null;
 
 $body = json_decode(file_get_contents('php://input'), true) ?? [];
 
+// ── API Docs (Swagger UI) ─────────────────────────────────────
+if ($uri === 'docs') {
+    header('Content-Type: text/html; charset=UTF-8');
+    readfile(__DIR__ . '/api-docs.html');
+    exit;
+}
+
 // ── Route Map ─────────────────────────────────────────────────
 require_once __DIR__ . '/routes/auth.php';
 require_once __DIR__ . '/routes/yuvak.php';

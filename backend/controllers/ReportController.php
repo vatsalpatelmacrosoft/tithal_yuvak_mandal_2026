@@ -22,10 +22,10 @@ class ReportController
                     ROUND(SUM(qs.percentage >= 40) / NULLIF(COUNT(qs.id),0) * 100, 2),
                     0
                 )                                                               AS pass_percentage,
-                (SELECT COUNT(*) FROM quiz_questions qq
-                 WHERE qq.quiz_id=q.id AND qq.status='active')                 AS question_count
+                COUNT(DISTINCT qq.id)                                          AS question_count
             FROM quizzes q
-            LEFT JOIN quiz_participants qp ON qp.quiz_id = q.id AND qp.status='active'
+            LEFT JOIN quiz_questions    qq ON qq.quiz_id = q.id AND qq.status = 'active'
+            LEFT JOIN quiz_participants qp ON qp.quiz_id = q.id AND qp.status = 'active'
             LEFT JOIN quiz_submissions  qs ON qs.participant_id = qp.id
             WHERE q.status='active'
             GROUP BY q.id

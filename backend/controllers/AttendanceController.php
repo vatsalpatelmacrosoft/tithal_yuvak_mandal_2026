@@ -20,14 +20,14 @@ class AttendanceController
         $stmt = $this->pdo->prepare("
             SELECT a.*,
                 CASE WHEN a.member_type='yuvak'
-                    THEN (SELECT CONCAT(first_name,' ',last_name) FROM yuvaks WHERE id=a.member_id)
-                    ELSE (SELECT CONCAT(first_name,' ',last_name) FROM yuvatis WHERE id=a.member_id)
-                END as member_name,
-                CASE WHEN a.member_type='yuvak'
-                    THEN (SELECT yuvak_id FROM yuvaks WHERE id=a.member_id)
-                    ELSE (SELECT yuvati_id FROM yuvatis WHERE id=a.member_id)
-                END as member_code
-            FROM attendances a $where ORDER BY a.attendance_date DESC, a.created_at DESC
+                    THEN CONCAT(y.first_name,' ',y.last_name)
+                    ELSE CONCAT(yt.first_name,' ',yt.last_name)
+                END AS member_name,
+                CASE WHEN a.member_type='yuvak' THEN y.yuvak_id ELSE yt.yuvati_id END AS member_code
+            FROM attendances a
+            LEFT JOIN yuvaks  y  ON y.id  = a.member_id AND a.member_type = 'yuvak'
+            LEFT JOIN yuvatis yt ON yt.id = a.member_id AND a.member_type = 'yuvati'
+            $where ORDER BY a.attendance_date DESC, a.created_at DESC
         ");
         $stmt->execute($params);
         $rows = $stmt->fetchAll();
@@ -79,16 +79,16 @@ class AttendanceController
             SELECT
                 a.member_type,
                 a.member_id,
+                CASE WHEN a.member_type='yuvak' THEN y.yuvak_id ELSE yt.yuvati_id END AS member_code,
                 CASE WHEN a.member_type='yuvak'
-                    THEN (SELECT yuvak_id  FROM yuvaks  WHERE id=a.member_id)
-                    ELSE (SELECT yuvati_id FROM yuvatis WHERE id=a.member_id)
-                END AS member_code,
-                CASE WHEN a.member_type='yuvak'
-                    THEN (SELECT CONCAT(first_name,' ',last_name) FROM yuvaks  WHERE id=a.member_id)
-                    ELSE (SELECT CONCAT(first_name,' ',last_name) FROM yuvatis WHERE id=a.member_id)
+                    THEN CONCAT(y.first_name,' ',y.last_name)
+                    ELSE CONCAT(yt.first_name,' ',yt.last_name)
                 END AS member_name,
                 COUNT(*) AS total_present
-            FROM attendances a $where
+            FROM attendances a
+            LEFT JOIN yuvaks  y  ON y.id  = a.member_id AND a.member_type = 'yuvak'
+            LEFT JOIN yuvatis yt ON yt.id = a.member_id AND a.member_type = 'yuvati'
+            $where
             GROUP BY a.member_type, a.member_id
             ORDER BY total_present DESC, member_name ASC
         ");
@@ -110,16 +110,16 @@ class AttendanceController
         $stmt = $this->pdo->prepare("
             SELECT
                 a.member_type,
+                CASE WHEN a.member_type='yuvak' THEN y.yuvak_id ELSE yt.yuvati_id END AS member_code,
                 CASE WHEN a.member_type='yuvak'
-                    THEN (SELECT yuvak_id  FROM yuvaks  WHERE id=a.member_id)
-                    ELSE (SELECT yuvati_id FROM yuvatis WHERE id=a.member_id)
-                END AS member_code,
-                CASE WHEN a.member_type='yuvak'
-                    THEN (SELECT CONCAT(first_name,' ',last_name) FROM yuvaks  WHERE id=a.member_id)
-                    ELSE (SELECT CONCAT(first_name,' ',last_name) FROM yuvatis WHERE id=a.member_id)
+                    THEN CONCAT(y.first_name,' ',y.last_name)
+                    ELSE CONCAT(yt.first_name,' ',yt.last_name)
                 END AS member_name,
                 COUNT(*) AS total_present
-            FROM attendances a $where
+            FROM attendances a
+            LEFT JOIN yuvaks  y  ON y.id  = a.member_id AND a.member_type = 'yuvak'
+            LEFT JOIN yuvatis yt ON yt.id = a.member_id AND a.member_type = 'yuvati'
+            $where
             GROUP BY a.member_type, a.member_id
             ORDER BY total_present DESC, member_name ASC
         ");
@@ -154,15 +154,15 @@ class AttendanceController
             SELECT
                 a.attendance_date,
                 a.member_type,
+                CASE WHEN a.member_type='yuvak' THEN y.yuvak_id ELSE yt.yuvati_id END AS member_code,
                 CASE WHEN a.member_type='yuvak'
-                    THEN (SELECT yuvak_id FROM yuvaks WHERE id=a.member_id)
-                    ELSE (SELECT yuvati_id FROM yuvatis WHERE id=a.member_id)
-                END as member_code,
-                CASE WHEN a.member_type='yuvak'
-                    THEN (SELECT CONCAT(first_name,' ',last_name) FROM yuvaks WHERE id=a.member_id)
-                    ELSE (SELECT CONCAT(first_name,' ',last_name) FROM yuvatis WHERE id=a.member_id)
-                END as member_name
-            FROM attendances a $where ORDER BY a.attendance_date DESC, a.created_at DESC
+                    THEN CONCAT(y.first_name,' ',y.last_name)
+                    ELSE CONCAT(yt.first_name,' ',yt.last_name)
+                END AS member_name
+            FROM attendances a
+            LEFT JOIN yuvaks  y  ON y.id  = a.member_id AND a.member_type = 'yuvak'
+            LEFT JOIN yuvatis yt ON yt.id = a.member_id AND a.member_type = 'yuvati'
+            $where ORDER BY a.attendance_date DESC, a.created_at DESC
         ");
         $stmt->execute($params);
         $rows = $stmt->fetchAll();
