@@ -319,6 +319,13 @@ class PublicController
             $externalMobile = $mobile;
         }
 
+        // Registered members don't fill a gender form — derive from member_type
+        if ($type === 'registered') {
+            $gender = $memberType === 'yuvak' ? 'male' : 'female';
+        } else {
+            $gender = $body['gender'] ?? null;
+        }
+
         $this->pdo->prepare("
             INSERT INTO quiz_participants
                 (uuid, quiz_id, participant_type, member_type, yuvak_id, yuvak_db_id, name, gender, mo_number)
@@ -329,7 +336,7 @@ class PublicController
             $storedMemberId,
             $memberDbId,
             $storedName ?? ($body['name'] ?? null),
-            $body['gender'] ?? null,
+            $gender,
             $externalMobile,
         ]);
 

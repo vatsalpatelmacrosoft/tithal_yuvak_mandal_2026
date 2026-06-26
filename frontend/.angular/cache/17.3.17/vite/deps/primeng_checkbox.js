@@ -1,16 +1,12 @@
 import {
   CheckIcon
 } from "./chunk-XECRHX7D.js";
+import "./chunk-PPSNSOBH.js";
 import {
   AutoFocus,
   AutoFocusModule
 } from "./chunk-OQVD43ZT.js";
-import "./chunk-PPSNSOBH.js";
 import "./chunk-JZQAVOZS.js";
-import {
-  NG_VALUE_ACCESSOR,
-  NgControl
-} from "./chunk-KGHYXXIT.js";
 import {
   PrimeNGConfig,
   PrimeTemplate,
@@ -19,6 +15,10 @@ import {
 import {
   ObjectUtils
 } from "./chunk-L6HMITPC.js";
+import {
+  NG_VALUE_ACCESSOR,
+  NgControl
+} from "./chunk-KGHYXXIT.js";
 import {
   CommonModule,
   NgClass,
@@ -74,8 +74,8 @@ import {
   ɵɵtextInterpolate1,
   ɵɵviewQuery
 } from "./chunk-KHB3FGJO.js";
-import "./chunk-4RMHXXWK.js";
 import "./chunk-LFVCTHGI.js";
+import "./chunk-4RMHXXWK.js";
 import "./chunk-AJN3JCM6.js";
 import "./chunk-TXDUYLVM.js";
 

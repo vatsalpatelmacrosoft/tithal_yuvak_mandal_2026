@@ -9,10 +9,7 @@ $user = requireAuth();
 // Export: GET /api/reports/export?type=X&quiz_uuid=Y
 if ($method === 'GET' && $id === 'export') {
     guard($user, 'reports', 'view', function() use ($ctrl) {
-        $type     = $_GET['type']      ?? '';
-        $quizUuid = $_GET['quiz_uuid'] ?? '';
-        $format   = $_GET['format']    ?? 'csv';
-        $ctrl->export($type, $quizUuid, $format);
+        $ctrl->export($_GET['type'] ?? '', $_GET['quiz_uuid'] ?? '');
     });
 }
 

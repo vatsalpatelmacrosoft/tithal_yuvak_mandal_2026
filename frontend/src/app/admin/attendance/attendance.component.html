@@ -85,11 +85,11 @@
       <div class="filter-grid">
         <div class="field">
           <label>From Date</label>
-          <input pInputText type="date" [(ngModel)]="fromDate" [max]="today">
+          <input pInputText type="date" [(ngModel)]="fromDate" [max]="today" (change)="load()">
         </div>
         <div class="field">
           <label>To Date</label>
-          <input pInputText type="date" [(ngModel)]="toDate" [max]="today">
+          <input pInputText type="date" [(ngModel)]="toDate" [max]="today" (change)="load()">
         </div>
         <div class="field">
           <label>Member Type</label>
@@ -97,6 +97,7 @@
             <i class="pi pi-users fw-icon"></i>
             <p-dropdown [options]="filterOptions" [(ngModel)]="filterType"
                         optionLabel="label" optionValue="value"
+                        (onChange)="load()"
                         styleClass="fw-dropdown" />
           </div>
         </div>

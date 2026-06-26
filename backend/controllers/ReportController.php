@@ -47,7 +47,11 @@ class ReportController
                 COALESCE(qp.name,
                     TRIM(CONCAT(y.first_name,' ',COALESCE(y.middle_name,''),' ',y.last_name))
                 ) AS name,
-                qp.gender,
+                COALESCE(qp.gender,
+                    CASE WHEN qp.member_type='yuvak'  THEN 'male'
+                         WHEN qp.member_type='yuvati' THEN 'female'
+                         ELSE NULL END
+                ) AS gender,
                 qs.score,
                 qs.total_marks,
                 qs.percentage,
@@ -105,7 +109,11 @@ class ReportController
 
         $stmt = $this->pdo->prepare("
             SELECT
-                qp.gender,
+                COALESCE(qp.gender,
+                    CASE WHEN qp.member_type='yuvak'  THEN 'male'
+                         WHEN qp.member_type='yuvati' THEN 'female'
+                         ELSE NULL END
+                ) AS gender,
                 COUNT(qp.id)                       AS total_participants,
                 COALESCE(MAX(qs.percentage),  0)   AS highest_score,
                 COALESCE(AVG(qs.percentage),  0)   AS average_score,
@@ -113,7 +121,7 @@ class ReportController
             FROM quiz_participants qp
             LEFT JOIN quiz_submissions qs ON qs.participant_id = qp.id
             WHERE qp.quiz_id=? AND qp.status='active'
-            GROUP BY qp.gender
+            GROUP BY gender
         ");
         $stmt->execute([$quiz['id']]);
         $summary = $stmt->fetchAll();
@@ -126,7 +134,11 @@ class ReportController
                 COALESCE(qp.name,
                     TRIM(CONCAT(y.first_name,' ',COALESCE(y.middle_name,''),' ',y.last_name))
                 ) AS name,
-                qp.gender,
+                COALESCE(qp.gender,
+                    CASE WHEN qp.member_type='yuvak'  THEN 'male'
+                         WHEN qp.member_type='yuvati' THEN 'female'
+                         ELSE NULL END
+                ) AS gender,
                 qs.score,
                 qs.total_marks,
                 qs.percentage,
@@ -136,22 +148,24 @@ class ReportController
             LEFT JOIN yuvaks y ON y.id = qp.yuvak_db_id
             LEFT JOIN quiz_submissions qs ON qs.participant_id = qp.id
             WHERE qp.quiz_id=? AND qp.status='active'
-            ORDER BY qp.gender, qs.percentage DESC
+            ORDER BY gender, qs.percentage DESC
         ");
         $details->execute([$quiz['id']]);
         $rows = $details->fetchAll();
 
-        $byGender = ['male' => [], 'female' => [], 'other' => [], 'unknown' => []];
+        $byGender = ['male' => [], 'female' => []];
         foreach ($rows as $r) {
-            $g = $r['gender'] ?? 'unknown';
-            $byGender[$g][] = $r;
+            $g = $r['gender'] ?? null;
+            if ($g === 'male' || $g === 'female') {
+                $byGender[$g][] = $r;
+            }
         }
 
         sendSuccess(['summary' => $summary, 'details' => $byGender]);
     }
 
-    // GET /api/reports/export?type=X&quiz_uuid=Y&format=csv
-    public function export(string $type, string $quizUuid, string $format = 'csv'): void
+    // GET /api/reports/export?type=X&quiz_uuid=Y
+    public function export(string $type, string $quizUuid): void
     {
         switch ($type) {
             case 'quiz-wise':
@@ -264,7 +278,7 @@ class ReportController
     private function outputCsv(string $filename, array $headers, array $rows): void
     {
         header('Content-Type: text/csv; charset=UTF-8');
-        header('Content-Disposition: attachment; filename="' . $filename . '.csv"');
+        header("Content-Disposition: attachment; filename=\"{$filename}.csv\"");
         header('Cache-Control: no-cache');
 
         $out = fopen('php://output', 'w');

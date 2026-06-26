@@ -48,12 +48,32 @@ export class ReportsComponent implements OnInit {
   loadingQs = false;
   loadingG  = false;
 
-  activeGenderTab: 'male' | 'female' | 'other' = 'male';
+  // Participant tab — gender sub-tabs
+  participantGenderTab: 'all' | 'male' | 'female' = 'all';
+
+  get maleParticipants()   { return this.participants().filter((p: any) => p.gender === 'male');   }
+  get femaleParticipants() { return this.participants().filter((p: any) => p.gender === 'female'); }
+
+  get filteredParticipants(): any[] {
+    if (this.participantGenderTab === 'male')   return this.maleParticipants;
+    if (this.participantGenderTab === 'female') return this.femaleParticipants;
+    return this.participants();
+  }
+
+  // Gender tab — registered / external filter
+  genderTypeFilter: 'all' | 'registered' | 'external' = 'all';
+
+  filteredGenderList(gender: string): any[] {
+    const list = (this.genderDetails() as any)[gender] || [];
+    if (this.genderTypeFilter === 'all') return list;
+    return list.filter((p: any) => p.participant_type === this.genderTypeFilter);
+  }
+
+  activeGenderTab: 'male' | 'female' = 'male';
 
   genderTabs = [
     { key: 'male'   as const, label: 'Male',   color: '#1D4ED8', bg: '#EFF6FF', border: '#BFDBFE' },
     { key: 'female' as const, label: 'Female', color: '#BE185D', bg: '#FDF2F8', border: '#FBCFE8' },
-    { key: 'other'  as const, label: 'Other',  color: '#6B7280', bg: '#F9FAFB', border: '#E5E7EB' },
   ];
 
   ngOnInit() {
@@ -83,6 +103,8 @@ export class ReportsComponent implements OnInit {
 
   onQuizSelect(uuid: string) {
     this.selectedQuiz.set(uuid);
+    this.participantGenderTab = 'all';
+    this.genderTypeFilter = 'all';
     this.loadParticipants(uuid);
     this.loadQuestions(uuid);
     this.loadGender(uuid);

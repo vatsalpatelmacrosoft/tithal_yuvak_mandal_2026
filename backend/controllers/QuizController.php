@@ -152,7 +152,8 @@ class QuizController
         $optB    = $qType === 'mcq' ? ($body['option_b'] ?? null) : null;
         $optC    = $qType === 'mcq' ? ($body['option_c'] ?? null) : null;
         $optD    = $qType === 'mcq' ? ($body['option_d'] ?? null) : null;
-        $options = in_array($qType, ['select','radio']) ? json_encode($body['options']) : null;
+        $options   = in_array($qType, ['select','radio']) ? json_encode($body['options']) : null;
+        $fieldType = $qType === 'mcq' ? 'radio' : $qType;
 
         $this->pdo->prepare("
             INSERT INTO quiz_questions
@@ -168,7 +169,7 @@ class QuizController
             $body['correct_answer'],
             (float)($body['marks'] ?? 1),
             (int)($body['display_order'] ?? $nextOrder),
-            $qType,   // reuse as field_type for legacy compat
+            $fieldType,
         ]);
 
         $this->listQuestions($quizUuid);
@@ -196,6 +197,8 @@ class QuizController
             $options = $q['options'];
         }
 
+        $fieldType = $qType === 'mcq' ? 'radio' : $qType;
+
         $this->pdo->prepare("
             UPDATE quiz_questions SET
                 title=?, question_type=?,
@@ -211,7 +214,7 @@ class QuizController
             $body['correct_answer'] ?? $q['correct_answer'],
             (float)($body['marks'] ?? $q['marks']),
             (int)($body['display_order'] ?? $q['display_order']),
-            $qType,
+            $fieldType,
             $questionUuid,
         ]);
 
