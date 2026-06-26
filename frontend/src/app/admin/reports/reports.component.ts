@@ -159,4 +159,9 @@ export class ReportsComponent implements OnInit {
     const s = this.genderSummary().find((r: any) => r.gender === gender);
     return s ? +s.total_participants : 0;
   }
+
+  genderTypeCount(gender: string, type: string): number {
+    const list = (this.genderDetails() as any)[gender] || [];
+    return list.filter((p: any) => p.participant_type === type).length;
+  }
 }

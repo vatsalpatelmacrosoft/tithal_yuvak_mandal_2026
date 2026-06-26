@@ -294,12 +294,12 @@
         <button class="type-pill registered" [class.active]="genderTypeFilter === 'registered'"
                 (click)="genderTypeFilter = 'registered'">
           Registered
-          <span class="g-count">{{ (genderDetails()[activeGenderTab] || []).filter($any(p => p.participant_type === 'registered')).length }}</span>
+          <span class="g-count">{{ genderTypeCount(activeGenderTab, 'registered') }}</span>
         </button>
         <button class="type-pill external" [class.active]="genderTypeFilter === 'external'"
                 (click)="genderTypeFilter = 'external'">
           External
-          <span class="g-count">{{ (genderDetails()[activeGenderTab] || []).filter($any(p => p.participant_type === 'external')).length }}</span>
+          <span class="g-count">{{ genderTypeCount(activeGenderTab, 'external') }}</span>
         </button>
       </div>
 
