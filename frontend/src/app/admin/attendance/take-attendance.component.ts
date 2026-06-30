@@ -1,4 +1,4 @@
-import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, signal, HostListener } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NgIf, TitleCasePipe } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
@@ -47,6 +47,8 @@ export class TakeAttendanceComponent implements OnInit, OnDestroy {
   marking        = false;
   todayCount     = signal({ yuvak: 0, yuvati: 0, total: 0 });
   facingMode: 'environment' | 'user' = 'environment';
+
+  isFullscreen = signal(false);
 
   private qr: Html5Qrcode | null = null;
   private processingQr = false;
@@ -128,6 +130,19 @@ export class TakeAttendanceComponent implements OnInit, OnDestroy {
       this.resultTimer = null;
       this.processingQr = false; // unlock scanner only after overlay is gone
     }, 3000);
+  }
+
+  toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  }
+
+  @HostListener('document:fullscreenchange')
+  onFullscreenChange() {
+    this.isFullscreen.set(!!document.fullscreenElement);
   }
 
   loadTodayCount() {

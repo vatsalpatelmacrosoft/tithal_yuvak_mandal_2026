@@ -1,4 +1,7 @@
-<div class="app-shell" [class.sidebar-collapsed]="collapsed">
+<div class="app-shell" [class.sidebar-collapsed]="collapsed" [class.sidebar-mobile-open]="mobileOpen">
+
+  <!-- ── Mobile backdrop ── -->
+  <div class="sidebar-backdrop" (click)="closeMobileSidebar()"></div>
 
   <!-- ── Sidebar ── -->
   <aside class="sidebar">

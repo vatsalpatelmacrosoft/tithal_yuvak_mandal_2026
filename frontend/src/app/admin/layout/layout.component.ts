@@ -1,10 +1,11 @@
 import { Component, inject } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { NgFor } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { filter } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
 
 const MENU_ITEMS = [
@@ -31,9 +32,21 @@ const MENU_ITEMS = [
   imports: [RouterOutlet, RouterLink, RouterLinkActive, NgFor, ButtonModule, TooltipModule, ToastModule, ConfirmDialogModule],
 })
 export class LayoutComponent {
-  private auth = inject(AuthService);
-  user = this.auth.currentUser;
-  collapsed = false;
+  private auth   = inject(AuthService);
+  private router = inject(Router);
+
+  user        = this.auth.currentUser;
+  collapsed   = false;
+  mobileOpen  = false;
+
+  constructor() {
+    // Auto-close sidebar on mobile after every navigation
+    this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe(() => {
+      if (this.isMobile) this.mobileOpen = false;
+    });
+  }
+
+  get isMobile(): boolean { return window.innerWidth <= 768; }
 
   get userInitial(): string {
     return (this.user()?.name || 'A').charAt(0).toUpperCase();
@@ -43,6 +56,14 @@ export class LayoutComponent {
     return MENU_ITEMS.filter(item => this.auth.hasPermission(item.slug, 'can_view'));
   }
 
-  toggleSidebar() { this.collapsed = !this.collapsed; }
+  toggleSidebar() {
+    if (this.isMobile) {
+      this.mobileOpen = !this.mobileOpen;
+    } else {
+      this.collapsed = !this.collapsed;
+    }
+  }
+
+  closeMobileSidebar() { this.mobileOpen = false; }
   logout() { this.auth.logout(); }
 }

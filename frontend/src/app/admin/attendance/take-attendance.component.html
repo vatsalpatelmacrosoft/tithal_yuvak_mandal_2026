@@ -6,7 +6,7 @@
   <div class="ta-layout">
 
     <!-- Scanner Card -->
-    <div class="table-card scanner-card">
+    <div class="table-card scanner-card" [class.fs-mode]="isFullscreen()">
 
       <!-- Card header -->
       <div class="sc-header">
@@ -17,6 +17,11 @@
         <div class="sc-header-right">
           <button type="button" class="flip-btn" (click)="toggleCamera()" title="Flip Camera">
             <i class="pi pi-sync"></i> Flip
+          </button>
+          <button type="button" class="flip-btn fs-toggle-btn" (click)="toggleFullscreen()"
+            [title]="isFullscreen() ? 'Exit Fullscreen' : 'Fullscreen'">
+            <i class="pi" [class.pi-window-maximize]="!isFullscreen()" [class.pi-window-minimize]="isFullscreen()"></i>
+            {{ isFullscreen() ? 'Exit' : 'Full' }}
           </button>
         </div>
       </div>
@@ -92,7 +97,7 @@
       <!-- Manual entry -->
       <div class="or-divider">— or enter manually —</div>
 
-      <div class="field">
+      <div class="field manual-entry-field">
         <label>UUID or Member ID</label>
         <div style="display:flex;gap:8px">
           <input pInputText [(ngModel)]="scanInput" placeholder="e.g. TTH01-0001 or UUID" (keydown.enter)="markByUuid()"

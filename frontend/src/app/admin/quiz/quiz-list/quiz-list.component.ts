@@ -44,7 +44,7 @@ export class QuizListComponent implements OnInit {
   ngOnInit() { this.load(); }
   load() { this.api.get<any>('quiz').subscribe(r => { if (r.success) this.quizzes.set(r.data); }); }
 
-  publicQuizUrl(slug: string) { return `${window.location.origin}/quiz/${slug}`; }
+  publicQuizUrl(slug: string) { return `${document.baseURI}quiz/${slug}`; }
 
   copyLink(slug: string) {
     navigator.clipboard.writeText(this.publicQuizUrl(slug));
