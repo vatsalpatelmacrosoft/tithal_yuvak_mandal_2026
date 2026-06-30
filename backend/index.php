@@ -1,6 +1,19 @@
 <?php
 // backend/index.php  — Front Controller
 
+// ── URI parsing (needed before DB so docs can short-circuit) ──
+$rawPath  = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$basePath = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
+$uri      = trim(substr($rawPath, strlen($basePath)), '/');
+$method   = $_SERVER['REQUEST_METHOD'];
+
+// ── API Docs (Swagger UI) — no DB needed ─────────────────────
+if ($uri === 'docs') {
+    header('Content-Type: text/html; charset=UTF-8');
+    readfile(__DIR__ . '/api-docs.html');
+    exit;
+}
+
 require_once __DIR__ . '/config/database.php';
 $config = require __DIR__ . '/config/app.php';
 
@@ -59,10 +72,6 @@ require_once __DIR__ . '/helpers/id_encoder.php';
 require_once __DIR__ . '/middleware/auth.php';
 
 // ── Route parsing ─────────────────────────────────────────────
-$rawPath  = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-$basePath = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
-$uri      = trim(substr($rawPath, strlen($basePath)), '/');
-$method   = $_SERVER['REQUEST_METHOD'];
 $parts    = explode('/', $uri);
 
 // parts[0] = 'api', parts[1] = resource, parts[2] = id, parts[3] = sub
@@ -71,13 +80,6 @@ $id       = $parts[2] ?? null;
 $sub      = $parts[3] ?? null;
 
 $body = json_decode(file_get_contents('php://input'), true) ?? [];
-
-// ── API Docs (Swagger UI) ─────────────────────────────────────
-if ($uri === 'docs') {
-    header('Content-Type: text/html; charset=UTF-8');
-    readfile(__DIR__ . '/api-docs.html');
-    exit;
-}
 
 // ── Route Map ─────────────────────────────────────────────────
 require_once __DIR__ . '/routes/auth.php';
