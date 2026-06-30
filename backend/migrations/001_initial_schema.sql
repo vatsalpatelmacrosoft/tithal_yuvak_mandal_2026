@@ -8,7 +8,7 @@
 -- ============================================================
 CREATE TABLE IF NOT EXISTS xetras (
     id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    uuid        CHAR(36)     NOT NULL DEFAULT (UUID()),
+    uuid        CHAR(36)     NOT NULL,
     name        VARCHAR(100) NOT NULL,
     code        VARCHAR(20)  NOT NULL,
     status      ENUM('active','archive') NOT NULL DEFAULT 'active',
@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS xetras (
 -- ============================================================
 CREATE TABLE IF NOT EXISTS mandals (
     id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    uuid        CHAR(36)     NOT NULL DEFAULT (UUID()),
+    uuid        CHAR(36)     NOT NULL,
     name        VARCHAR(100) NOT NULL,
     code        VARCHAR(20)  NOT NULL,
     status      ENUM('active','archive') NOT NULL DEFAULT 'active',
@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS mandals (
 -- ============================================================
 CREATE TABLE IF NOT EXISTS yuvaks (
     id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    uuid            CHAR(36)      NOT NULL DEFAULT (UUID()),
+    uuid            CHAR(36)      NOT NULL,
     yuvak_id        VARCHAR(30)   NOT NULL COMMENT 'Format: YUVAK{XetraCode}{EncryptedId}',
     first_name      VARCHAR(60)   NOT NULL,
     middle_name     VARCHAR(60)   DEFAULT NULL,
@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS yuvaks (
 -- ============================================================
 CREATE TABLE IF NOT EXISTS yuvatis (
     id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    uuid            CHAR(36)      NOT NULL DEFAULT (UUID()),
+    uuid            CHAR(36)      NOT NULL,
     yuvati_id       VARCHAR(30)   NOT NULL COMMENT 'Format: YUVATI{XetraCode}{EncryptedId}',
     first_name      VARCHAR(60)   NOT NULL,
     middle_name     VARCHAR(60)   DEFAULT NULL,
@@ -100,7 +100,7 @@ CREATE TABLE IF NOT EXISTS yuvatis (
 -- ============================================================
 CREATE TABLE IF NOT EXISTS roles (
     id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    uuid       CHAR(36)     NOT NULL DEFAULT (UUID()),
+    uuid       CHAR(36)     NOT NULL,
     name       VARCHAR(60)  NOT NULL,
     code       VARCHAR(30)  NOT NULL,
     status     ENUM('active','archive') NOT NULL DEFAULT 'active',
@@ -143,7 +143,7 @@ CREATE TABLE IF NOT EXISTS permissions (
 -- ============================================================
 CREATE TABLE IF NOT EXISTS users (
     id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    uuid         CHAR(36)     NOT NULL DEFAULT (UUID()),
+    uuid         CHAR(36)     NOT NULL,
     yuvak_id     INT UNSIGNED NOT NULL,
     role_id      INT UNSIGNED NOT NULL,
     mo_number    VARCHAR(15)  NOT NULL,
@@ -177,7 +177,7 @@ CREATE TABLE IF NOT EXISTS password_resets (
 -- ============================================================
 CREATE TABLE IF NOT EXISTS shibirs (
     id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    uuid       CHAR(36)     NOT NULL DEFAULT (UUID()),
+    uuid       CHAR(36)     NOT NULL,
     name       VARCHAR(150) NOT NULL,
     date       DATE         NOT NULL,
     slug       VARCHAR(200) NOT NULL,
@@ -192,7 +192,7 @@ CREATE TABLE IF NOT EXISTS shibirs (
 -- ============================================================
 CREATE TABLE IF NOT EXISTS quizzes (
     id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    uuid        CHAR(36)     NOT NULL DEFAULT (UUID()),
+    uuid        CHAR(36)     NOT NULL,
     name        VARCHAR(150) NOT NULL,
     slug        VARCHAR(200) NOT NULL,
     quiz_status ENUM('draft','published','deleted') NOT NULL DEFAULT 'draft',
@@ -288,7 +288,7 @@ INSERT IGNORE INTO menus (name, slug, icon, sort_order) VALUES
 -- ============================================================
 -- SEED: Super Admin Role
 -- ============================================================
-INSERT IGNORE INTO roles (name, code) VALUES ('Super Admin', 'SUPER_ADMIN');
+INSERT IGNORE INTO roles (uuid, name, code) VALUES (UUID(), 'Super Admin', 'SUPER_ADMIN');
 
 -- ============================================================
 -- SEED: Public form defaults

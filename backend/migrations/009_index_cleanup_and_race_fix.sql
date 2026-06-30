@@ -4,29 +4,29 @@
 
 DELETE qp FROM quiz_participants qp
 LEFT JOIN quiz_submissions qs ON qs.participant_id = qp.id
-WHERE qp.yuvak_db_id IS NOT NULL
-  AND qs.id IS NULL
-  AND EXISTS (
-      SELECT 1 FROM (
-          SELECT id FROM quiz_participants qp2
-          WHERE qp2.quiz_id     = qp.quiz_id
-            AND qp2.yuvak_db_id = qp.yuvak_db_id
-            AND qp2.id         <> qp.id
-      ) AS dup_check
-  );
+INNER JOIN (
+    SELECT MIN(id) AS keep_id, quiz_id, yuvak_db_id
+    FROM quiz_participants
+    WHERE yuvak_db_id IS NOT NULL
+    GROUP BY quiz_id, yuvak_db_id
+    HAVING COUNT(*) > 1
+) AS dupes ON qp.quiz_id = dupes.quiz_id
+         AND qp.yuvak_db_id = dupes.yuvak_db_id
+         AND qp.id <> dupes.keep_id
+WHERE qs.id IS NULL;
 
 DELETE qp FROM quiz_participants qp
 LEFT JOIN quiz_submissions qs ON qs.participant_id = qp.id
-WHERE qp.mo_number IS NOT NULL
-  AND qs.id IS NULL
-  AND EXISTS (
-      SELECT 1 FROM (
-          SELECT id FROM quiz_participants qp2
-          WHERE qp2.quiz_id   = qp.quiz_id
-            AND qp2.mo_number = qp.mo_number
-            AND qp2.id       <> qp.id
-      ) AS dup_check
-  );
+INNER JOIN (
+    SELECT MIN(id) AS keep_id, quiz_id, mo_number
+    FROM quiz_participants
+    WHERE mo_number IS NOT NULL
+    GROUP BY quiz_id, mo_number
+    HAVING COUNT(*) > 1
+) AS dupes ON qp.quiz_id = dupes.quiz_id
+         AND qp.mo_number = dupes.mo_number
+         AND qp.id <> dupes.keep_id
+WHERE qs.id IS NULL;
 
 -- ── Upgrade regular indexes to UNIQUE constraints ────────────────────────────
 -- Drop the regular (non-unique) versions added by migration 008, then re-add as UNIQUE.

@@ -7,7 +7,7 @@
 -- ============================================================
 CREATE TABLE IF NOT EXISTS global_settings (
     id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    uuid         CHAR(36)     NOT NULL DEFAULT (UUID()),
+    uuid         CHAR(36)     NOT NULL,
     reg_open     TINYINT(1)   NOT NULL DEFAULT 0
                               COMMENT 'Is public registration open?',
     field_config JSON         NOT NULL
@@ -19,8 +19,9 @@ CREATE TABLE IF NOT EXISTS global_settings (
     UNIQUE KEY uq_gs_uuid (uuid)
 ) ENGINE=InnoDB;
 
-INSERT IGNORE INTO global_settings (id, reg_open, field_config) VALUES (
+INSERT IGNORE INTO global_settings (id, uuid, reg_open, field_config) VALUES (
     1,
+    UUID(),
     0,
     JSON_OBJECT(
         'name',        JSON_OBJECT('label','Name',        'required',TRUE,  'max_length',100),
@@ -66,7 +67,7 @@ ALTER TABLE quiz_questions
 -- ============================================================
 CREATE TABLE IF NOT EXISTS quiz_participants (
     id               INT UNSIGNED  AUTO_INCREMENT PRIMARY KEY,
-    uuid             CHAR(36)      NOT NULL DEFAULT (UUID()),
+    uuid             CHAR(36)      NOT NULL,
     quiz_id          INT UNSIGNED  NOT NULL,
     participant_type ENUM('registered','external') NOT NULL DEFAULT 'external',
     yuvak_id         VARCHAR(30)   DEFAULT NULL COMMENT 'Yuvak ID for registered type',
@@ -87,7 +88,7 @@ CREATE TABLE IF NOT EXISTS quiz_participants (
 -- ============================================================
 CREATE TABLE IF NOT EXISTS quiz_submissions (
     id                  INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    uuid                CHAR(36)     NOT NULL DEFAULT (UUID()),
+    uuid                CHAR(36)     NOT NULL,
     quiz_id             INT UNSIGNED NOT NULL,
     participant_id      INT UNSIGNED NOT NULL,
     total_questions     INT          NOT NULL DEFAULT 0,

@@ -9,6 +9,18 @@ function seedError(string $message): never
     exit(1);
 }
 
+function genUuid(): string
+{
+    return sprintf(
+        '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+        mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+        mt_rand(0, 0xffff),
+        mt_rand(0, 0x0fff) | 0x4000,
+        mt_rand(0, 0x3fff) | 0x8000,
+        mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+    );
+}
+
 require_once __DIR__ . '/config/database.php';
 
 // ── Configurable defaults ─────────────────────────────────────────────────────
@@ -31,7 +43,7 @@ try {
     $stmt->execute([$xetraCode]);
     $xetra = $stmt->fetch();
     if (!$xetra) {
-        $pdo->prepare("INSERT INTO xetras (name, code) VALUES (?, ?)")->execute([$xetraName, $xetraCode]);
+        $pdo->prepare("INSERT INTO xetras (uuid, name, code) VALUES (?, ?, ?)")->execute([genUuid(), $xetraName, $xetraCode]);
         $xetraId = (int) $pdo->lastInsertId();
         echo "[OK]    Created xetra: $xetraName ($xetraCode)\n";
     } else {
@@ -44,7 +56,7 @@ try {
     $stmt->execute([$mandalCode]);
     $mandal = $stmt->fetch();
     if (!$mandal) {
-        $pdo->prepare("INSERT INTO mandals (name, code) VALUES (?, ?)")->execute([$mandalName, $mandalCode]);
+        $pdo->prepare("INSERT INTO mandals (uuid, name, code) VALUES (?, ?, ?)")->execute([genUuid(), $mandalName, $mandalCode]);
         $mandalId = (int) $pdo->lastInsertId();
         echo "[OK]    Created mandal: $mandalName ($mandalCode)\n";
     } else {
@@ -59,9 +71,9 @@ try {
     if (!$yuvak) {
         $yuvakId = strtoupper($xetraCode) . '00001';
         $pdo->prepare("
-        INSERT INTO yuvaks (yuvak_id, first_name, last_name, mo_number, xetra_id, mandal_id)
-        VALUES (?, ?, ?, ?, ?, ?)
-    ")->execute([$yuvakId, $adminFirstName, $adminLastName, $adminMobile, $xetraId, $mandalId]);
+        INSERT INTO yuvaks (uuid, yuvak_id, first_name, last_name, mo_number, xetra_id, mandal_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    ")->execute([genUuid(), $yuvakId, $adminFirstName, $adminLastName, $adminMobile, $xetraId, $mandalId]);
         $yuvakDbId = (int) $pdo->lastInsertId();
         echo "[OK]    Created yuvak: $adminFirstName $adminLastName ($adminMobile)\n";
     } else {
@@ -85,9 +97,9 @@ try {
     if (!$user) {
         $hash = password_hash($adminPassword, PASSWORD_BCRYPT, ['cost' => 12]);
         $pdo->prepare("
-        INSERT INTO users (yuvak_id, role_id, mo_number, password)
-        VALUES (?, ?, ?, ?)
-    ")->execute([$yuvakDbId, $roleId, $adminMobile, $hash]);
+        INSERT INTO users (uuid, yuvak_id, role_id, mo_number, password)
+        VALUES (?, ?, ?, ?, ?)
+    ")->execute([genUuid(), $yuvakDbId, $roleId, $adminMobile, $hash]);
         echo "[OK]    Created user account\n";
     } else {
         echo "[SKIP]  User account already exists for mobile: $adminMobile\n";
