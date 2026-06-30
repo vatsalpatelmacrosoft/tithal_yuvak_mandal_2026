@@ -59,13 +59,14 @@ require_once __DIR__ . '/helpers/id_encoder.php';
 require_once __DIR__ . '/middleware/auth.php';
 
 // ── Route parsing ─────────────────────────────────────────────
-$uri    = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
-$method = $_SERVER['REQUEST_METHOD'];
-$parts  = explode('/', $uri);
+$rawPath  = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$basePath = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
+$uri      = trim(substr($rawPath, strlen($basePath)), '/');
+$method   = $_SERVER['REQUEST_METHOD'];
+$parts    = explode('/', $uri);
 
-// Remove base prefix if hosted in subdir e.g. /api/v1/...
-// Assumes root: /yuvak, /auth, /xetra, etc.
-$resource = $parts[1] ?? '';  // parts[0] = 'api', parts[1] = resource
+// parts[0] = 'api', parts[1] = resource, parts[2] = id, parts[3] = sub
+$resource = $parts[1] ?? '';
 $id       = $parts[2] ?? null;
 $sub      = $parts[3] ?? null;
 

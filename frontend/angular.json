@@ -33,6 +33,7 @@
           },
           "configurations": {
             "production": {
+              "baseHref": "/tithal-yuvak-mandal/",
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
