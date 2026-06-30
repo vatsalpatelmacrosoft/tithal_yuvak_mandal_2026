@@ -1,0 +1,12 @@
+Options -Indexes
+
+RewriteEngine On
+RewriteBase /tithal-yuvak-mandal/
+
+# Pass real files/assets through
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Route all SPA navigation to index.html
+RewriteRule ^ index.html [L]
