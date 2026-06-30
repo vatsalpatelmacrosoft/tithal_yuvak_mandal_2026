@@ -214,7 +214,7 @@ export class RegisterComponent implements OnInit {
           this.success    = true;
           this.memberId   = res.data?.yuvak_id || res.data?.yuvati_id || '';
           this.memberUuid = res.data?.uuid || '';
-          this.welcomeLink = `${window.location.origin}/welcome/${this.formType}/${this.memberUuid}`;
+          this.welcomeLink = `${document.baseURI}welcome/${this.formType}/${this.memberUuid}`;
         }
         this.saving = false;
       },

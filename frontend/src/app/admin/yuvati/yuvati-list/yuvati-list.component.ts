@@ -93,12 +93,12 @@ export class YuvatiListComponent implements OnInit {
   }
 
   openWelcomePage(y: any) {
-    const url = `${window.location.origin}/welcome/yuvati/${y.uuid}`;
+    const url = `${document.baseURI}welcome/yuvati/${y.uuid}`;
     window.open(url, '_blank');
   }
 
   copyWelcomeLink(y: any) {
-    const url = `${window.location.origin}/welcome/yuvati/${y.uuid}`;
+    const url = `${document.baseURI}welcome/yuvati/${y.uuid}`;
     navigator.clipboard.writeText(url).then(() => {
       this.toast.success('Welcome link copied!');
     });

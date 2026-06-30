@@ -85,12 +85,12 @@ export class YuvakListComponent implements OnInit {
   }
 
   openWelcomePage(y: Yuvak) {
-    const url = `${window.location.origin}/welcome/yuvak/${y.uuid}`;
+    const url = `${document.baseURI}welcome/yuvak/${y.uuid}`;
     window.open(url, '_blank');
   }
 
   copyWelcomeLink(y: Yuvak) {
-    const url = `${window.location.origin}/welcome/yuvak/${y.uuid}`;
+    const url = `${document.baseURI}welcome/yuvak/${y.uuid}`;
     navigator.clipboard.writeText(url).then(() => {
       this.toast.success('Welcome link copied!');
     });
