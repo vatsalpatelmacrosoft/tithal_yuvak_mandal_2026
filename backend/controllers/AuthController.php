@@ -26,7 +26,7 @@ class AuthController
             LEFT JOIN yuvaks  y  ON y.id  = u.yuvak_id
             LEFT JOIN yuvatis yt ON yt.id = u.yuvati_id
             JOIN roles r ON r.id = u.role_id
-            WHERE u.mo_number = ? AND u.status = 'active'env
+            WHERE u.mo_number = ? AND u.status = 'active'
         ");
         $stmt->execute([trim($body['mo_number'])]);
         $user = $stmt->fetch();
