@@ -41,6 +41,7 @@ export class UsersComponent implements OnInit {
   roles: any[]    = [];
   showAdd = false; saving = false;
   showChangeRole = false; changeRoleTarget: any = null; newRoleUuid = '';
+  showResetPwd   = false; resetPwdTarget: any  = null; newPassword = ''; resettingPwd = false;
   searchTerm  = '';
   memberType: 'yuvak' | 'yuvati' = 'yuvak';
 
@@ -108,6 +109,31 @@ export class UsersComponent implements OnInit {
     this.api.put(`users/${this.changeRoleTarget.uuid}`, { role_uuid: this.newRoleUuid }).subscribe({
       next: () => { this.toast.success('Role updated'); this.showChangeRole = false; this.loadUsers(); },
       error: () => {}
+    });
+  }
+
+  openResetPwd(u: any) {
+    this.resetPwdTarget = u;
+    this.newPassword    = '';
+    this.showResetPwd   = true;
+  }
+
+  doResetPassword() {
+    if (!this.newPassword || this.newPassword.length < 8) {
+      this.toast.error('Password must be at least 8 characters');
+      return;
+    }
+    this.resettingPwd = true;
+    this.api.put(`users/${this.resetPwdTarget.uuid}`, { password: this.newPassword }).subscribe({
+      next: () => {
+        this.toast.success('Password reset successfully');
+        this.showResetPwd = false;
+        this.resettingPwd = false;
+      },
+      error: err => {
+        this.resettingPwd = false;
+        this.toast.error(err.error?.message || 'Failed to reset password');
+      }
     });
   }
 

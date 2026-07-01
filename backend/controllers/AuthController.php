@@ -3,21 +3,30 @@
 
 class AuthController
 {
-    public function __construct(private PDO $pdo) {}
+    public function __construct(private PDO $pdo)
+    {
+    }
 
     public function login(array $body): void
     {
         $errors = [];
-        if (empty($body['mo_number'])) $errors['mo_number'] = 'Mobile number is required';
-        if (empty($body['password']))  $errors['password']  = 'Password is required';
-        if ($errors) sendValidationError($errors);
+        if (empty($body['mo_number']))
+            $errors['mo_number'] = 'Mobile number is required';
+        if (empty($body['password']))
+            $errors['password'] = 'Password is required';
+        if ($errors)
+            sendValidationError($errors);
 
         $stmt = $this->pdo->prepare("
-            SELECT u.*, y.first_name, y.last_name, r.name as role_name, r.code as role_code
+            SELECT u.*,
+                   COALESCE(y.first_name,  yt.first_name)  AS first_name,
+                   COALESCE(y.last_name,   yt.last_name)   AS last_name,
+                   r.name AS role_name, r.code AS role_code
             FROM users u
-            JOIN yuvaks y ON y.id = u.yuvak_id
-            JOIN roles  r ON r.id = u.role_id
-            WHERE u.mo_number = ? AND u.status = 'active'
+            LEFT JOIN yuvaks  y  ON y.id  = u.yuvak_id
+            LEFT JOIN yuvatis yt ON yt.id = u.yuvati_id
+            JOIN roles r ON r.id = u.role_id
+            WHERE u.mo_number = ? AND u.status = 'active'env
         ");
         $stmt->execute([trim($body['mo_number'])]);
         $user = $stmt->fetch();
@@ -39,19 +48,19 @@ class AuthController
         $this->pdo->prepare("UPDATE users SET last_login = NOW() WHERE id = ?")->execute([$user['id']]);
 
         $token = jwtEncode([
-            'user_id'   => $user['id'],
+            'user_id' => $user['id'],
             'role_code' => $user['role_code'],
         ]);
 
         sendSuccess([
             'token' => $token,
-            'user'  => [
-                'id'         => $user['id'],
-                'name'       => $user['first_name'] . ' ' . $user['last_name'],
-                'mo_number'  => $user['mo_number'],
-                'role'       => $user['role_name'],
-                'role_code'  => $user['role_code'],
-                'permissions'=> $permissions,
+            'user' => [
+                'id' => $user['id'],
+                'name' => $user['first_name'] . ' ' . $user['last_name'],
+                'mo_number' => $user['mo_number'],
+                'role' => $user['role_name'],
+                'role_code' => $user['role_code'],
+                'permissions' => $permissions,
             ],
         ], 'Login successful');
     }
@@ -70,7 +79,8 @@ class AuthController
 
     public function forgotPassword(array $body): void
     {
-        if (empty($body['mo_number'])) sendValidationError(['mo_number' => 'Mobile number is required']);
+        if (empty($body['mo_number']))
+            sendValidationError(['mo_number' => 'Mobile number is required']);
 
         $stmt = $this->pdo->prepare("SELECT id FROM users WHERE mo_number = ? AND status = 'active'");
         $stmt->execute([$body['mo_number']]);
@@ -90,16 +100,21 @@ class AuthController
     public function resetPassword(array $body): void
     {
         $errors = [];
-        if (empty($body['token']))        $errors['token']    = 'Token is required';
-        if (empty($body['new_password'])) $errors['password'] = 'New password is required';
-        if (strlen($body['new_password'] ?? '') < 8) $errors['password'] = 'Password must be at least 8 characters';
-        if ($errors) sendValidationError($errors);
+        if (empty($body['token']))
+            $errors['token'] = 'Token is required';
+        if (empty($body['new_password']))
+            $errors['password'] = 'New password is required';
+        if (strlen($body['new_password'] ?? '') < 8)
+            $errors['password'] = 'Password must be at least 8 characters';
+        if ($errors)
+            sendValidationError($errors);
 
         $stmt = $this->pdo->prepare("SELECT * FROM password_resets WHERE token = ? AND used = 0 AND expires_at > NOW()");
         $stmt->execute([$body['token']]);
         $reset = $stmt->fetch();
 
-        if (!$reset) sendError(400, 'Invalid or expired reset token');
+        if (!$reset)
+            sendError(400, 'Invalid or expired reset token');
 
         $hash = password_hash($body['new_password'], PASSWORD_BCRYPT, ['cost' => 12]);
         $this->pdo->prepare("UPDATE users SET password = ? WHERE mo_number = ?")->execute([$hash, $reset['mo_number']]);
