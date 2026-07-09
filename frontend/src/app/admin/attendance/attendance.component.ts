@@ -37,12 +37,19 @@ export class AttendanceComponent implements OnInit, OnDestroy {
   nameWise  = signal<any[]>([]);
   summary   = signal({ yuvak: 0, yuvati: 0, total: 0 });
 
+  xetraOptions = signal<{label: string, value: any}[]>([{ label: 'All Xetras', value: '' }]);
+  mandalOptions = signal<{label: string, value: any}[]>([{ label: 'All Mandals', value: '' }]);
+
   readonly today = AttendanceComponent.localDate();
 
   // Filters
-  fromDate   = this.today;
-  toDate     = this.today;
-  filterType = '';
+  fromDate      = this.today;
+  toDate        = this.today;
+  filterType    = '';
+  filterXetraId: any = '';
+  filterMandalId: any = '';
+  filterFromTime = '';
+  filterToTime   = '';
   scanDate   = this.today;
 
   private static localDate(d = new Date()): string {
@@ -79,6 +86,30 @@ export class AttendanceComponent implements OnInit, OnDestroy {
     if (!this.canViewYuvak && this.canViewYuvati) {
       this.memberTab = 'yuvati';
       this.nmTab     = 'yuvati';
+    }
+    this.loadXetras();
+    this.load();
+  }
+
+  loadXetras() {
+    this.api.get<any>('xetra').subscribe(res => {
+      if (res.success) {
+        const opts = (res.data || []).map((x: any) => ({ label: x.name, value: x.id }));
+        this.xetraOptions.set([{ label: 'All Xetras', value: '' }, ...opts]);
+      }
+    });
+  }
+
+  onXetraChange() {
+    this.filterMandalId = '';
+    this.mandalOptions.set([{ label: 'All Mandals', value: '' }]);
+    if (this.filterXetraId) {
+      this.api.get<any>('mandal', { xetra_id: this.filterXetraId }).subscribe(res => {
+        if (res.success) {
+          const opts = (res.data || []).map((m: any) => ({ label: m.name, value: m.id }));
+          this.mandalOptions.set([{ label: 'All Mandals', value: '' }, ...opts]);
+        }
+      });
     }
     this.load();
   }
@@ -149,7 +180,11 @@ export class AttendanceComponent implements OnInit, OnDestroy {
 
   load() {
     const params: any = { from_date: this.fromDate, to_date: this.toDate };
-    if (this.filterType) params.member_type = this.filterType;
+    if (this.filterType)     params.member_type = this.filterType;
+    if (this.filterXetraId)  params.xetra_id    = this.filterXetraId;
+    if (this.filterMandalId) params.mandal_id   = this.filterMandalId;
+    if (this.filterFromTime) params.from_time   = this.filterFromTime;
+    if (this.filterToTime)   params.to_time     = this.filterToTime;
 
     this.api.get<any>('attendance', params).subscribe(res => {
       if (res.success) {
@@ -162,11 +197,11 @@ export class AttendanceComponent implements OnInit, OnDestroy {
       }
     });
 
-    this.api.get<any>('attendance/date-wise', { from_date: this.fromDate, to_date: this.toDate }).subscribe(res => {
+    this.api.get<any>('attendance/date-wise', params).subscribe(res => {
       if (res.success) this.dateWise.set(res.data);
     });
 
-    this.api.get<any>('attendance/name-wise', { from_date: this.fromDate, to_date: this.toDate }).subscribe(res => {
+    this.api.get<any>('attendance/name-wise', params).subscribe(res => {
       if (res.success) this.nameWise.set(res.data);
     });
   }
@@ -181,13 +216,21 @@ export class AttendanceComponent implements OnInit, OnDestroy {
 
   exportCsv() {
     let url = `${environment.apiUrl}/attendance/export?from_date=${this.fromDate}&to_date=${this.toDate}`;
-    if (this.filterType) url += `&member_type=${this.filterType}`;
+    if (this.filterType)     url += `&member_type=${this.filterType}`;
+    if (this.filterXetraId)  url += `&xetra_id=${this.filterXetraId}`;
+    if (this.filterMandalId) url += `&mandal_id=${this.filterMandalId}`;
+    if (this.filterFromTime) url += `&from_time=${encodeURIComponent(this.filterFromTime)}`;
+    if (this.filterToTime)   url += `&to_time=${encodeURIComponent(this.filterToTime)}`;
     this.openDownload(url);
   }
 
   exportNameWiseCsv(memberType?: string) {
     let url = `${environment.apiUrl}/attendance/export-name-wise?from_date=${this.fromDate}&to_date=${this.toDate}`;
-    if (memberType) url += `&member_type=${memberType}`;
+    if (memberType)          url += `&member_type=${memberType}`;
+    if (this.filterXetraId)  url += `&xetra_id=${this.filterXetraId}`;
+    if (this.filterMandalId) url += `&mandal_id=${this.filterMandalId}`;
+    if (this.filterFromTime) url += `&from_time=${encodeURIComponent(this.filterFromTime)}`;
+    if (this.filterToTime)   url += `&to_time=${encodeURIComponent(this.filterToTime)}`;
     this.openDownload(url);
   }
 

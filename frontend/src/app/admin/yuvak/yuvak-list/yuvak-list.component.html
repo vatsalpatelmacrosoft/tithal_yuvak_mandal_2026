@@ -39,6 +39,16 @@
           optionValue="id" placeholder="All Mandal" [showClear]="true" styleClass="fw-dropdown" />
       </div>
 
+      <!-- Birth Date range filter -->
+      <div class="filter-wrap">
+        <i class="pi pi-calendar fw-icon"></i>
+        <input pInputText type="date" [(ngModel)]="filters.birth_date_from" (ngModelChange)="loadData(1)"
+          [max]="filters.birth_date_to || undefined" title="Birth date from" style="width:9.5rem">
+        <span style="margin:0 4px;color:#9CA3AF">–</span>
+        <input pInputText type="date" [(ngModel)]="filters.birth_date_to" (ngModelChange)="loadData(1)"
+          [min]="filters.birth_date_from || undefined" title="Birth date to" style="width:9.5rem">
+      </div>
+
     </div>
     <div class="toolbar-right">
       <p-button label="Export CSV" icon="pi pi-download" [outlined]="true" size="small" (click)="exportCsv()" />
@@ -53,6 +63,7 @@
       <tr>
         <th>Yuvak ID</th>
         <th>Name</th>
+        <th>Birth Date</th>
         <th>Mobile</th>
         <th>Xetra</th>
         <th>Mandal</th>
@@ -68,6 +79,7 @@
           <code class="id-badge">{{ y.yuvak_id }}</code>
         </td>
         <td style="font-weight:500">{{ y.first_name }} {{ y.middle_name }} {{ y.last_name }}</td>
+        <td>{{ y.birth_date | date:'MM-dd-yyyy' }}</td>
         <td>{{ y.mo_number }}</td>
         <td>{{ y.xetra_name }}</td>
         <td>{{ y.mandal_name }}</td>
@@ -94,7 +106,7 @@
 
     <ng-template pTemplate="emptymessage">
       <tr>
-        <td colspan="8" style="text-align:center;padding:3rem;color:#9CA3AF">
+        <td colspan="9" style="text-align:center;padding:3rem;color:#9CA3AF">
           <i class="pi pi-user" style="font-size:2rem;display:block;margin-bottom:10px;color:#D1D5DB"></i>
           No Yuvak records found
         </td>

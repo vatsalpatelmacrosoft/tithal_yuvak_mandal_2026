@@ -1,14 +1,4 @@
 <!-- ── Module Hero ──────────────────────────────────────────────── -->
-<div class="module-hero">
-  <div class="hero-left">
-    <div class="hero-icon green"><i class="pi pi-check-square"></i></div>
-    <div>
-      <div class="hero-title">Attendance</div>
-      <div class="hero-subtitle">Mark and track attendance by QR scan or Member ID</div>
-      <span class="hero-badge">{{ summary().total }} Present</span>
-    </div>
-  </div>
-</div>
 
 <!-- ── Top Layout: Mark panel (left) + Stats & Filters (right) ── -->
 <div class="att-top">
@@ -34,11 +24,10 @@
     <div class="field">
       <label>UUID or Member ID</label>
       <div style="display:flex;gap:8px">
-        <input pInputText [(ngModel)]="scanInput" placeholder="e.g. TTH01-0001 or UUID"
-               (keydown.enter)="markByUuid()" style="flex:1">
-        <p-button icon="pi pi-check" (click)="markByUuid()"
-                  [disabled]="!scanInput" [loading]="marking"
-                  pTooltip="Mark Attendance" />
+        <input pInputText [(ngModel)]="scanInput" placeholder="e.g. TTH01-0001 or UUID" (keydown.enter)="markByUuid()"
+          style="flex:1">
+        <p-button icon="pi pi-check" (click)="markByUuid()" [disabled]="!scanInput" [loading]="marking"
+          pTooltip="Mark Attendance" />
       </div>
     </div>
 
@@ -95,11 +84,37 @@
           <label>Member Type</label>
           <div class="filter-wrap">
             <i class="pi pi-users fw-icon"></i>
-            <p-dropdown [options]="filterOptions" [(ngModel)]="filterType"
-                        optionLabel="label" optionValue="value"
-                        (onChange)="load()"
-                        styleClass="fw-dropdown" />
+            <p-dropdown [options]="filterOptions" [(ngModel)]="filterType" optionLabel="label" optionValue="value"
+              (onChange)="load()" styleClass="fw-dropdown" />
           </div>
+        </div>
+        <div class="field">
+          <label>From Time</label>
+          <div class="time-input-wrap">
+            <input pInputText type="time" [(ngModel)]="filterFromTime" (change)="load()">
+            <button *ngIf="filterFromTime" class="time-clear-btn" type="button" (click)="filterFromTime=''; load()">
+              <i class="pi pi-times"></i>
+            </button>
+          </div>
+        </div>
+        <div class="field">
+          <label>To Time</label>
+          <div class="time-input-wrap">
+            <input pInputText type="time" [(ngModel)]="filterToTime" (change)="load()">
+            <button *ngIf="filterToTime" class="time-clear-btn" type="button" (click)="filterToTime=''; load()">
+              <i class="pi pi-times"></i>
+            </button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Xetra</label>
+          <p-dropdown [options]="xetraOptions()" [(ngModel)]="filterXetraId" optionLabel="label" optionValue="value"
+            (onChange)="onXetraChange()" styleClass="fw-dropdown" />
+        </div>
+        <div class="field">
+          <label>Mandal</label>
+          <p-dropdown [options]="mandalOptions()" [(ngModel)]="filterMandalId" optionLabel="label" optionValue="value"
+            [disabled]="!filterXetraId" (onChange)="load()" styleClass="fw-dropdown" />
         </div>
       </div>
 
@@ -111,8 +126,8 @@
 
       <div class="action-row">
         <p-button label="Apply" icon="pi pi-search" (click)="load()" styleClass="w-full" />
-        <p-button label="Export CSV" icon="pi pi-download" [outlined]="true"
-                  (click)="exportCsv()" styleClass="w-full" />
+        <p-button label="Export CSV" icon="pi pi-download" [outlined]="true" (click)="exportCsv()"
+          styleClass="w-full" />
       </div>
     </div>
 
@@ -141,61 +156,79 @@
   <!-- Attendance List tab -->
   <ng-container *ngIf="activeTab === 'list'">
     <div class="member-tab-nav">
-      <button *ngIf="canViewYuvak"
-              class="member-tab yuvak" [class.active]="memberTab === 'yuvak'"
-              (click)="memberTab = 'yuvak'">
+      <button *ngIf="canViewYuvak" class="member-tab yuvak" [class.active]="memberTab === 'yuvak'"
+        (click)="memberTab = 'yuvak'">
         <i class="pi pi-user"></i> Yuvak
         <span class="member-tab-count">{{ yuvakRecords.length }}</span>
       </button>
-      <button *ngIf="canViewYuvati"
-              class="member-tab yuvati" [class.active]="memberTab === 'yuvati'"
-              (click)="memberTab = 'yuvati'">
+      <button *ngIf="canViewYuvati" class="member-tab yuvati" [class.active]="memberTab === 'yuvati'"
+        (click)="memberTab = 'yuvati'">
         <i class="pi pi-users"></i> Yuvati
         <span class="member-tab-count">{{ yuvatiRecords.length }}</span>
       </button>
     </div>
 
-    <p-table *ngIf="memberTab === 'yuvak' && canViewYuvak"
-             [value]="yuvakRecords" [paginator]="true" [rows]="20"
-             [showCurrentPageReport]="true" currentPageReportTemplate="{first}-{last} of {totalRecords}"
-             styleClass="p-datatable-striped" [tableStyle]="{'min-width':'46rem'}">
+    <p-table *ngIf="memberTab === 'yuvak' && canViewYuvak" [value]="yuvakRecords" [paginator]="true" [rows]="20"
+      [showCurrentPageReport]="true" currentPageReportTemplate="{first}-{last} of {totalRecords}"
+      [scrollable]="true" scrollHeight="450px"
+      styleClass="p-datatable-striped" [tableStyle]="{'min-width':'46rem'}">
       <ng-template pTemplate="header">
-        <tr><th>Date</th><th>Name</th><th>Yuvak ID</th></tr>
+        <tr>
+          <th>Date &amp; Time</th>
+          <th>Name</th>
+          <th>Yuvak ID</th>
+        </tr>
       </ng-template>
       <ng-template pTemplate="body" let-a>
         <tr>
-          <td style="font-size:0.85rem;color:#6B7280;white-space:nowrap">{{ a.attendance_date | date:'dd MMM yyyy' }}</td>
+          <td style="white-space:nowrap">
+            <span style="font-size:0.85rem;color:#374151;font-weight:500">{{ a.attendance_date | date:'dd MMM yyyy'
+              }}</span><br>
+            <span style="font-size:0.78rem;color:#9CA3AF">{{ a.scan_time }}</span>
+          </td>
           <td style="font-weight:500">{{ a.member_name }}</td>
           <td><code class="id-badge-saffron">{{ a.member_code }}</code></td>
         </tr>
       </ng-template>
       <ng-template pTemplate="emptymessage">
-        <tr><td colspan="3" class="empty-state">
-          <i class="pi pi-user" style="font-size:2rem;display:block;margin-bottom:10px;color:#D1D5DB"></i>
-          No Yuvak attendance for this period
-        </td></tr>
+        <tr>
+          <td colspan="3" class="empty-state">
+            <i class="pi pi-user" style="font-size:2rem;display:block;margin-bottom:10px;color:#D1D5DB"></i>
+            No Yuvak attendance for this period
+          </td>
+        </tr>
       </ng-template>
     </p-table>
 
-    <p-table *ngIf="memberTab === 'yuvati' && canViewYuvati"
-             [value]="yuvatiRecords" [paginator]="true" [rows]="20"
-             [showCurrentPageReport]="true" currentPageReportTemplate="{first}-{last} of {totalRecords}"
-             styleClass="p-datatable-striped" [tableStyle]="{'min-width':'46rem'}">
+    <p-table *ngIf="memberTab === 'yuvati' && canViewYuvati" [value]="yuvatiRecords" [paginator]="true" [rows]="20"
+      [showCurrentPageReport]="true" currentPageReportTemplate="{first}-{last} of {totalRecords}"
+      [scrollable]="true" scrollHeight="450px"
+      styleClass="p-datatable-striped" [tableStyle]="{'min-width':'46rem'}">
       <ng-template pTemplate="header">
-        <tr><th>Date</th><th>Name</th><th>Yuvati ID</th></tr>
+        <tr>
+          <th>Date &amp; Time</th>
+          <th>Name</th>
+          <th>Yuvati ID</th>
+        </tr>
       </ng-template>
       <ng-template pTemplate="body" let-a>
         <tr>
-          <td style="font-size:0.85rem;color:#6B7280;white-space:nowrap">{{ a.attendance_date | date:'dd MMM yyyy' }}</td>
+          <td style="white-space:nowrap">
+            <span style="font-size:0.85rem;color:#374151;font-weight:500">{{ a.attendance_date | date:'dd MMM yyyy'
+              }}</span><br>
+            <span style="font-size:0.78rem;color:#9CA3AF">{{ a.scan_time }}</span>
+          </td>
           <td style="font-weight:500">{{ a.member_name }}</td>
           <td><code class="id-badge-blue">{{ a.member_code }}</code></td>
         </tr>
       </ng-template>
       <ng-template pTemplate="emptymessage">
-        <tr><td colspan="3" class="empty-state">
-          <i class="pi pi-users" style="font-size:2rem;display:block;margin-bottom:10px;color:#D1D5DB"></i>
-          No Yuvati attendance for this period
-        </td></tr>
+        <tr>
+          <td colspan="3" class="empty-state">
+            <i class="pi pi-users" style="font-size:2rem;display:block;margin-bottom:10px;color:#D1D5DB"></i>
+            No Yuvati attendance for this period
+          </td>
+        </tr>
       </ng-template>
     </p-table>
 
@@ -209,28 +242,25 @@
   <ng-container *ngIf="activeTab === 'namewise'">
     <div class="nm-toolbar">
       <div class="member-tab-nav" style="border-bottom:none;padding:0;background:none;flex:1">
-        <button *ngIf="canViewYuvak"
-                class="member-tab yuvak" [class.active]="nmTab === 'yuvak'"
-                (click)="nmTab = 'yuvak'">
+        <button *ngIf="canViewYuvak" class="member-tab yuvak" [class.active]="nmTab === 'yuvak'"
+          (click)="nmTab = 'yuvak'">
           <i class="pi pi-user"></i> Yuvak
           <span class="member-tab-count">{{ yuvakNameWise.length }}</span>
         </button>
-        <button *ngIf="canViewYuvati"
-                class="member-tab yuvati" [class.active]="nmTab === 'yuvati'"
-                (click)="nmTab = 'yuvati'">
+        <button *ngIf="canViewYuvati" class="member-tab yuvati" [class.active]="nmTab === 'yuvati'"
+          (click)="nmTab = 'yuvati'">
           <i class="pi pi-users"></i> Yuvati
           <span class="member-tab-count">{{ yuvatiNameWise.length }}</span>
         </button>
       </div>
       <p-button label="Export CSV" icon="pi pi-download" [outlined]="true" size="small"
-                (click)="exportNameWiseCsv(nmTab)" />
+        (click)="exportNameWiseCsv(nmTab)" />
     </div>
 
-    <p-table *ngIf="nmTab === 'yuvak' && canViewYuvak"
-             [value]="yuvakNameWise" [paginator]="true" [rows]="20"
-             [showCurrentPageReport]="true" currentPageReportTemplate="{first}-{last} of {totalRecords}"
-             [sortField]="'total_present'" [sortOrder]="-1"
-             styleClass="p-datatable-striped" [tableStyle]="{'min-width':'38rem'}">
+    <p-table *ngIf="nmTab === 'yuvak' && canViewYuvak" [value]="yuvakNameWise" [paginator]="true" [rows]="20"
+      [showCurrentPageReport]="true" currentPageReportTemplate="{first}-{last} of {totalRecords}"
+      [sortField]="'total_present'" [sortOrder]="-1" [scrollable]="true" scrollHeight="450px"
+      styleClass="p-datatable-striped" [tableStyle]="{'min-width':'38rem'}">
       <ng-template pTemplate="header">
         <tr>
           <th style="width:3rem">#</th>
@@ -250,18 +280,19 @@
         </tr>
       </ng-template>
       <ng-template pTemplate="emptymessage">
-        <tr><td colspan="4" class="empty-state">
-          <i class="pi pi-user" style="font-size:2rem;display:block;margin-bottom:10px;color:#D1D5DB"></i>
-          No Yuvak attendance in this period
-        </td></tr>
+        <tr>
+          <td colspan="4" class="empty-state">
+            <i class="pi pi-user" style="font-size:2rem;display:block;margin-bottom:10px;color:#D1D5DB"></i>
+            No Yuvak attendance in this period
+          </td>
+        </tr>
       </ng-template>
     </p-table>
 
-    <p-table *ngIf="nmTab === 'yuvati' && canViewYuvati"
-             [value]="yuvatiNameWise" [paginator]="true" [rows]="20"
-             [showCurrentPageReport]="true" currentPageReportTemplate="{first}-{last} of {totalRecords}"
-             [sortField]="'total_present'" [sortOrder]="-1"
-             styleClass="p-datatable-striped" [tableStyle]="{'min-width':'38rem'}">
+    <p-table *ngIf="nmTab === 'yuvati' && canViewYuvati" [value]="yuvatiNameWise" [paginator]="true" [rows]="20"
+      [showCurrentPageReport]="true" currentPageReportTemplate="{first}-{last} of {totalRecords}"
+      [sortField]="'total_present'" [sortOrder]="-1" [scrollable]="true" scrollHeight="450px"
+      styleClass="p-datatable-striped" [tableStyle]="{'min-width':'38rem'}">
       <ng-template pTemplate="header">
         <tr>
           <th style="width:3rem">#</th>
@@ -281,10 +312,12 @@
         </tr>
       </ng-template>
       <ng-template pTemplate="emptymessage">
-        <tr><td colspan="4" class="empty-state">
-          <i class="pi pi-users" style="font-size:2rem;display:block;margin-bottom:10px;color:#D1D5DB"></i>
-          No Yuvati attendance in this period
-        </td></tr>
+        <tr>
+          <td colspan="4" class="empty-state">
+            <i class="pi pi-users" style="font-size:2rem;display:block;margin-bottom:10px;color:#D1D5DB"></i>
+            No Yuvati attendance in this period
+          </td>
+        </tr>
       </ng-template>
     </p-table>
 
@@ -295,9 +328,9 @@
   </ng-container>
 
   <!-- Date-wise tab -->
-  <p-table *ngIf="activeTab === 'datewise'"
-           [value]="dateWise()" [paginator]="true" [rows]="20"
-           styleClass="p-datatable-striped" [tableStyle]="{'min-width':'40rem'}">
+  <p-table *ngIf="activeTab === 'datewise'" [value]="dateWise()" [paginator]="true" [rows]="20"
+    [scrollable]="true" scrollHeight="450px"
+    styleClass="p-datatable-striped" [tableStyle]="{'min-width':'40rem'}">
     <ng-template pTemplate="header">
       <tr>
         <th>Date</th>
@@ -315,19 +348,20 @@
       </tr>
     </ng-template>
     <ng-template pTemplate="emptymessage">
-      <tr><td colspan="4" class="empty-state">
-        <i class="pi pi-calendar" style="font-size:2rem;display:block;margin-bottom:10px;color:#D1D5DB"></i>
-        No data for this date range
-      </td></tr>
+      <tr>
+        <td colspan="4" class="empty-state">
+          <i class="pi pi-calendar" style="font-size:2rem;display:block;margin-bottom:10px;color:#D1D5DB"></i>
+          No data for this date range
+        </td>
+      </tr>
     </ng-template>
   </p-table>
 
 </div>
 
 <!-- QR Scanner Dialog -->
-<p-dialog header="Scan QR Code" [(visible)]="showScanner" [modal]="true"
-          [style]="{width:'360px'}" [draggable]="false" [resizable]="false"
-          (onHide)="onScannerHide()">
+<p-dialog header="Scan QR Code" [(visible)]="showScanner" [modal]="true" [style]="{width:'360px'}" [draggable]="false"
+  [resizable]="false" (onHide)="onScannerHide()">
   <div style="padding:8px 0">
     <p style="font-size:0.85rem;color:#6B7280;margin:0 0 14px;text-align:center">
       Point the camera at a member's QR code

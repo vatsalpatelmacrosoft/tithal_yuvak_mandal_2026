@@ -1,7 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { NgIf, TitleCasePipe } from '@angular/common';
+import { NgIf, TitleCasePipe, DatePipe } from '@angular/common';
 import { TableModule, TableLazyLoadEvent } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -18,7 +18,7 @@ import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 @Component({
   selector: 'app-yuvak-list',
   standalone: true,
-  imports: [FormsModule, NgIf, TitleCasePipe, TableModule, ButtonModule, InputTextModule,
+  imports: [FormsModule, NgIf, TitleCasePipe, DatePipe, TableModule, ButtonModule, InputTextModule,
             DropdownModule, TooltipModule],
   templateUrl: './yuvak-list.component.html',
   styleUrls: ['./yuvak-list.component.scss']
@@ -35,7 +35,7 @@ export class YuvakListComponent implements OnInit {
   xetras: any[] = []; mandals: any[] = [];
   loading = false; perPage = 15;
   searchTerm = '';
-  filters = { xetra_id: null as any, mandal_id: null as any };
+  filters = { xetra_id: null as any, mandal_id: null as any, birth_date_from: '' as string, birth_date_to: '' as string };
   private search$ = new Subject<string>();
 
   get canCreate() { return this.auth.hasPermission('yuvak', 'can_create'); }
@@ -59,6 +59,8 @@ export class YuvakListComponent implements OnInit {
     const params: any = { page, limit: this.perPage, search: this.searchTerm };
     if (this.filters.xetra_id)  params.xetra_id  = this.filters.xetra_id;
     if (this.filters.mandal_id) params.mandal_id = this.filters.mandal_id;
+    if (this.filters.birth_date_from) params.birth_date_from = this.filters.birth_date_from;
+    if (this.filters.birth_date_to)   params.birth_date_to   = this.filters.birth_date_to;
 
     this.api.get<PaginatedResponse<Yuvak>>('yuvak', params).subscribe({
       next: res => {
@@ -79,6 +81,8 @@ export class YuvakListComponent implements OnInit {
     if (this.searchTerm)       url += `&search=${encodeURIComponent(this.searchTerm)}`;
     if (this.filters.xetra_id)  url += `&xetra_id=${this.filters.xetra_id}`;
     if (this.filters.mandal_id) url += `&mandal_id=${this.filters.mandal_id}`;
+    if (this.filters.birth_date_from) url += `&birth_date_from=${this.filters.birth_date_from}`;
+    if (this.filters.birth_date_to)   url += `&birth_date_to=${this.filters.birth_date_to}`;
     const a = document.createElement('a');
     a.href = url;
     a.click();

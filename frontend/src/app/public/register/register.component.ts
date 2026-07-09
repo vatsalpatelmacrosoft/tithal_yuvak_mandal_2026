@@ -90,6 +90,12 @@ import { ToastService } from '../../core/services/toast.service';
                 <small class="p-error" *ngIf="hasErr('last_name')">{{ getErr('last_name') }}</small>
               </div>
               <div class="field">
+                <label class="required">Birth Date</label>
+                <input pInputText formControlName="birth_date" type="date" class="w-full" [max]="maxBirthDate"
+                  [ngClass]="{'ng-invalid ng-dirty': hasErr('birth_date')}">
+                <small class="p-error" *ngIf="hasErr('birth_date')">{{ getErr('birth_date') }}</small>
+              </div>
+              <div class="field">
                 <label class="required">Mobile Number</label>
                 <input pInputText formControlName="mo_number" type="tel" placeholder="10-digit mobile" class="w-full"
                   [ngClass]="{'ng-invalid ng-dirty': hasErr('mo_number')}">
@@ -161,8 +167,11 @@ export class RegisterComponent implements OnInit {
     { label: 'Sanyukta Karyakar',value: 'sanyukta' },
   ];
 
+  readonly maxBirthDate = new Date().toISOString().slice(0, 10);
+
   form = this.fb.group({
     first_name: ['', Validators.required], middle_name: [''], last_name: ['', Validators.required],
+    birth_date: ['', Validators.required],
     mo_number: ['', [Validators.required, Validators.pattern(/^[6-9]\d{9}$/)]], whatsapp_number: [''],
     email: ['', Validators.email], address: [''],
     xetra_id: [null, Validators.required], mandal_id: [null, Validators.required],

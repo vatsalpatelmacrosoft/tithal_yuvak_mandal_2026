@@ -35,6 +35,11 @@
         <input pInputText formControlName="last_name" placeholder="Last name" [class.err]="hasErr('last_name')">
         <small class="p-error" *ngIf="hasErr('last_name')">{{ getErr('last_name') }}</small>
       </div>
+      <div class="field">
+        <label class="req">Birth Date</label>
+        <input pInputText formControlName="birth_date" type="date" [max]="maxBirthDate" [class.err]="hasErr('birth_date')">
+        <small class="p-error" *ngIf="hasErr('birth_date')">{{ getErr('birth_date') }}</small>
+      </div>
     </div>
   </div>
 

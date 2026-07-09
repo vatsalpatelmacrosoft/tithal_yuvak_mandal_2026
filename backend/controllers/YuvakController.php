@@ -22,6 +22,8 @@ class YuvakController
         }
         if (!empty($_GET['xetra_id']))  { $where .= ' AND y.xetra_id = ?';  $params[] = $_GET['xetra_id']; }
         if (!empty($_GET['mandal_id'])) { $where .= ' AND y.mandal_id = ?'; $params[] = $_GET['mandal_id']; }
+        if (!empty($_GET['birth_date_from'])) { $where .= ' AND y.birth_date >= ?'; $params[] = $_GET['birth_date_from']; }
+        if (!empty($_GET['birth_date_to']))   { $where .= ' AND y.birth_date <= ?'; $params[] = $_GET['birth_date_to']; }
 
         $countStmt = $this->pdo->prepare("SELECT COUNT(*) FROM yuvaks y $where");
         $countStmt->execute($params);
@@ -82,12 +84,12 @@ class YuvakController
         try {
             $this->pdo->prepare("
                 INSERT INTO yuvaks
-                    (uuid, yuvak_id, first_name, middle_name, last_name, mo_number, whatsapp_number,
+                    (uuid, yuvak_id, first_name, middle_name, last_name, birth_date, mo_number, whatsapp_number,
                      email, address, xetra_id, mandal_id, is_karyakar, tags)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ")->execute([
                 $uuid, $tempId,
-                $body['first_name'], $body['middle_name'] ?? null, $body['last_name'],
+                $body['first_name'], $body['middle_name'] ?? null, $body['last_name'], $body['birth_date'],
                 $body['mo_number'], $body['whatsapp_number'] ?? null,
                 $body['email'] ?? null, $body['address'] ?? null,
                 $body['xetra_id'], $body['mandal_id'],
@@ -134,12 +136,12 @@ class YuvakController
 
         $this->pdo->prepare("
             UPDATE yuvaks SET
-                first_name=?, middle_name=?, last_name=?, mo_number=?,
+                first_name=?, middle_name=?, last_name=?, birth_date=?, mo_number=?,
                 whatsapp_number=?, email=?, address=?,
                 xetra_id=?, mandal_id=?, is_karyakar=?, tags=?
             WHERE uuid=?
         ")->execute([
-            $body['first_name'], $body['middle_name'] ?? null, $body['last_name'],
+            $body['first_name'], $body['middle_name'] ?? null, $body['last_name'], $body['birth_date'],
             $body['mo_number'], $body['whatsapp_number'] ?? null, $body['email'] ?? null,
             $body['address'] ?? null, $body['xetra_id'], $body['mandal_id'],
             $body['is_karyakar'] ?? 'no',
@@ -171,9 +173,11 @@ class YuvakController
         }
         if (!empty($_GET['xetra_id']))  { $where .= ' AND y.xetra_id = ?';  $params[] = (int)$_GET['xetra_id']; }
         if (!empty($_GET['mandal_id'])) { $where .= ' AND y.mandal_id = ?'; $params[] = (int)$_GET['mandal_id']; }
+        if (!empty($_GET['birth_date_from'])) { $where .= ' AND y.birth_date >= ?'; $params[] = $_GET['birth_date_from']; }
+        if (!empty($_GET['birth_date_to']))   { $where .= ' AND y.birth_date <= ?'; $params[] = $_GET['birth_date_to']; }
 
         $stmt = $this->pdo->prepare("
-            SELECT y.yuvak_id, y.first_name, y.middle_name, y.last_name,
+            SELECT y.yuvak_id, y.first_name, y.middle_name, y.last_name, y.birth_date,
                    y.mo_number, y.whatsapp_number, y.email, y.address,
                    y.is_karyakar, x.name AS xetra_name, m.name AS mandal_name,
                    DATE(y.created_at) AS joined_on
@@ -191,11 +195,11 @@ class YuvakController
         header('Pragma: no-cache');
 
         $out = fopen('php://output', 'w');
-        fputcsv($out, ['Yuvak ID','First Name','Middle Name','Last Name','Mobile','WhatsApp','Email','Address','Karyakar','Xetra','Mandal','Joined On'], ',', '"', '\\');
+        fputcsv($out, ['Yuvak ID','First Name','Middle Name','Last Name','Birth Date','Mobile','WhatsApp','Email','Address','Karyakar','Xetra','Mandal','Joined On'], ',', '"', '\\');
         foreach ($rows as $r) {
             fputcsv($out, [
                 $r['yuvak_id'], $r['first_name'], $r['middle_name'] ?? '',
-                $r['last_name'], $r['mo_number'], $r['whatsapp_number'] ?? '',
+                $r['last_name'], $r['birth_date'] ?? '', $r['mo_number'], $r['whatsapp_number'] ?? '',
                 $r['email'] ?? '', $r['address'] ?? '', $r['is_karyakar'],
                 $r['xetra_name'], $r['mandal_name'], $r['joined_on'],
             ], ',', '"', '\\');
@@ -238,6 +242,8 @@ class YuvakController
         $errors = [];
         if (empty($body['first_name']))  $errors['first_name']  = 'First name is required';
         if (empty($body['last_name']))   $errors['last_name']   = 'Last name is required';
+        if (empty($body['birth_date']))  $errors['birth_date']  = 'Birth date is required';
+        elseif (!self::isValidPastDate($body['birth_date'])) $errors['birth_date'] = 'Invalid birth date';
         if (empty($body['mo_number']))   $errors['mo_number']   = 'Mobile number is required';
         if (!empty($body['mo_number']) && !preg_match('/^[6-9]\d{9}$/', $body['mo_number'])) {
             $errors['mo_number'] = 'Invalid Indian mobile number (10 digits, starts 6-9)';
@@ -260,5 +266,11 @@ class YuvakController
             mt_rand(0,0xffff), mt_rand(0,0xffff), mt_rand(0,0xffff),
             mt_rand(0,0x0fff)|0x4000, mt_rand(0,0x3fff)|0x8000,
             mt_rand(0,0xffff), mt_rand(0,0xffff), mt_rand(0,0xffff));
+    }
+
+    private static function isValidPastDate(string $date): bool
+    {
+        $d = \DateTime::createFromFormat('Y-m-d', $date);
+        return $d && $d->format('Y-m-d') === $date && $d <= new \DateTime('today');
     }
 }

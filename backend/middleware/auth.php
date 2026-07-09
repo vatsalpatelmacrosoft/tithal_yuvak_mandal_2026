@@ -37,10 +37,17 @@ function guard(array $user, string $menu, string $action, callable $fn): mixed
 
 function requirePermission(array $user, string $menuSlug, string $action): void
 {
+    if (!hasPermission($user, $menuSlug, $action)) {
+        sendError(403, "Forbidden: Cannot $action in $menuSlug");
+    }
+}
+
+function hasPermission(array $user, string $menuSlug, string $action): bool
+{
     global $pdo;
 
     // Super admin bypasses permission check
-    if ($user['role_code'] === 'SUPER_ADMIN') return;
+    if ($user['role_code'] === 'SUPER_ADMIN') return true;
 
     $stmt = $pdo->prepare("
         SELECT p.can_view, p.can_create, p.can_update, p.can_delete
@@ -51,11 +58,9 @@ function requirePermission(array $user, string $menuSlug, string $action): void
     $stmt->execute([$user['role_id'], $menuSlug]);
     $perm = $stmt->fetch();
 
-    if (!$perm) sendError(403, 'Forbidden: No access to this module');
+    if (!$perm) return false;
 
     $map = ['view' => 'can_view', 'create' => 'can_create', 'update' => 'can_update', 'delete' => 'can_delete'];
     $col = $map[$action] ?? null;
-    if (!$col || !$perm[$col]) {
-        sendError(403, "Forbidden: Cannot $action in $menuSlug");
-    }
+    return $col ? (bool)$perm[$col] : false;
 }

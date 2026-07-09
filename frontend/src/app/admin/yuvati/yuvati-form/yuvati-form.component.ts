@@ -37,8 +37,11 @@ export class YuvatiFormComponent implements OnInit {
     { label: 'Sanyukta', value: 'sanyukta' }
   ];
 
+  readonly maxBirthDate = new Date().toISOString().slice(0, 10);
+
   form = this.fb.group({
     first_name: ['', Validators.required], middle_name: [''], last_name: ['', Validators.required],
+    birth_date: ['', Validators.required],
     mo_number: ['', [Validators.required, Validators.pattern(/^[6-9]\d{9}$/)]], whatsapp_number: [''],
     email: ['', Validators.email], address: [''],
     xetra_id: [null as any, Validators.required], mandal_id: [null as any, Validators.required],

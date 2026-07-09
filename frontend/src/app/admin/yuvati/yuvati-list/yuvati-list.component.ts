@@ -1,7 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { NgIf, TitleCasePipe } from '@angular/common';
+import { NgIf, TitleCasePipe, DatePipe } from '@angular/common';
 import { TableModule, TableLazyLoadEvent } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -18,7 +18,7 @@ import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 @Component({
   selector: 'app-yuvati-list',
   standalone: true,
-  imports: [FormsModule, NgIf, TitleCasePipe, TableModule, ButtonModule, InputTextModule,
+  imports: [FormsModule, NgIf, TitleCasePipe, DatePipe, TableModule, ButtonModule, InputTextModule,
             DropdownModule, DialogModule, TooltipModule],
   templateUrl: './yuvati-list.component.html',
   styleUrls: ['./yuvati-list.component.scss']
@@ -35,6 +35,7 @@ export class YuvatiListComponent implements OnInit {
   xetras: any[] = []; mandals: any[] = [];
   loading = false; perPage = 15;
   searchTerm = ''; xetraFilter: any = null; mandalFilter: any = null;
+  birthDateFrom = ''; birthDateTo = '';
   showQrDialog = false; qrTarget: any = null; qrUrl = '';
   private search$ = new Subject<string>();
 
@@ -59,6 +60,8 @@ export class YuvatiListComponent implements OnInit {
     const params: any = { page, limit: this.perPage, search: this.searchTerm };
     if (this.xetraFilter)  params.xetra_id  = this.xetraFilter;
     if (this.mandalFilter) params.mandal_id = this.mandalFilter;
+    if (this.birthDateFrom) params.birth_date_from = this.birthDateFrom;
+    if (this.birthDateTo)   params.birth_date_to   = this.birthDateTo;
     this.api.get<any>('yuvati', params).subscribe({
       next: res => {
         if (res.success) { this.rows.set(res.data.data); this.total.set(res.data.total); }
@@ -75,6 +78,8 @@ export class YuvatiListComponent implements OnInit {
     if (this.searchTerm)    url += `&search=${encodeURIComponent(this.searchTerm)}`;
     if (this.xetraFilter)   url += `&xetra_id=${this.xetraFilter}`;
     if (this.mandalFilter)  url += `&mandal_id=${this.mandalFilter}`;
+    if (this.birthDateFrom) url += `&birth_date_from=${this.birthDateFrom}`;
+    if (this.birthDateTo)   url += `&birth_date_to=${this.birthDateTo}`;
     const a = document.createElement('a');
     a.href = url;
     a.click();

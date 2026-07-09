@@ -39,6 +39,7 @@ export interface Yuvak {
   first_name: string;
   middle_name?: string;
   last_name: string;
+  birth_date: string;
   mo_number: string;
   whatsapp_number?: string;
   email?: string;

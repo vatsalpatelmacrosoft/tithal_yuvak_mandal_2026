@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { NgFor, NgIf } from '@angular/common';
+import { NgFor, NgIf, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -7,7 +7,7 @@ import { AuthService } from '../../core/services/auth.service';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [NgFor, NgIf, RouterLink],
+  imports: [NgFor, NgIf, DatePipe, RouterLink],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
@@ -16,6 +16,17 @@ export class DashboardComponent implements OnInit {
   private auth = inject(AuthService);
 
   stats = signal<any>(null);
+  birthdays = signal<any>({ yuvak: [], yuvati: [] });
+  loadingBirthdays = false;
+  birthdayRange = 'last7';
+
+  readonly birthdayRangeOptions = [
+    { label: 'Today',    value: 'today'  },
+    { label: 'Last 7',   value: 'last7'  },
+    { label: 'Last 10',  value: 'last10' },
+    { label: 'Last 30',  value: 'last30' },
+    { label: 'Next 7',   value: 'next7'  },
+  ];
 
   private readonly ALL_QUICK_LINKS = [
     { slug: 'yuvak',      label: 'Yuvak',      path: '/admin/yuvak',      icon: 'pi-user',            iconStyle: 'background:linear-gradient(135deg,#FF6B00,#FF8C38)' },
@@ -40,6 +51,23 @@ export class DashboardComponent implements OnInit {
   ngOnInit() {
     this.api.get<any>('dashboard').subscribe(res => {
       if (res.success) this.stats.set(res.data);
+    });
+    this.loadBirthdays();
+  }
+
+  setBirthdayRange(range: string) {
+    this.birthdayRange = range;
+    this.loadBirthdays();
+  }
+
+  loadBirthdays() {
+    this.loadingBirthdays = true;
+    this.api.get<any>('dashboard/birthdays', { range: this.birthdayRange }).subscribe({
+      next: res => {
+        if (res.success) this.birthdays.set(res.data);
+        this.loadingBirthdays = false;
+      },
+      error: () => { this.loadingBirthdays = false; }
     });
   }
 }

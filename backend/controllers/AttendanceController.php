@@ -11,14 +11,23 @@ class AttendanceController
         $fromDate   = $_GET['from_date']   ?? date('Y-m-d');
         $toDate     = $_GET['to_date']     ?? $fromDate;
         $memberType = $_GET['member_type'] ?? null;
+        $xetraId    = $_GET['xetra_id']   ?? null;
+        $mandalId   = $_GET['mandal_id']  ?? null;
+        $fromTime   = $_GET['from_time']  ?? null;
+        $toTime     = $_GET['to_time']    ?? null;
 
         $where  = "WHERE a.attendance_date BETWEEN ? AND ?";
         $params = [$fromDate, $toDate];
 
         if ($memberType) { $where .= ' AND a.member_type = ?'; $params[] = $memberType; }
+        if ($xetraId)  { $where .= " AND ((a.member_type='yuvak' AND y.xetra_id=?) OR (a.member_type='yuvati' AND yt.xetra_id=?))";  $params[] = $xetraId;  $params[] = $xetraId; }
+        if ($mandalId) { $where .= " AND ((a.member_type='yuvak' AND y.mandal_id=?) OR (a.member_type='yuvati' AND yt.mandal_id=?))"; $params[] = $mandalId; $params[] = $mandalId; }
+        if ($fromTime) { $where .= ' AND TIME(a.created_at) >= ?'; $params[] = $fromTime; }
+        if ($toTime)   { $where .= ' AND TIME(a.created_at) <= ?'; $params[] = $toTime; }
 
         $stmt = $this->pdo->prepare("
             SELECT a.*,
+                DATE_FORMAT(a.created_at, '%l:%i %p') AS scan_time,
                 CASE WHEN a.member_type='yuvak'
                     THEN CONCAT(y.first_name,' ',y.last_name)
                     ELSE CONCAT(yt.first_name,' ',yt.last_name)
@@ -48,19 +57,33 @@ class AttendanceController
     {
         $fromDate = $_GET['from_date'] ?? date('Y-m-d', strtotime('-30 days'));
         $toDate   = $_GET['to_date']   ?? date('Y-m-d');
+        $xetraId  = $_GET['xetra_id'] ?? null;
+        $mandalId = $_GET['mandal_id'] ?? null;
+        $fromTime = $_GET['from_time'] ?? null;
+        $toTime   = $_GET['to_time']   ?? null;
+
+        $where  = "WHERE a.attendance_date BETWEEN ? AND ?";
+        $params = [$fromDate, $toDate];
+
+        if ($xetraId)  { $where .= " AND ((a.member_type='yuvak' AND y.xetra_id=?) OR (a.member_type='yuvati' AND yt.xetra_id=?))";  $params[] = $xetraId;  $params[] = $xetraId; }
+        if ($mandalId) { $where .= " AND ((a.member_type='yuvak' AND y.mandal_id=?) OR (a.member_type='yuvati' AND yt.mandal_id=?))"; $params[] = $mandalId; $params[] = $mandalId; }
+        if ($fromTime) { $where .= ' AND TIME(a.created_at) >= ?'; $params[] = $fromTime; }
+        if ($toTime)   { $where .= ' AND TIME(a.created_at) <= ?'; $params[] = $toTime; }
 
         $stmt = $this->pdo->prepare("
             SELECT
-                attendance_date,
-                SUM(member_type = 'yuvak')  AS yuvak_count,
-                SUM(member_type = 'yuvati') AS yuvati_count,
-                COUNT(*)                    AS total
-            FROM attendances
-            WHERE attendance_date BETWEEN ? AND ?
-            GROUP BY attendance_date
-            ORDER BY attendance_date DESC
+                a.attendance_date,
+                SUM(a.member_type = 'yuvak')  AS yuvak_count,
+                SUM(a.member_type = 'yuvati') AS yuvati_count,
+                COUNT(*)                      AS total
+            FROM attendances a
+            LEFT JOIN yuvaks  y  ON y.id  = a.member_id AND a.member_type = 'yuvak'
+            LEFT JOIN yuvatis yt ON yt.id = a.member_id AND a.member_type = 'yuvati'
+            $where
+            GROUP BY a.attendance_date
+            ORDER BY a.attendance_date DESC
         ");
-        $stmt->execute([$fromDate, $toDate]);
+        $stmt->execute($params);
         sendSuccess($stmt->fetchAll());
     }
 
@@ -70,10 +93,18 @@ class AttendanceController
         $fromDate   = $_GET['from_date']   ?? date('Y-m-d');
         $toDate     = $_GET['to_date']     ?? $fromDate;
         $memberType = $_GET['member_type'] ?? null;
+        $xetraId    = $_GET['xetra_id']   ?? null;
+        $mandalId   = $_GET['mandal_id']  ?? null;
+        $fromTime   = $_GET['from_time']  ?? null;
+        $toTime     = $_GET['to_time']    ?? null;
 
         $where  = "WHERE a.attendance_date BETWEEN ? AND ?";
         $params = [$fromDate, $toDate];
         if ($memberType) { $where .= ' AND a.member_type = ?'; $params[] = $memberType; }
+        if ($xetraId)  { $where .= " AND ((a.member_type='yuvak' AND y.xetra_id=?) OR (a.member_type='yuvati' AND yt.xetra_id=?))";  $params[] = $xetraId;  $params[] = $xetraId; }
+        if ($mandalId) { $where .= " AND ((a.member_type='yuvak' AND y.mandal_id=?) OR (a.member_type='yuvati' AND yt.mandal_id=?))"; $params[] = $mandalId; $params[] = $mandalId; }
+        if ($fromTime) { $where .= ' AND TIME(a.created_at) >= ?'; $params[] = $fromTime; }
+        if ($toTime)   { $where .= ' AND TIME(a.created_at) <= ?'; $params[] = $toTime; }
 
         $stmt = $this->pdo->prepare("
             SELECT
@@ -102,10 +133,18 @@ class AttendanceController
         $fromDate   = $_GET['from_date']   ?? date('Y-m-d');
         $toDate     = $_GET['to_date']     ?? $fromDate;
         $memberType = $_GET['member_type'] ?? null;
+        $xetraId    = $_GET['xetra_id']   ?? null;
+        $mandalId   = $_GET['mandal_id']  ?? null;
+        $fromTime   = $_GET['from_time']  ?? null;
+        $toTime     = $_GET['to_time']    ?? null;
 
         $where  = "WHERE a.attendance_date BETWEEN ? AND ?";
         $params = [$fromDate, $toDate];
         if ($memberType) { $where .= ' AND a.member_type = ?'; $params[] = $memberType; }
+        if ($xetraId)  { $where .= " AND ((a.member_type='yuvak' AND y.xetra_id=?) OR (a.member_type='yuvati' AND yt.xetra_id=?))";  $params[] = $xetraId;  $params[] = $xetraId; }
+        if ($mandalId) { $where .= " AND ((a.member_type='yuvak' AND y.mandal_id=?) OR (a.member_type='yuvati' AND yt.mandal_id=?))"; $params[] = $mandalId; $params[] = $mandalId; }
+        if ($fromTime) { $where .= ' AND TIME(a.created_at) >= ?'; $params[] = $fromTime; }
+        if ($toTime)   { $where .= ' AND TIME(a.created_at) <= ?'; $params[] = $toTime; }
 
         $stmt = $this->pdo->prepare("
             SELECT
@@ -145,14 +184,23 @@ class AttendanceController
         $fromDate   = $_GET['from_date']   ?? date('Y-m-d');
         $toDate     = $_GET['to_date']     ?? $fromDate;
         $memberType = $_GET['member_type'] ?? null;
+        $xetraId    = $_GET['xetra_id']   ?? null;
+        $mandalId   = $_GET['mandal_id']  ?? null;
+        $fromTime   = $_GET['from_time']  ?? null;
+        $toTime     = $_GET['to_time']    ?? null;
 
         $where  = "WHERE a.attendance_date BETWEEN ? AND ?";
         $params = [$fromDate, $toDate];
         if ($memberType) { $where .= ' AND a.member_type = ?'; $params[] = $memberType; }
+        if ($xetraId)  { $where .= " AND ((a.member_type='yuvak' AND y.xetra_id=?) OR (a.member_type='yuvati' AND yt.xetra_id=?))";  $params[] = $xetraId;  $params[] = $xetraId; }
+        if ($mandalId) { $where .= " AND ((a.member_type='yuvak' AND y.mandal_id=?) OR (a.member_type='yuvati' AND yt.mandal_id=?))"; $params[] = $mandalId; $params[] = $mandalId; }
+        if ($fromTime) { $where .= ' AND TIME(a.created_at) >= ?'; $params[] = $fromTime; }
+        if ($toTime)   { $where .= ' AND TIME(a.created_at) <= ?'; $params[] = $toTime; }
 
         $stmt = $this->pdo->prepare("
             SELECT
                 a.attendance_date,
+                DATE_FORMAT(a.created_at, '%l:%i %p') AS scan_time,
                 a.member_type,
                 CASE WHEN a.member_type='yuvak' THEN y.yuvak_id ELSE yt.yuvati_id END AS member_code,
                 CASE WHEN a.member_type='yuvak'
@@ -172,9 +220,9 @@ class AttendanceController
         header('Cache-Control: no-store, no-cache');
         header('Pragma: no-cache');
         $out = fopen('php://output', 'w');
-        fputcsv($out, ['Date', 'Member Type', 'Member Code', 'Member Name'], ',', '"', '\\');
+        fputcsv($out, ['Date', 'Time', 'Member Type', 'Member Code', 'Member Name'], ',', '"', '\\');
         foreach ($rows as $r) {
-            fputcsv($out, [$r['attendance_date'], ucfirst($r['member_type']), $r['member_code'], $r['member_name']], ',', '"', '\\');
+            fputcsv($out, [$r['attendance_date'], $r['scan_time'], ucfirst($r['member_type']), $r['member_code'], $r['member_name']], ',', '"', '\\');
         }
         fclose($out);
         exit;
