@@ -21,9 +21,15 @@
       </div>
     </div>
   </div>
-  <p-table [value]="filteredRows" [tableStyle]="{'min-width':'50rem'}" styleClass="p-datatable-striped">
+  <p-table [value]="filteredRows" [tableStyle]="{'min-width':'50rem'}" styleClass="p-datatable-striped"
+    [lazy]="true" (onLazyLoad)="onSort($event)" [sortField]="sortField" [sortOrder]="sortOrder">
     <ng-template pTemplate="header">
-      <tr><th>Name</th><th>Date</th><th>Slug</th><th style="width:9rem">Actions</th></tr>
+      <tr>
+        <th pSortableColumn="name">Name <p-sortIcon field="name" /></th>
+        <th pSortableColumn="date">Date <p-sortIcon field="date" /></th>
+        <th pSortableColumn="slug">Slug <p-sortIcon field="slug" /></th>
+        <th style="width:9rem">Actions</th>
+      </tr>
     </ng-template>
     <ng-template pTemplate="body" let-s>
       <tr>

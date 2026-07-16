@@ -7,7 +7,18 @@ class UserController
 
     public function index(): void
     {
-        $stmt = $this->pdo->query("
+        $sortMap = [
+            'first_name' => 'first_name',
+            'last_name'  => 'last_name',
+            'yuvak_id'   => 'yuvak_id',
+            'mo_number'  => 'u.mo_number',
+            'role_name'  => 'role_name',
+            'last_login' => 'u.last_login',
+        ];
+        $sortBy  = $sortMap[$_GET['sort_by'] ?? ''] ?? 'first_name';
+        $sortDir = strtoupper($_GET['sort_dir'] ?? '') === 'DESC' ? 'DESC' : 'ASC';
+
+        $stmt = $this->pdo->prepare("
             SELECT u.id, u.uuid, u.mo_number, u.status, u.last_login, u.member_type,
                    COALESCE(y.first_name, yt.first_name) AS first_name,
                    COALESCE(y.last_name,  yt.last_name)  AS last_name,
@@ -18,8 +29,9 @@ class UserController
             LEFT JOIN yuvatis yt ON yt.id = u.yuvati_id
             JOIN roles r ON r.id = u.role_id
             WHERE u.status = 'active'
-            ORDER BY COALESCE(y.first_name, yt.first_name)
+            ORDER BY $sortBy $sortDir
         ");
+        $stmt->execute();
         sendSuccess($stmt->fetchAll());
     }
 

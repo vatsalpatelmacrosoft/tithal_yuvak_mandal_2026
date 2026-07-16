@@ -184,9 +184,12 @@ class PublicController
 
     public function quizBySlug(string $slug): void
     {
+        // Deliberately does NOT require is_active=1 here: an inactive quiz should still
+        // show its landing page so a participant can reach "View My Submitted Answer" —
+        // startQuiz() is what actually blocks new attempts on an inactive quiz.
         $stmt = $this->pdo->prepare("
             SELECT * FROM quizzes
-            WHERE slug=? AND quiz_status='published' AND is_active=1 AND status='active'
+            WHERE slug=? AND quiz_status='published' AND status='active'
         ");
         $stmt->execute([$slug]);
         $quiz = $stmt->fetch();
@@ -488,6 +491,100 @@ class PublicController
             'show_result'         => (bool)$quiz['show_result'],
             'total_attempts'      => $totalAttempts,
         ], 'Quiz submitted successfully');
+    }
+
+    /**
+     * Look up a participant's already-recorded submission for a quiz (re-entered by
+     * identifier/mobile, same as startQuiz's participant lookup). Used once a quiz has
+     * ended or the participant has already submitted, so they can review their answers.
+     * Correct-answer / correctness fields are only included when the quiz's show_result
+     * flag is on — otherwise only the participant's own selected answers are returned.
+     */
+    public function myQuizResult(string $slug, array $body): void
+    {
+        $stmt = $this->pdo->prepare("SELECT * FROM quizzes WHERE slug=? AND status='active'");
+        $stmt->execute([$slug]);
+        $quiz = $stmt->fetch();
+        if (!$quiz) sendError(404, 'Quiz not found');
+
+        $type = $body['participant_type'] ?? 'external';
+        $participant = null;
+
+        if ($type === 'registered') {
+            $identifier = trim($body['identifier'] ?? $body['yuvak_id'] ?? '');
+            if (empty($identifier)) sendValidationError(['identifier' => 'Yuvak ID or Mobile Number is required']);
+
+            $isMobile  = (bool) preg_match('/^\d{10}$/', $identifier);
+            $searchVal = $isMobile ? $identifier : strtoupper($identifier);
+
+            $wf    = $isMobile ? 'mo_number' : 'yuvak_id';
+            $yStmt = $this->pdo->prepare("SELECT id FROM yuvaks WHERE {$wf}=? AND status='active'");
+            $yStmt->execute([$searchVal]);
+            $member     = $yStmt->fetch();
+            $memberType = 'yuvak';
+
+            if (!$member) {
+                $wf2    = $isMobile ? 'mo_number' : 'yuvati_id';
+                $yStmt2 = $this->pdo->prepare("SELECT id FROM yuvatis WHERE {$wf2}=? AND status='active'");
+                $yStmt2->execute([$searchVal]);
+                $member = $yStmt2->fetch();
+                if ($member) $memberType = 'yuvati';
+            }
+            if (!$member) sendError(404, 'Member not found. Please check your ID or Mobile Number.');
+
+            $pStmt = $this->pdo->prepare("
+                SELECT id FROM quiz_participants
+                WHERE quiz_id=? AND yuvak_db_id=? AND member_type=? AND status='active'
+            ");
+            $pStmt->execute([$quiz['id'], $member['id'], $memberType]);
+            $participant = $pStmt->fetch();
+        } else {
+            $mobile = trim($body['mo_number'] ?? '');
+            if (empty($mobile)) sendValidationError(['mo_number' => 'Mobile number is required']);
+
+            $pStmt = $this->pdo->prepare("
+                SELECT id FROM quiz_participants
+                WHERE quiz_id=? AND mo_number=? AND participant_type='external' AND status='active'
+            ");
+            $pStmt->execute([$quiz['id'], $mobile]);
+            $participant = $pStmt->fetch();
+        }
+
+        if (!$participant) sendError(404, 'No submission found for this quiz with the given details.');
+
+        $subStmt = $this->pdo->prepare("SELECT * FROM quiz_submissions WHERE participant_id=?");
+        $subStmt->execute([$participant['id']]);
+        $submission = $subStmt->fetch();
+        if (!$submission) sendError(404, 'No submission found for this quiz with the given details.');
+
+        $ansStmt = $this->pdo->prepare("
+            SELECT qa.selected_answer, qa.is_correct, qa.marks_obtained,
+                   qq.id AS question_id, qq.title, qq.question_type,
+                   qq.option_a, qq.option_b, qq.option_c, qq.option_d, qq.options,
+                   qq.correct_answer, qq.marks, qq.display_order
+            FROM quiz_answers qa
+            JOIN quiz_questions qq ON qq.id = qa.question_id
+            WHERE qa.submission_id=?
+            ORDER BY qq.display_order ASC, qq.id ASC
+        ");
+        $ansStmt->execute([$submission['id']]);
+        $answers = $ansStmt->fetchAll();
+
+        $showResult = (bool)$quiz['show_result'];
+        foreach ($answers as &$a) {
+            if ($a['options'] !== null) $a['options'] = json_decode($a['options'], true);
+            if (!$showResult) {
+                unset($a['is_correct'], $a['correct_answer'], $a['marks_obtained']);
+            }
+        }
+        unset($a);
+
+        sendSuccess([
+            'quiz_title'  => $quiz['title'] ?: $quiz['name'],
+            'show_result' => $showResult,
+            'submission'  => $showResult ? $submission : null,
+            'answers'     => $answers,
+        ]);
     }
 
     // ── Welcome Card ────────────────────────────────────────────

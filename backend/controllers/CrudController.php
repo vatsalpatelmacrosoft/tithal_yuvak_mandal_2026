@@ -21,7 +21,11 @@ class CrudController
             $where .= " AND (name LIKE ? OR code LIKE ?)";
             $params = [$s, $s];
         }
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} $where ORDER BY name");
+        $sortMap = ['name' => 'name', 'code' => 'code'];
+        $sortBy  = $sortMap[$_GET['sort_by'] ?? ''] ?? 'name';
+        $sortDir = strtoupper($_GET['sort_dir'] ?? '') === 'DESC' ? 'DESC' : 'ASC';
+
+        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} $where ORDER BY $sortBy $sortDir");
         $stmt->execute($params);
         sendSuccess($stmt->fetchAll());
     }

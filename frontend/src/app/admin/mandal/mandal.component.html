@@ -24,13 +24,14 @@
     </div>
   </div>
 
-  <p-table [value]="rows()" [tableStyle]="{'min-width':'48rem'}" styleClass="p-datatable-striped">
+  <p-table [value]="rows()" [tableStyle]="{'min-width':'48rem'}" styleClass="p-datatable-striped"
+    [lazy]="true" (onLazyLoad)="onSort($event)" [sortField]="sortField" [sortOrder]="sortOrder">
     <ng-template pTemplate="header">
       <tr>
         <th style="width:3rem">#</th>
-        <th>Xetra</th>
-        <th>Mandal Name</th>
-        <th>Code</th>
+        <th pSortableColumn="xetra_name">Xetra <p-sortIcon field="xetra_name" /></th>
+        <th pSortableColumn="name">Mandal Name <p-sortIcon field="name" /></th>
+        <th pSortableColumn="code">Code <p-sortIcon field="code" /></th>
         <th style="width:9rem">Actions</th>
       </tr>
     </ng-template>

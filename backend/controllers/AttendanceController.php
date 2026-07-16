@@ -25,6 +25,16 @@ class AttendanceController
         if ($fromTime) { $where .= ' AND TIME(a.created_at) >= ?'; $params[] = $fromTime; }
         if ($toTime)   { $where .= ' AND TIME(a.created_at) <= ?'; $params[] = $toTime; }
 
+        $sortMap = [
+            'attendance_date' => 'a.attendance_date',
+            'scan_time'       => 'a.created_at',
+            'member_name'     => 'member_name',
+            'member_code'     => 'member_code',
+            'member_type'     => 'a.member_type',
+        ];
+        $sortBy  = $sortMap[$_GET['sort_by'] ?? ''] ?? 'a.attendance_date';
+        $sortDir = strtoupper($_GET['sort_dir'] ?? '') === 'ASC' ? 'ASC' : 'DESC';
+
         $stmt = $this->pdo->prepare("
             SELECT a.*,
                 DATE_FORMAT(a.created_at, '%l:%i %p') AS scan_time,
@@ -36,7 +46,7 @@ class AttendanceController
             FROM attendances a
             LEFT JOIN yuvaks  y  ON y.id  = a.member_id AND a.member_type = 'yuvak'
             LEFT JOIN yuvatis yt ON yt.id = a.member_id AND a.member_type = 'yuvati'
-            $where ORDER BY a.attendance_date DESC, a.created_at DESC
+            $where ORDER BY $sortBy $sortDir, a.created_at DESC
         ");
         $stmt->execute($params);
         $rows = $stmt->fetchAll();
@@ -70,6 +80,15 @@ class AttendanceController
         if ($fromTime) { $where .= ' AND TIME(a.created_at) >= ?'; $params[] = $fromTime; }
         if ($toTime)   { $where .= ' AND TIME(a.created_at) <= ?'; $params[] = $toTime; }
 
+        $sortMap = [
+            'attendance_date' => 'a.attendance_date',
+            'yuvak_count'     => 'yuvak_count',
+            'yuvati_count'    => 'yuvati_count',
+            'total'           => 'total',
+        ];
+        $sortBy  = $sortMap[$_GET['sort_by'] ?? ''] ?? 'a.attendance_date';
+        $sortDir = strtoupper($_GET['sort_dir'] ?? '') === 'ASC' ? 'ASC' : 'DESC';
+
         $stmt = $this->pdo->prepare("
             SELECT
                 a.attendance_date,
@@ -81,7 +100,7 @@ class AttendanceController
             LEFT JOIN yuvatis yt ON yt.id = a.member_id AND a.member_type = 'yuvati'
             $where
             GROUP BY a.attendance_date
-            ORDER BY a.attendance_date DESC
+            ORDER BY $sortBy $sortDir
         ");
         $stmt->execute($params);
         sendSuccess($stmt->fetchAll());
@@ -106,6 +125,15 @@ class AttendanceController
         if ($fromTime) { $where .= ' AND TIME(a.created_at) >= ?'; $params[] = $fromTime; }
         if ($toTime)   { $where .= ' AND TIME(a.created_at) <= ?'; $params[] = $toTime; }
 
+        $sortMap = [
+            'member_name'   => 'member_name',
+            'member_code'   => 'member_code',
+            'member_type'   => 'a.member_type',
+            'total_present' => 'total_present',
+        ];
+        $sortBy  = $sortMap[$_GET['sort_by'] ?? ''] ?? 'total_present';
+        $sortDir = strtoupper($_GET['sort_dir'] ?? '') === 'ASC' ? 'ASC' : 'DESC';
+
         $stmt = $this->pdo->prepare("
             SELECT
                 a.member_type,
@@ -121,7 +149,7 @@ class AttendanceController
             LEFT JOIN yuvatis yt ON yt.id = a.member_id AND a.member_type = 'yuvati'
             $where
             GROUP BY a.member_type, a.member_id
-            ORDER BY total_present DESC, member_name ASC
+            ORDER BY $sortBy $sortDir, member_name ASC
         ");
         $stmt->execute($params);
         sendSuccess($stmt->fetchAll());

@@ -36,6 +36,8 @@ export class YuvakListComponent implements OnInit {
   loading = false; perPage = 15;
   searchTerm = '';
   filters = { xetra_id: null as any, mandal_id: null as any, birth_date_from: '' as string, birth_date_to: '' as string };
+  sortField = 'created_at';
+  sortOrder = -1;
   private search$ = new Subject<string>();
 
   get canCreate() { return this.auth.hasPermission('yuvak', 'can_create'); }
@@ -51,12 +53,16 @@ export class YuvakListComponent implements OnInit {
 
   onLazyLoad(event: TableLazyLoadEvent) {
     const page = Math.floor((event.first ?? 0) / (event.rows ?? this.perPage)) + 1;
+    if (event.sortField) { this.sortField = event.sortField as string; this.sortOrder = event.sortOrder ?? 1; }
     this.loadData(page);
   }
 
   loadData(page = 1) {
     this.loading = true;
-    const params: any = { page, limit: this.perPage, search: this.searchTerm };
+    const params: any = {
+      page, limit: this.perPage, search: this.searchTerm,
+      sort_by: this.sortField, sort_dir: this.sortOrder === 1 ? 'asc' : 'desc',
+    };
     if (this.filters.xetra_id)  params.xetra_id  = this.filters.xetra_id;
     if (this.filters.mandal_id) params.mandal_id = this.filters.mandal_id;
     if (this.filters.birth_date_from) params.birth_date_from = this.filters.birth_date_from;

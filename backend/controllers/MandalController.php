@@ -20,11 +20,15 @@ class MandalController
             $params[] = $s; $params[] = $s;
         }
 
+        $sortMap = ['name' => 'm.name', 'code' => 'm.code', 'xetra_name' => 'x.name'];
+        $sortBy  = $sortMap[$_GET['sort_by'] ?? ''] ?? 'm.name';
+        $sortDir = strtoupper($_GET['sort_dir'] ?? '') === 'DESC' ? 'DESC' : 'ASC';
+
         $stmt = $this->pdo->prepare("
             SELECT m.*, x.name AS xetra_name, x.id AS xetra_id
             FROM mandals m
             LEFT JOIN xetras x ON x.id = m.xetra_id
-            $where ORDER BY m.name
+            $where ORDER BY $sortBy $sortDir
         ");
         $stmt->execute($params);
         sendSuccess($stmt->fetchAll());

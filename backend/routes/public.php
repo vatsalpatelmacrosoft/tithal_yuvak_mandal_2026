@@ -18,6 +18,10 @@ match (true) {
     $method === 'POST' && $resource === 'quiz' && $id && $sub === 'submit'
         => $ctrl->submitQuiz($id, $body),
 
+    // POST /public/quiz/{slug}/my-result — look up a past submission (post-end / already-submitted review)
+    $method === 'POST' && $resource === 'quiz' && $id && $sub === 'my-result'
+        => $ctrl->myQuizResult($id, $body),
+
     // POST /public/validate-yuvak      — validate Yuvak ID
     $method === 'POST' && $resource === 'validate-yuvak'
         => $ctrl->validateYuvak($body),

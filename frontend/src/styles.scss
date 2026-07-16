@@ -175,6 +175,8 @@ button { cursor: pointer; border: none; background: none; font: inherit; }
 .main-wrapper {
   margin-left: var(--sidebar-w);
   flex: 1;
+  min-width: 0; /* flex items default to min-width:auto, which blocks shrinking below content's
+                   intrinsic width and forces horizontal overflow on narrow (mobile) viewports */
   display: flex;
   flex-direction: column;
   transition: var(--transition);
@@ -1095,7 +1097,13 @@ p-inputNumber { width: 100%; }
   .main-wrapper { margin-left: 0 !important; }
   .main-content { padding: 16px; }
   .form-grid { grid-template-columns: 1fr; }
-  .module-hero { flex-direction: column; align-items: flex-start; gap: 12px; }
+  /* align-items: stretch (not flex-start) so children get the container's real width
+     instead of sizing to their own content — flex-start was letting long titles/subtitles
+     push .module-hero wider than the viewport (horizontal overflow). */
+  .module-hero { flex-direction: column; align-items: stretch; gap: 12px; }
+  /* Keep primary action buttons clear of the sidebar's overlay width (var(--sidebar-w))
+     so an open sidebar can't shadow-tap a nav link when the user means to tap "Add …" */
+  .hero-right { align-self: flex-end; }
 
   /* Backdrop — hidden by default */
   .sidebar-backdrop { display: none; }

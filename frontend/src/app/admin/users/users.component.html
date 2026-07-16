@@ -21,11 +21,16 @@
       </div>
     </div>
   </div>
-  <p-table [value]="filteredUsers" [tableStyle]="{'min-width':'60rem'}" styleClass="p-datatable-striped">
+  <p-table [value]="filteredUsers" [tableStyle]="{'min-width':'60rem'}" styleClass="p-datatable-striped"
+    [lazy]="true" (onLazyLoad)="onSort($event)" [sortField]="sortField" [sortOrder]="sortOrder">
     <ng-template pTemplate="header">
       <tr>
-        <th>Member ID</th><th>Name</th><th>Mobile</th>
-        <th>Role</th><th>Last Login</th><th style="width:10rem">Actions</th>
+        <th pSortableColumn="yuvak_id">Member ID <p-sortIcon field="yuvak_id" /></th>
+        <th pSortableColumn="first_name">Name <p-sortIcon field="first_name" /></th>
+        <th pSortableColumn="mo_number">Mobile <p-sortIcon field="mo_number" /></th>
+        <th pSortableColumn="role_name">Role <p-sortIcon field="role_name" /></th>
+        <th pSortableColumn="last_login">Last Login <p-sortIcon field="last_login" /></th>
+        <th style="width:10rem">Actions</th>
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-u>

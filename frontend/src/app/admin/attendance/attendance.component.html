@@ -171,11 +171,12 @@
     <p-table *ngIf="memberTab === 'yuvak' && canViewYuvak" [value]="yuvakRecords" [paginator]="true" [rows]="20"
       [showCurrentPageReport]="true" currentPageReportTemplate="{first}-{last} of {totalRecords}"
       [scrollable]="true" scrollHeight="450px"
+      [customSort]="true" (sortFunction)="onSortList($event)" [sortField]="sortField" [sortOrder]="sortOrder"
       styleClass="p-datatable-striped" [tableStyle]="{'min-width':'46rem'}">
       <ng-template pTemplate="header">
         <tr>
-          <th>Date &amp; Time</th>
-          <th>Name</th>
+          <th pSortableColumn="attendance_date">Date &amp; Time <p-sortIcon field="attendance_date" /></th>
+          <th pSortableColumn="member_name">Name <p-sortIcon field="member_name" /></th>
           <th>Yuvak ID</th>
         </tr>
       </ng-template>
@@ -203,11 +204,12 @@
     <p-table *ngIf="memberTab === 'yuvati' && canViewYuvati" [value]="yuvatiRecords" [paginator]="true" [rows]="20"
       [showCurrentPageReport]="true" currentPageReportTemplate="{first}-{last} of {totalRecords}"
       [scrollable]="true" scrollHeight="450px"
+      [customSort]="true" (sortFunction)="onSortList($event)" [sortField]="sortField" [sortOrder]="sortOrder"
       styleClass="p-datatable-striped" [tableStyle]="{'min-width':'46rem'}">
       <ng-template pTemplate="header">
         <tr>
-          <th>Date &amp; Time</th>
-          <th>Name</th>
+          <th pSortableColumn="attendance_date">Date &amp; Time <p-sortIcon field="attendance_date" /></th>
+          <th pSortableColumn="member_name">Name <p-sortIcon field="member_name" /></th>
           <th>Yuvati ID</th>
         </tr>
       </ng-template>
@@ -259,7 +261,8 @@
 
     <p-table *ngIf="nmTab === 'yuvak' && canViewYuvak" [value]="yuvakNameWise" [paginator]="true" [rows]="20"
       [showCurrentPageReport]="true" currentPageReportTemplate="{first}-{last} of {totalRecords}"
-      [sortField]="'total_present'" [sortOrder]="-1" [scrollable]="true" scrollHeight="450px"
+      [customSort]="true" (sortFunction)="onSortNameWise($event)"
+      [sortField]="nameWiseSortField" [sortOrder]="nameWiseSortOrder" [scrollable]="true" scrollHeight="450px"
       styleClass="p-datatable-striped" [tableStyle]="{'min-width':'38rem'}">
       <ng-template pTemplate="header">
         <tr>
@@ -291,7 +294,8 @@
 
     <p-table *ngIf="nmTab === 'yuvati' && canViewYuvati" [value]="yuvatiNameWise" [paginator]="true" [rows]="20"
       [showCurrentPageReport]="true" currentPageReportTemplate="{first}-{last} of {totalRecords}"
-      [sortField]="'total_present'" [sortOrder]="-1" [scrollable]="true" scrollHeight="450px"
+      [customSort]="true" (sortFunction)="onSortNameWise($event)"
+      [sortField]="nameWiseSortField" [sortOrder]="nameWiseSortOrder" [scrollable]="true" scrollHeight="450px"
       styleClass="p-datatable-striped" [tableStyle]="{'min-width':'38rem'}">
       <ng-template pTemplate="header">
         <tr>
@@ -330,13 +334,15 @@
   <!-- Date-wise tab -->
   <p-table *ngIf="activeTab === 'datewise'" [value]="dateWise()" [paginator]="true" [rows]="20"
     [scrollable]="true" scrollHeight="450px"
+    [customSort]="true" (sortFunction)="onSortDateWise($event)"
+    [sortField]="dateWiseSortField" [sortOrder]="dateWiseSortOrder"
     styleClass="p-datatable-striped" [tableStyle]="{'min-width':'40rem'}">
     <ng-template pTemplate="header">
       <tr>
-        <th>Date</th>
-        <th class="text-center">Yuvak</th>
-        <th class="text-center">Yuvati</th>
-        <th class="text-center">Total</th>
+        <th pSortableColumn="attendance_date">Date <p-sortIcon field="attendance_date" /></th>
+        <th class="text-center" pSortableColumn="yuvak_count">Yuvak <p-sortIcon field="yuvak_count" /></th>
+        <th class="text-center" pSortableColumn="yuvati_count">Yuvati <p-sortIcon field="yuvati_count" /></th>
+        <th class="text-center" pSortableColumn="total">Total <p-sortIcon field="total" /></th>
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-d>

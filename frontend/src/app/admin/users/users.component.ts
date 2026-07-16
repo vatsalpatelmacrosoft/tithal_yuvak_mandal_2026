@@ -43,6 +43,7 @@ export class UsersComponent implements OnInit {
   showChangeRole = false; changeRoleTarget: any = null; newRoleUuid = '';
   showResetPwd   = false; resetPwdTarget: any  = null; newPassword = ''; resettingPwd = false;
   searchTerm  = '';
+  sortField = 'first_name'; sortOrder = 1;
   memberType: 'yuvak' | 'yuvati' = 'yuvak';
 
   get memberList() { return this.memberType === 'yuvati' ? this.yuvatis : this.yuvaks; }
@@ -85,7 +86,15 @@ export class UsersComponent implements OnInit {
     this.addForm.patchValue({ member_uuid: '' });
   }
 
-  loadUsers() { this.api.get<any>('users').subscribe(r => { if (r.success) this.users.set(r.data); }); }
+  loadUsers() {
+    const params = { sort_by: this.sortField, sort_dir: this.sortOrder === 1 ? 'asc' : 'desc' };
+    this.api.get<any>('users', params).subscribe(r => { if (r.success) this.users.set(r.data); });
+  }
+
+  onSort(event: any) {
+    if (event.sortField) { this.sortField = event.sortField; this.sortOrder = event.sortOrder ?? 1; }
+    this.loadUsers();
+  }
 
   openAddForm() { this.addForm.reset(); this.memberType = 'yuvak'; this.showAdd = true; }
 

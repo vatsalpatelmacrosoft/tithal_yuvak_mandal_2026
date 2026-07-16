@@ -33,6 +33,7 @@ export class QuizListComponent implements OnInit {
 
   quizzes    = signal<any[]>([]);
   searchTerm = '';
+  sortField = 'created_at'; sortOrder = -1;
 
   get filteredQuizzes() {
     const q = this.searchTerm.toLowerCase().trim();
@@ -42,7 +43,15 @@ export class QuizListComponent implements OnInit {
   }
 
   ngOnInit() { this.load(); }
-  load() { this.api.get<any>('quiz').subscribe(r => { if (r.success) this.quizzes.set(r.data); }); }
+  load() {
+    const params = { sort_by: this.sortField, sort_dir: this.sortOrder === 1 ? 'asc' : 'desc' };
+    this.api.get<any>('quiz', params).subscribe(r => { if (r.success) this.quizzes.set(r.data); });
+  }
+
+  onSort(event: any) {
+    if (event.sortField) { this.sortField = event.sortField; this.sortOrder = event.sortOrder ?? 1; }
+    this.load();
+  }
 
   publicQuizUrl(slug: string) { return `${document.baseURI}quiz/${slug}`; }
 
@@ -62,6 +71,20 @@ export class QuizListComponent implements OnInit {
     });
   }
 
+  confirmEndQuiz(q: any) {
+    this.confirm.confirm({
+      message: `End <strong>${q.title || q.name}</strong> now? No one will be able to start it after this — this cannot be undone.`,
+      header: 'Confirm End Quiz',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'End Quiz',
+      rejectLabel: 'Cancel',
+      defaultFocus: 'reject',
+      accept: () => this.api.put<any>(`quiz/${q.uuid}/end`, {}).subscribe({
+        next: res => { if (res.success) { this.toast.success('Quiz ended'); this.load(); } }
+      })
+    });
+  }
+
   confirmDelete(q: any) {
     this.confirm.confirm({
       message: `Archive quiz <strong>${q.title || q.name}</strong>? This action cannot be undone.`,
@@ -77,6 +100,7 @@ export class QuizListComponent implements OnInit {
   }
 
   statusSeverity(q: any): string {
+    if (q.has_ended) return 'danger';
     if (!q.is_active) return 'danger';
     if (q.quiz_status === 'published') return 'success';
     if (q.quiz_status === 'draft') return 'warning';
@@ -84,6 +108,7 @@ export class QuizListComponent implements OnInit {
   }
 
   statusLabel(q: any): string {
+    if (q.has_ended) return 'Ended';
     if (!q.is_active) return 'Inactive';
     if (q.quiz_status === 'published') return 'Published';
     return 'Draft';

@@ -376,6 +376,23 @@
       color: #fff;
     }
   }
+
+  &:disabled {
+    cursor: default;
+    &:hover { border-color: #E5E7EB; background: #fff; }
+  }
+
+  &.correct-opt {
+    border-color: #10B981;
+    background: #ECFDF5;
+    .opt-key { background: #10B981; color: #fff; }
+  }
+
+  &.wrong-opt {
+    border-color: #EF4444;
+    background: #FEF2F2;
+    .opt-key { background: #EF4444; color: #fff; }
+  }
 }
 
 .opt-key {

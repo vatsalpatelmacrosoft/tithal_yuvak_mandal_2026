@@ -21,6 +21,9 @@ match (true) {
     // Toggle active
     $method === 'PUT'  && $id && $sub === 'toggle'  => guard($user, 'quiz', 'update', fn() => $ctrl->toggle($id)),
 
+    // End quiz immediately (stamps end_datetime = now)
+    $method === 'PUT'  && $id && $sub === 'end'     => guard($user, 'quiz', 'update', fn() => $ctrl->endQuiz($id)),
+
     // Questions sub-resource
     $method === 'GET'  && $id && $sub === 'questions' => guard($user, 'quiz', 'view',   fn() => $ctrl->listQuestions($id)),
     $method === 'POST' && $id && $sub === 'questions' => guard($user, 'quiz', 'create', fn() => $ctrl->addQuestion($id, $body)),

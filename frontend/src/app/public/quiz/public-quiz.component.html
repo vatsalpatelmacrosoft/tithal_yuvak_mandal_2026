@@ -51,6 +51,11 @@
       {{ formatDateTime(quiz()?.end_datetime) }}
     </div>
     <p class="status-hint">This quiz is no longer accepting responses.</p>
+    <div class="status-footer">
+      <button type="button" class="qbtn qbtn-primary w-full" (click)="goViewMyResult()">
+        <i class="pi pi-eye"></i> View My Submitted Answers
+      </button>
+    </div>
   </div>
 
   <!-- ─── Landing ───────────────────────────────────────────── -->
@@ -71,10 +76,16 @@
           <i class="pi pi-calendar"></i> Starts: {{ quiz()?.start_datetime | slice:0:16 }}
         </span>
       </div>
+      <p *ngIf="!quiz()?.is_active" style="margin-top:14px;color:#B45309;background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:10px 14px;font-size:0.85rem">
+        <i class="pi pi-info-circle"></i> This quiz is not currently accepting new attempts. If you already submitted, you can still view your answers below.
+      </p>
     </div>
-    <div class="quiz-footer">
-      <button type="button" class="qbtn qbtn-primary w-full" (click)="goSelectType()">
+    <div class="quiz-footer" style="flex-direction:column;gap:10px">
+      <button type="button" class="qbtn qbtn-primary w-full" *ngIf="quiz()?.is_active" (click)="goSelectType()">
         <i class="pi pi-play"></i> Start Quiz
+      </button>
+      <button type="button" class="qbtn qbtn-secondary w-full" (click)="goViewMyResult()">
+        <i class="pi pi-eye"></i> View My Submitted Answer
       </button>
     </div>
   </div>
@@ -100,13 +111,18 @@
         <span class="type-arrow"><i class="pi pi-arrow-right"></i></span>
       </button>
     </div>
+    <div class="quiz-footer">
+      <button type="button" class="qbtn qbtn-secondary w-full" (click)="backFromSelectType()">
+        <i class="pi pi-arrow-left"></i> Back
+      </button>
+    </div>
   </div>
 
   <!-- ─── Register: Registered Yuvak ───────────────────────── -->
   <div class="quiz-card" *ngIf="step() === 'register-yuvak'">
     <div class="quiz-header small">
       <div class="quiz-icon small"><i class="pi pi-id-card"></i></div>
-      <h2>Enter Yuvak ID or Mobile Number</h2>
+      <h2>{{ viewingResult ? 'View My Submitted Answers' : 'Enter Yuvak ID or Mobile Number' }}</h2>
       <p>Enter your registered Yuvak ID or 10-digit mobile number</p>
     </div>
     <div class="quiz-body">
@@ -173,7 +189,7 @@
       <button type="button" class="qbtn qbtn-primary" [disabled]="!yuvakInfo || validating"
         (click)="startAsRegistered()">
         <i class="pi" [class.pi-play]="!validating" [class.pi-spin]="validating" [class.pi-spinner]="validating"></i>
-        Start Quiz
+        {{ viewingResult ? 'View Answers' : 'Start Quiz' }}
       </button>
     </div>
   </div>
@@ -191,6 +207,7 @@
         <div class="field" style="margin-bottom:16px">
           <label class="req">Full Name</label>
           <input pInputText formControlName="name" placeholder="Enter your full name" style="width:100%"
+            [attr.disabled]="viewingResult ? '' : null"
             [ngClass]="{'ng-invalid ng-dirty': externalForm.get('name')?.invalid && externalForm.get('name')?.touched}">
           <small class="p-error" *ngIf="externalForm.get('name')?.invalid && externalForm.get('name')?.touched">
             Full name is required (min 2 characters)
@@ -210,7 +227,7 @@
         <div class="field" style="margin-bottom:4px">
           <label class="req">Gender</label>
           <p-dropdown [options]="genderOptions" formControlName="gender" optionLabel="label" optionValue="value"
-            placeholder="Select gender" styleClass="w-full" />
+            [disabled]="viewingResult" placeholder="Select gender" styleClass="w-full" />
           <small class="p-error" *ngIf="externalForm.get('gender')?.invalid && externalForm.get('gender')?.touched">
             Gender is required
           </small>
@@ -224,7 +241,7 @@
       </button>
       <button type="button" class="qbtn qbtn-primary" [disabled]="validating" (click)="startAsExternal()">
         <i class="pi" [class.pi-play]="!validating" [class.pi-spin]="validating" [class.pi-spinner]="validating"></i>
-        Start Quiz
+        {{ viewingResult ? 'View Answers' : 'Start Quiz' }}
       </button>
     </div>
   </div>
@@ -237,6 +254,11 @@
     <div class="status-title">Already Submitted</div>
     <p class="status-desc">You have already completed this quiz.</p>
     <p class="status-hint">Only one attempt is allowed per participant.</p>
+    <div class="status-footer">
+      <button type="button" class="qbtn qbtn-primary w-full" (click)="goViewMyResult()">
+        <i class="pi pi-eye"></i> View My Submitted Answers
+      </button>
+    </div>
   </div>
 
   <!-- ─── Quiz Attempt ──────────────────────────────────────── -->
@@ -316,6 +338,41 @@
       <strong>{{ result()?.total_attempts }}</strong>
     </div>
     <p class="status-hint">Results will be announced by the organiser. Stay tuned!</p>
+
+    <!-- show_result is off: only the participant's own selected answers, no correctness -->
+    <div class="question-list" style="margin-top:20px;text-align:left" *ngIf="myResult()">
+      <div class="q-block" *ngFor="let a of myResult().answers; let i = index">
+        <div class="q-num-row">
+          <span class="q-num-tag answered">Q{{ i + 1 }}</span>
+          <div class="q-text">{{ a.title }}</div>
+        </div>
+
+        <div class="options-grid" *ngIf="!a.question_type || a.question_type === 'mcq'">
+          <button class="opt-btn" *ngFor="let key of ['a','b','c','d']" type="button" disabled
+            [style.display]="optionText(a,key) ? '' : 'none'"
+            [class.selected]="a.selected_answer === key">
+            <span class="opt-key">{{ key.toUpperCase() }}</span>
+            <span class="opt-text">{{ optionText(a, key) }}</span>
+          </button>
+        </div>
+
+        <div class="options-grid" *ngIf="a.question_type === 'radio'">
+          <button class="opt-btn" *ngFor="let opt of getSelectOptions(a); let oi=index" type="button" disabled
+            [class.selected]="a.selected_answer === opt.value">
+            <span class="opt-key">{{ oi + 1 }}</span>
+            <span class="opt-text">{{ opt.label }}</span>
+          </button>
+        </div>
+
+        <div class="select-wrap" *ngIf="a.question_type === 'select'">
+          <p-dropdown [options]="getSelectOptions(a)" [ngModel]="a.selected_answer" [disabled]="true" styleClass="w-full" />
+        </div>
+
+        <div class="input-wrap" *ngIf="a.question_type === 'input'">
+          <input pInputText [value]="a.selected_answer" disabled style="width:100%">
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- ─── Result ───────────────────────────────────────────── -->
@@ -352,9 +409,144 @@
       </div>
     </div>
 
+    <div class="question-list" style="margin-top:20px" *ngIf="myResult()">
+      <div class="q-block" *ngFor="let a of myResult().answers; let i = index">
+        <div class="q-num-row">
+          <span class="q-num-tag answered">Q{{ i + 1 }}</span>
+          <div class="q-text">{{ a.title }}</div>
+        </div>
+
+        <div class="options-grid" *ngIf="!a.question_type || a.question_type === 'mcq'">
+          <button class="opt-btn" *ngFor="let key of ['a','b','c','d']" type="button" disabled
+            [style.display]="optionText(a,key) ? '' : 'none'"
+            [class.correct-opt]="a.correct_answer === key"
+            [class.wrong-opt]="a.selected_answer === key && a.selected_answer !== a.correct_answer">
+            <span class="opt-key">{{ key.toUpperCase() }}</span>
+            <span class="opt-text">{{ optionText(a, key) }}</span>
+            <i *ngIf="a.correct_answer === key" class="pi pi-check-circle" style="margin-left:auto;color:#10B981"></i>
+            <i *ngIf="a.selected_answer === key && a.selected_answer !== a.correct_answer" class="pi pi-times-circle" style="margin-left:auto;color:#EF4444"></i>
+          </button>
+        </div>
+
+        <div class="options-grid" *ngIf="a.question_type === 'radio'">
+          <button class="opt-btn" *ngFor="let opt of getSelectOptions(a); let oi=index" type="button" disabled
+            [class.correct-opt]="a.correct_answer === opt.value"
+            [class.wrong-opt]="a.selected_answer === opt.value && a.selected_answer !== a.correct_answer">
+            <span class="opt-key">{{ oi + 1 }}</span>
+            <span class="opt-text">{{ opt.label }}</span>
+            <i *ngIf="a.correct_answer === opt.value" class="pi pi-check-circle" style="margin-left:auto;color:#10B981"></i>
+            <i *ngIf="a.selected_answer === opt.value && a.selected_answer !== a.correct_answer" class="pi pi-times-circle" style="margin-left:auto;color:#EF4444"></i>
+          </button>
+        </div>
+
+        <div class="select-wrap" *ngIf="a.question_type === 'select'">
+          <p-dropdown [options]="getSelectOptions(a)" [ngModel]="a.selected_answer" [disabled]="true" styleClass="w-full" />
+        </div>
+
+        <div class="input-wrap" *ngIf="a.question_type === 'input'">
+          <input pInputText [value]="a.selected_answer" disabled style="width:100%">
+        </div>
+
+        <div *ngIf="!a.is_correct && (a.question_type === 'select' || a.question_type === 'input')"
+          style="font-size:0.9rem;color:#059669;margin-top:8px">
+          Correct answer: <strong>{{ correctAnswerText(a) }}</strong>
+        </div>
+      </div>
+    </div>
+
     <p style="text-align:center;color:#9CA3AF;font-size:0.88rem;margin-top:20px">
       Your response has been recorded. Thank you for participating!
     </p>
+  </div>
+
+  <!-- ─── My Result (view past submission) ─────────────────── -->
+  <div class="quiz-card result-card" *ngIf="step() === 'my-result' && myResult()">
+    <div class="quiz-header small">
+      <div class="quiz-icon small"><i class="pi pi-eye"></i></div>
+      <h2>{{ myResult().quiz_title }}</h2>
+      <p>Your submitted answers</p>
+    </div>
+
+    <div class="result-score" *ngIf="myResult().show_result && myResult().submission">
+      <span class="big-score">{{ myResult().submission.percentage | number:'1.1-1' }}%</span>
+      <span class="score-label">{{ myResult().submission.score }} / {{ myResult().submission.total_marks }} marks</span>
+    </div>
+
+    <div class="result-stats" *ngIf="myResult().show_result && myResult().submission">
+      <div class="stat-box">
+        <div class="stat-v">{{ myResult().submission.total_questions }}</div>
+        <div class="stat-l">Total</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-v">{{ myResult().submission.attempted_questions }}</div>
+        <div class="stat-l">Attempted</div>
+      </div>
+      <div class="stat-box correct">
+        <div class="stat-v">{{ myResult().submission.correct_answers }}</div>
+        <div class="stat-l">Correct</div>
+      </div>
+      <div class="stat-box wrong">
+        <div class="stat-v">{{ myResult().submission.incorrect_answers }}</div>
+        <div class="stat-l">Wrong</div>
+      </div>
+    </div>
+
+    <div class="question-list" style="margin-top:20px">
+      <div class="q-block" *ngFor="let a of myResult().answers; let i = index">
+        <div class="q-num-row">
+          <span class="q-num-tag answered">Q{{ i + 1 }}</span>
+          <div class="q-text">{{ a.title }}</div>
+        </div>
+
+        <!-- MCQ: A/B/C/D, disabled, selected/correct/wrong marked -->
+        <div class="options-grid" *ngIf="!a.question_type || a.question_type === 'mcq'">
+          <button class="opt-btn" *ngFor="let key of ['a','b','c','d']" type="button" disabled
+            [style.display]="optionText(a,key) ? '' : 'none'"
+            [class.selected]="!myResult().show_result && a.selected_answer === key"
+            [class.correct-opt]="myResult().show_result && a.correct_answer === key"
+            [class.wrong-opt]="myResult().show_result && a.selected_answer === key && a.selected_answer !== a.correct_answer">
+            <span class="opt-key">{{ key.toUpperCase() }}</span>
+            <span class="opt-text">{{ optionText(a, key) }}</span>
+            <i *ngIf="myResult().show_result && a.correct_answer === key" class="pi pi-check-circle" style="margin-left:auto;color:#10B981"></i>
+            <i *ngIf="myResult().show_result && a.selected_answer === key && a.selected_answer !== a.correct_answer" class="pi pi-times-circle" style="margin-left:auto;color:#EF4444"></i>
+          </button>
+        </div>
+
+        <!-- Radio: custom options, disabled, selected/correct/wrong marked -->
+        <div class="options-grid" *ngIf="a.question_type === 'radio'">
+          <button class="opt-btn" *ngFor="let opt of getSelectOptions(a); let oi=index" type="button" disabled
+            [class.selected]="!myResult().show_result && a.selected_answer === opt.value"
+            [class.correct-opt]="myResult().show_result && a.correct_answer === opt.value"
+            [class.wrong-opt]="myResult().show_result && a.selected_answer === opt.value && a.selected_answer !== a.correct_answer">
+            <span class="opt-key">{{ oi + 1 }}</span>
+            <span class="opt-text">{{ opt.label }}</span>
+            <i *ngIf="myResult().show_result && a.correct_answer === opt.value" class="pi pi-check-circle" style="margin-left:auto;color:#10B981"></i>
+            <i *ngIf="myResult().show_result && a.selected_answer === opt.value && a.selected_answer !== a.correct_answer" class="pi pi-times-circle" style="margin-left:auto;color:#EF4444"></i>
+          </button>
+        </div>
+
+        <!-- Select: disabled dropdown pre-filled with the selected answer -->
+        <div class="select-wrap" *ngIf="a.question_type === 'select'">
+          <p-dropdown [options]="getSelectOptions(a)" [ngModel]="a.selected_answer" [disabled]="true" styleClass="w-full" />
+        </div>
+
+        <!-- Input: disabled text field pre-filled with the selected answer -->
+        <div class="input-wrap" *ngIf="a.question_type === 'input'">
+          <input pInputText [value]="a.selected_answer" disabled style="width:100%">
+        </div>
+
+        <div *ngIf="myResult().show_result && !a.is_correct && (a.question_type === 'select' || a.question_type === 'input')"
+          style="font-size:0.9rem;color:#059669;margin-top:8px">
+          Correct answer: <strong>{{ correctAnswerText(a) }}</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="quiz-footer">
+      <button type="button" class="qbtn qbtn-secondary w-full" (click)="step.set('landing')">
+        <i class="pi pi-arrow-left"></i> Back to Quiz Info
+      </button>
+    </div>
   </div>
 
 </div>

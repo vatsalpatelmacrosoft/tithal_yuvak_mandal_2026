@@ -36,6 +36,8 @@ export class YuvatiListComponent implements OnInit {
   loading = false; perPage = 15;
   searchTerm = ''; xetraFilter: any = null; mandalFilter: any = null;
   birthDateFrom = ''; birthDateTo = '';
+  sortField = 'created_at';
+  sortOrder = -1;
   showQrDialog = false; qrTarget: any = null; qrUrl = '';
   private search$ = new Subject<string>();
 
@@ -52,12 +54,16 @@ export class YuvatiListComponent implements OnInit {
 
   onLazyLoad(event: TableLazyLoadEvent) {
     const page = Math.floor((event.first ?? 0) / (event.rows ?? this.perPage)) + 1;
+    if (event.sortField) { this.sortField = event.sortField as string; this.sortOrder = event.sortOrder ?? 1; }
     this.loadData(page);
   }
 
   loadData(page = 1) {
     this.loading = true;
-    const params: any = { page, limit: this.perPage, search: this.searchTerm };
+    const params: any = {
+      page, limit: this.perPage, search: this.searchTerm,
+      sort_by: this.sortField, sort_dir: this.sortOrder === 1 ? 'asc' : 'desc',
+    };
     if (this.xetraFilter)  params.xetra_id  = this.xetraFilter;
     if (this.mandalFilter) params.mandal_id = this.mandalFilter;
     if (this.birthDateFrom) params.birth_date_from = this.birthDateFrom;

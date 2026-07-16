@@ -7,7 +7,11 @@ class ShibirController
 
     public function index(): void
     {
-        $stmt = $this->pdo->query("SELECT * FROM shibirs WHERE status='active' ORDER BY date DESC");
+        $sortMap = ['name' => 'name', 'date' => 'date', 'slug' => 'slug'];
+        $sortBy  = $sortMap[$_GET['sort_by'] ?? ''] ?? 'date';
+        $sortDir = strtoupper($_GET['sort_dir'] ?? '') === 'ASC' ? 'ASC' : 'DESC';
+
+        $stmt = $this->pdo->query("SELECT * FROM shibirs WHERE status='active' ORDER BY $sortBy $sortDir");
         sendSuccess($stmt->fetchAll());
     }
 

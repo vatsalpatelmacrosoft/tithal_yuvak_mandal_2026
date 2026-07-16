@@ -29,6 +29,7 @@ export class XetraComponent implements OnInit {
 
   rows     = signal<any[]>([]);
   showForm = false; editItem: any = null; saving = false;
+  sortField = 'name'; sortOrder = 1;
 
   form = this.fb.group({
     name: ['', Validators.required],
@@ -40,7 +41,15 @@ export class XetraComponent implements OnInit {
   get canDelete() { return this.auth.hasPermission('xetra', 'can_delete'); }
 
   ngOnInit() { this.load(); }
-  load() { this.api.get<any>('xetra').subscribe(r => { if (r.success) this.rows.set(r.data); }); }
+  load() {
+    const params = { sort_by: this.sortField, sort_dir: this.sortOrder === 1 ? 'asc' : 'desc' };
+    this.api.get<any>('xetra', params).subscribe(r => { if (r.success) this.rows.set(r.data); });
+  }
+
+  onSort(event: any) {
+    if (event.sortField) { this.sortField = event.sortField; this.sortOrder = event.sortOrder ?? 1; }
+    this.load();
+  }
 
   openForm(item?: any) {
     this.editItem = item || null;

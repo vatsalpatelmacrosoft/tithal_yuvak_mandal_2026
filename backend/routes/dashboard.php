@@ -60,20 +60,28 @@ if ($id === 'birthdays') {
     sendSuccess($data);
 }
 
-$yuvakCount  = $pdo->query("SELECT COUNT(*) FROM yuvaks  WHERE status='active'")->fetchColumn();
-$yuvatiCount = $pdo->query("SELECT COUNT(*) FROM yuvatis WHERE status='active'")->fetchColumn();
-$today       = date('Y-m-d');
-$todayYuvak  = $pdo->prepare("SELECT COUNT(*) FROM attendances WHERE attendance_date=? AND member_type='yuvak'");
-$todayYuvak->execute([$today]);
-$todayYuvati = $pdo->prepare("SELECT COUNT(*) FROM attendances WHERE attendance_date=? AND member_type='yuvati'");
-$todayYuvati->execute([$today]);
+$canViewYuvak      = hasPermission($user, 'yuvak', 'view');
+$canViewYuvati     = hasPermission($user, 'yuvati', 'view');
+$canViewAttendance = hasPermission($user, 'attendance', 'view');
+$today = date('Y-m-d');
 
-sendSuccess([
-    'yuvak_total'          => (int)$yuvakCount,
-    'yuvati_total'         => (int)$yuvatiCount,
-    'today_attendance'     => [
-        'yuvak'  => (int)$todayYuvak->fetchColumn(),
-        'yuvati' => (int)$todayYuvati->fetchColumn(),
-        'date'   => $today,
-    ],
-]);
+$data = ['today_attendance' => ['date' => $today]];
+
+if ($canViewYuvak) {
+    $data['yuvak_total'] = (int)$pdo->query("SELECT COUNT(*) FROM yuvaks WHERE status='active'")->fetchColumn();
+}
+if ($canViewYuvati) {
+    $data['yuvati_total'] = (int)$pdo->query("SELECT COUNT(*) FROM yuvatis WHERE status='active'")->fetchColumn();
+}
+if ($canViewAttendance || $canViewYuvak) {
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM attendances WHERE attendance_date=? AND member_type='yuvak'");
+    $stmt->execute([$today]);
+    $data['today_attendance']['yuvak'] = (int)$stmt->fetchColumn();
+}
+if ($canViewAttendance || $canViewYuvati) {
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM attendances WHERE attendance_date=? AND member_type='yuvati'");
+    $stmt->execute([$today]);
+    $data['today_attendance']['yuvati'] = (int)$stmt->fetchColumn();
+}
+
+sendSuccess($data);

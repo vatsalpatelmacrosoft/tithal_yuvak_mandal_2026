@@ -24,14 +24,15 @@
     </div>
   </div>
 
-  <p-table [value]="filteredQuizzes" [tableStyle]="{'min-width':'70rem'}" styleClass="p-datatable-striped">
+  <p-table [value]="filteredQuizzes" [tableStyle]="{'min-width':'70rem'}" styleClass="p-datatable-striped"
+    [lazy]="true" (onLazyLoad)="onSort($event)" [sortField]="sortField" [sortOrder]="sortOrder">
     <ng-template pTemplate="header">
       <tr>
-        <th>Title</th>
-        <th style="width:110px">Status</th>
-        <th style="width:80px" class="text-center">Questions</th>
-        <th style="width:80px" class="text-center">Participants</th>
-        <th style="width:160px">Schedule</th>
+        <th pSortableColumn="title">Title <p-sortIcon field="title" /></th>
+        <th style="width:110px" pSortableColumn="quiz_status">Status <p-sortIcon field="quiz_status" /></th>
+        <th style="width:80px" class="text-center" pSortableColumn="question_count">Questions <p-sortIcon field="question_count" /></th>
+        <th style="width:80px" class="text-center" pSortableColumn="participant_count">Participants <p-sortIcon field="participant_count" /></th>
+        <th style="width:160px" pSortableColumn="start_datetime">Schedule <p-sortIcon field="start_datetime" /></th>
         <th style="width:140px">Actions</th>
       </tr>
     </ng-template>
@@ -75,6 +76,9 @@
             <p-button *ngIf="q.quiz_status==='published'" icon="pi pi-link"
               [rounded]="true" [text]="true" size="small" severity="info"
               (click)="copyLink(q.slug)" pTooltip="Copy Link" tooltipPosition="top" />
+            <p-button *ngIf="canUpdate && !q.has_ended" icon="pi pi-stop-circle"
+              [rounded]="true" [text]="true" size="small" severity="danger"
+              (click)="confirmEndQuiz(q)" pTooltip="End Quiz Now" tooltipPosition="top" />
             <p-button *ngIf="canDelete" icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small"
               (click)="confirmDelete(q)" pTooltip="Archive" tooltipPosition="top" />
           </div>

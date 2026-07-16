@@ -9,16 +9,30 @@ class QuizController
 
     public function index(): void
     {
+        $sortMap = [
+            'title'              => 'q.title',
+            'name'               => 'q.name',
+            'quiz_status'        => 'q.quiz_status',
+            'start_datetime'     => 'q.start_datetime',
+            'end_datetime'       => 'q.end_datetime',
+            'created_at'         => 'q.created_at',
+            'question_count'     => 'question_count',
+            'participant_count'  => 'participant_count',
+        ];
+        $sortBy  = $sortMap[$_GET['sort_by'] ?? ''] ?? 'q.created_at';
+        $sortDir = strtoupper($_GET['sort_dir'] ?? '') === 'ASC' ? 'ASC' : 'DESC';
+
         $stmt = $this->pdo->query("
             SELECT q.*,
                    COUNT(DISTINCT qq.id) AS question_count,
-                   COUNT(DISTINCT qp.id) AS participant_count
+                   COUNT(DISTINCT qp.id) AS participant_count,
+                   CASE WHEN q.end_datetime IS NOT NULL AND q.end_datetime <= NOW() THEN 1 ELSE 0 END AS has_ended
             FROM quizzes q
             LEFT JOIN quiz_questions   qq ON qq.quiz_id = q.id AND qq.status   = 'active'
             LEFT JOIN quiz_participants qp ON qp.quiz_id = q.id AND qp.status = 'active'
             WHERE q.status = 'active'
             GROUP BY q.id
-            ORDER BY q.created_at DESC
+            ORDER BY $sortBy $sortDir
         ");
         sendSuccess($stmt->fetchAll());
     }
@@ -111,6 +125,21 @@ class QuizController
         $newState = $quiz['is_active'] ? 0 : 1;
         $this->pdo->prepare("UPDATE quizzes SET is_active=? WHERE uuid=?")->execute([$newState, $uuid]);
         sendSuccess(['is_active' => $newState], $newState ? 'Quiz activated' : 'Quiz deactivated');
+    }
+
+    /**
+     * Immediately end a quiz — stamps end_datetime to now, so startQuiz()'s existing
+     * "quiz has already ended" check blocks any further attempts right away, regardless
+     * of any future-dated end_datetime the quiz was originally scheduled with.
+     */
+    public function endQuiz(string $uuid): void
+    {
+        $stmt = $this->pdo->prepare("SELECT id FROM quizzes WHERE uuid=? AND status='active'");
+        $stmt->execute([$uuid]);
+        if (!$stmt->fetch()) sendError(404, 'Quiz not found');
+
+        $this->pdo->prepare("UPDATE quizzes SET end_datetime = NOW() WHERE uuid=?")->execute([$uuid]);
+        sendSuccess([], 'Quiz ended successfully');
     }
 
     // ── Admin: Question Management ───────────────────────────────

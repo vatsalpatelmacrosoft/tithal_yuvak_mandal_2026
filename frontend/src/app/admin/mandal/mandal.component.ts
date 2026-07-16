@@ -31,6 +31,7 @@ export class MandalComponent implements OnInit {
   rows    = signal<any[]>([]);
   xetras: any[] = [];
   xetraFilter: any = null;
+  sortField = 'name'; sortOrder = 1;
   show = false; editing: any = null; saving = false;
 
   form = this.fb.group({
@@ -45,9 +46,14 @@ export class MandalComponent implements OnInit {
   }
 
   load() {
-    const params: any = {};
+    const params: any = { sort_by: this.sortField, sort_dir: this.sortOrder === 1 ? 'asc' : 'desc' };
     if (this.xetraFilter) params.xetra_id = this.xetraFilter;
     this.api.get<any>('mandal', params).subscribe(r => { if (r.success) this.rows.set(r.data); });
+  }
+
+  onSort(event: any) {
+    if (event.sortField) { this.sortField = event.sortField; this.sortOrder = event.sortOrder ?? 1; }
+    this.load();
   }
 
   openForm(item?: any) {

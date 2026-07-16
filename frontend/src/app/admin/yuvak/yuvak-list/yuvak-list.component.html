@@ -58,16 +58,17 @@
   <!-- ── Table ───────────────────────────────────────────── -->
   <p-table [value]="yuvaks()" [lazy]="true" (onLazyLoad)="onLazyLoad($event)" [totalRecords]="total()" [rows]="perPage"
     [paginator]="true" [loading]="loading" [tableStyle]="{'min-width':'70rem'}" [showCurrentPageReport]="true"
-    currentPageReportTemplate="{first}-{last} of {totalRecords}" styleClass="p-datatable-striped">
+    currentPageReportTemplate="{first}-{last} of {totalRecords}" styleClass="p-datatable-striped"
+    [sortField]="sortField" [sortOrder]="sortOrder">
     <ng-template pTemplate="header">
       <tr>
-        <th>Yuvak ID</th>
-        <th>Name</th>
-        <th>Birth Date</th>
-        <th>Mobile</th>
-        <th>Xetra</th>
-        <th>Mandal</th>
-        <th>Karyakar</th>
+        <th pSortableColumn="yuvak_id">Yuvak ID <p-sortIcon field="yuvak_id" /></th>
+        <th pSortableColumn="first_name">Name <p-sortIcon field="first_name" /></th>
+        <th pSortableColumn="birth_date">Birth Date <p-sortIcon field="birth_date" /></th>
+        <th pSortableColumn="mo_number">Mobile <p-sortIcon field="mo_number" /></th>
+        <th pSortableColumn="xetra_name">Xetra <p-sortIcon field="xetra_name" /></th>
+        <th pSortableColumn="mandal_name">Mandal <p-sortIcon field="mandal_name" /></th>
+        <th pSortableColumn="is_karyakar">Karyakar <p-sortIcon field="is_karyakar" /></th>
         <th style="width:6rem">Welcome</th>
         <th style="width:10rem">Actions</th>
       </tr>

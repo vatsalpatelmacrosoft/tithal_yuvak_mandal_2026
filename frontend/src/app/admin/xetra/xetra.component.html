@@ -13,12 +13,13 @@
 </div>
 
 <div class="table-card">
-  <p-table [value]="rows()" [tableStyle]="{'min-width':'38rem'}" styleClass="p-datatable-striped">
+  <p-table [value]="rows()" [tableStyle]="{'min-width':'38rem'}" styleClass="p-datatable-striped"
+    [lazy]="true" (onLazyLoad)="onSort($event)" [sortField]="sortField" [sortOrder]="sortOrder">
     <ng-template pTemplate="header">
       <tr>
         <th style="width:3.5rem">#</th>
-        <th>Name</th>
-        <th>Code</th>
+        <th pSortableColumn="name">Name <p-sortIcon field="name" /></th>
+        <th pSortableColumn="code">Code <p-sortIcon field="code" /></th>
         <th style="width:9rem">Actions</th>
       </tr>
     </ng-template>

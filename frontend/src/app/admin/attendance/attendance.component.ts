@@ -52,6 +52,11 @@ export class AttendanceComponent implements OnInit, OnDestroy {
   filterToTime   = '';
   scanDate   = this.today;
 
+  // Server-driven sort state, one per tab (each hits its own backend endpoint)
+  sortField = 'attendance_date'; sortOrder = -1;
+  dateWiseSortField = 'attendance_date'; dateWiseSortOrder = -1;
+  nameWiseSortField = 'total_present'; nameWiseSortOrder = -1;
+
   private static localDate(d = new Date()): string {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
@@ -179,14 +184,16 @@ export class AttendanceComponent implements OnInit, OnDestroy {
   }
 
   load() {
-    const params: any = { from_date: this.fromDate, to_date: this.toDate };
-    if (this.filterType)     params.member_type = this.filterType;
-    if (this.filterXetraId)  params.xetra_id    = this.filterXetraId;
-    if (this.filterMandalId) params.mandal_id   = this.filterMandalId;
-    if (this.filterFromTime) params.from_time   = this.filterFromTime;
-    if (this.filterToTime)   params.to_time     = this.filterToTime;
+    const baseParams: any = { from_date: this.fromDate, to_date: this.toDate };
+    if (this.filterType)     baseParams.member_type = this.filterType;
+    if (this.filterXetraId)  baseParams.xetra_id    = this.filterXetraId;
+    if (this.filterMandalId) baseParams.mandal_id   = this.filterMandalId;
+    if (this.filterFromTime) baseParams.from_time   = this.filterFromTime;
+    if (this.filterToTime)   baseParams.to_time     = this.filterToTime;
 
-    this.api.get<any>('attendance', params).subscribe(res => {
+    this.api.get<any>('attendance', {
+      ...baseParams, sort_by: this.sortField, sort_dir: this.sortOrder === 1 ? 'asc' : 'desc',
+    }).subscribe(res => {
       if (res.success) {
         this.records.set(res.data.data || []);
         this.summary.set({
@@ -197,13 +204,41 @@ export class AttendanceComponent implements OnInit, OnDestroy {
       }
     });
 
-    this.api.get<any>('attendance/date-wise', params).subscribe(res => {
+    this.api.get<any>('attendance/date-wise', {
+      ...baseParams, sort_by: this.dateWiseSortField, sort_dir: this.dateWiseSortOrder === 1 ? 'asc' : 'desc',
+    }).subscribe(res => {
       if (res.success) this.dateWise.set(res.data);
     });
 
-    this.api.get<any>('attendance/name-wise', params).subscribe(res => {
+    this.api.get<any>('attendance/name-wise', {
+      ...baseParams, sort_by: this.nameWiseSortField, sort_dir: this.nameWiseSortOrder === 1 ? 'asc' : 'desc',
+    }).subscribe(res => {
       if (res.success) this.nameWise.set(res.data);
     });
+  }
+
+  // customSort's sortFunction fires again whenever [value] changes (e.g. after our own
+  // reload updates the signal) — guard on an actual field/order change so that echo
+  // doesn't re-trigger load() and loop forever.
+  onSortList(event: any) {
+    if (event.field && (event.field !== this.sortField || event.order !== this.sortOrder)) {
+      this.sortField = event.field; this.sortOrder = event.order ?? 1;
+      this.load();
+    }
+  }
+
+  onSortDateWise(event: any) {
+    if (event.field && (event.field !== this.dateWiseSortField || event.order !== this.dateWiseSortOrder)) {
+      this.dateWiseSortField = event.field; this.dateWiseSortOrder = event.order ?? 1;
+      this.load();
+    }
+  }
+
+  onSortNameWise(event: any) {
+    if (event.field && (event.field !== this.nameWiseSortField || event.order !== this.nameWiseSortOrder)) {
+      this.nameWiseSortField = event.field; this.nameWiseSortOrder = event.order ?? 1;
+      this.load();
+    }
   }
 
   private openDownload(url: string) {

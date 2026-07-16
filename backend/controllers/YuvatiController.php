@@ -25,6 +25,20 @@ class YuvatiController
         if (!empty($_GET['birth_date_from'])) { $where .= ' AND y.birth_date >= ?'; $params[] = $_GET['birth_date_from']; }
         if (!empty($_GET['birth_date_to']))   { $where .= ' AND y.birth_date <= ?'; $params[] = $_GET['birth_date_to']; }
 
+        $sortMap = [
+            'yuvati_id'   => 'y.yuvati_id',
+            'first_name'  => 'y.first_name',
+            'last_name'   => 'y.last_name',
+            'birth_date'  => 'y.birth_date',
+            'mo_number'   => 'y.mo_number',
+            'xetra_name'  => 'x.name',
+            'mandal_name' => 'm.name',
+            'is_karyakar' => 'y.is_karyakar',
+            'created_at'  => 'y.created_at',
+        ];
+        $sortBy  = $sortMap[$_GET['sort_by'] ?? ''] ?? 'y.created_at';
+        $sortDir = strtoupper($_GET['sort_dir'] ?? '') === 'ASC' ? 'ASC' : 'DESC';
+
         $countStmt = $this->pdo->prepare("SELECT COUNT(*) FROM yuvatis y $where");
         $countStmt->execute($params);
         $total = $countStmt->fetchColumn();
@@ -34,7 +48,7 @@ class YuvatiController
             FROM yuvatis y
             JOIN xetras  x ON x.id = y.xetra_id
             JOIN mandals m ON m.id = y.mandal_id
-            $where ORDER BY y.created_at DESC LIMIT $limit OFFSET $offset
+            $where ORDER BY $sortBy $sortDir LIMIT $limit OFFSET $offset
         ");
         $stmt->execute($params);
 

@@ -32,6 +32,7 @@ export class ShibirComponent implements OnInit {
 
   rows = signal<any[]>([]); show = false; editing: any = null; saving = false;
   searchTerm = '';
+  sortField = 'date'; sortOrder = -1;
   form = this.fb.group({ name: ['', Validators.required], date: ['', Validators.required] });
 
   get filteredRows() {
@@ -40,7 +41,15 @@ export class ShibirComponent implements OnInit {
   }
 
   ngOnInit() { this.load(); }
-  load() { this.api.get<any>('shibir').subscribe(r => { if (r.success) this.rows.set(r.data); }); }
+  load() {
+    const params = { sort_by: this.sortField, sort_dir: this.sortOrder === 1 ? 'asc' : 'desc' };
+    this.api.get<any>('shibir', params).subscribe(r => { if (r.success) this.rows.set(r.data); });
+  }
+
+  onSort(event: any) {
+    if (event.sortField) { this.sortField = event.sortField; this.sortOrder = event.sortOrder ?? 1; }
+    this.load();
+  }
   openForm(item?: any) { this.editing = item || null; this.form.reset(item ? { name: item.name, date: item.date } : {}); this.show = true; }
   closeForm() { this.show = false; this.editing = null; }
   save() {
