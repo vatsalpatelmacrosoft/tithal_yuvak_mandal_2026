@@ -127,5 +127,6 @@ export interface AttendanceRecord {
   member_id: number;
   member_name: string;
   member_code: string;
+  mandal_name?: string;
   shibir_id?: number;
 }

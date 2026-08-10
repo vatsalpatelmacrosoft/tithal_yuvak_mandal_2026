@@ -33,7 +33,7 @@ export class YuvakListComponent implements OnInit {
   yuvaks  = signal<Yuvak[]>([]);
   total   = signal(0);
   xetras: any[] = []; mandals: any[] = [];
-  loading = false; perPage = 15;
+  loading = false; perPage = 20;
   searchTerm = '';
   filters = { xetra_id: null as any, mandal_id: null as any, birth_date_from: '' as string, birth_date_to: '' as string };
   sortField = 'created_at';
@@ -52,7 +52,8 @@ export class YuvakListComponent implements OnInit {
   }
 
   onLazyLoad(event: TableLazyLoadEvent) {
-    const page = Math.floor((event.first ?? 0) / (event.rows ?? this.perPage)) + 1;
+    this.perPage = event.rows ?? this.perPage;
+    const page = Math.floor((event.first ?? 0) / this.perPage) + 1;
     if (event.sortField) { this.sortField = event.sortField as string; this.sortOrder = event.sortOrder ?? 1; }
     this.loadData(page);
   }
@@ -80,6 +81,13 @@ export class YuvakListComponent implements OnInit {
   onSearch(v: string) { this.search$.next(v); }
   goToCreate() { this.router.navigate(['/admin/yuvak/new']); }
   edit(y: Yuvak) { this.router.navigate(['/admin/yuvak', y.uuid]); }
+
+  whatsappLink(y: Yuvak): string {
+    const number = y.whatsapp_number || y.mo_number;
+    const welcomeUrl = `${document.baseURI}welcome/yuvak/${y.uuid}`;
+    const text = `Jay Swaminarayan ${y.first_name} ${y.last_name}!\nWelcome to Tithal Yuvak Mandal.\nYour Yuvak Id is *${y.yuvak_id}*\n${welcomeUrl}`;
+    return `https://wa.me/91${number}?text=${encodeURIComponent(text)}`;
+  }
 
   exportCsv() {
     const token = localStorage.getItem('tdd_token') || '';

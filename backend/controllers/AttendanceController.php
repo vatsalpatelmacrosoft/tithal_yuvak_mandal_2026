@@ -42,10 +42,12 @@ class AttendanceController
                     THEN CONCAT(y.first_name,' ',y.last_name)
                     ELSE CONCAT(yt.first_name,' ',yt.last_name)
                 END AS member_name,
-                CASE WHEN a.member_type='yuvak' THEN y.yuvak_id ELSE yt.yuvati_id END AS member_code
+                CASE WHEN a.member_type='yuvak' THEN y.yuvak_id ELSE yt.yuvati_id END AS member_code,
+                m.name AS mandal_name
             FROM attendances a
             LEFT JOIN yuvaks  y  ON y.id  = a.member_id AND a.member_type = 'yuvak'
             LEFT JOIN yuvatis yt ON yt.id = a.member_id AND a.member_type = 'yuvati'
+            LEFT JOIN mandals m  ON m.id  = COALESCE(y.mandal_id, yt.mandal_id)
             $where ORDER BY $sortBy $sortDir, a.created_at DESC
         ");
         $stmt->execute($params);
@@ -143,10 +145,12 @@ class AttendanceController
                     THEN CONCAT(y.first_name,' ',y.last_name)
                     ELSE CONCAT(yt.first_name,' ',yt.last_name)
                 END AS member_name,
+                MAX(m.name) AS mandal_name,
                 COUNT(*) AS total_present
             FROM attendances a
             LEFT JOIN yuvaks  y  ON y.id  = a.member_id AND a.member_type = 'yuvak'
             LEFT JOIN yuvatis yt ON yt.id = a.member_id AND a.member_type = 'yuvati'
+            LEFT JOIN mandals m  ON m.id  = COALESCE(y.mandal_id, yt.mandal_id)
             $where
             GROUP BY a.member_type, a.member_id
             ORDER BY $sortBy $sortDir, member_name ASC
@@ -182,10 +186,12 @@ class AttendanceController
                     THEN CONCAT(y.first_name,' ',y.last_name)
                     ELSE CONCAT(yt.first_name,' ',yt.last_name)
                 END AS member_name,
+                MAX(m.name) AS mandal_name,
                 COUNT(*) AS total_present
             FROM attendances a
             LEFT JOIN yuvaks  y  ON y.id  = a.member_id AND a.member_type = 'yuvak'
             LEFT JOIN yuvatis yt ON yt.id = a.member_id AND a.member_type = 'yuvati'
+            LEFT JOIN mandals m  ON m.id  = COALESCE(y.mandal_id, yt.mandal_id)
             $where
             GROUP BY a.member_type, a.member_id
             ORDER BY total_present DESC, member_name ASC
@@ -198,9 +204,9 @@ class AttendanceController
         header('Cache-Control: no-store, no-cache');
         header('Pragma: no-cache');
         $out = fopen('php://output', 'w');
-        fputcsv($out, ['Member Type', 'Member Code', 'Member Name', 'Total Present'], ',', '"', '\\');
+        fputcsv($out, ['Member Type', 'Member Code', 'Member Name', 'Mandal', 'Total Present'], ',', '"', '\\');
         foreach ($rows as $r) {
-            fputcsv($out, [ucfirst($r['member_type']), $r['member_code'], $r['member_name'], $r['total_present']], ',', '"', '\\');
+            fputcsv($out, [ucfirst($r['member_type']), $r['member_code'], $r['member_name'], $r['mandal_name'], $r['total_present']], ',', '"', '\\');
         }
         fclose($out);
         exit;
@@ -234,10 +240,12 @@ class AttendanceController
                 CASE WHEN a.member_type='yuvak'
                     THEN CONCAT(y.first_name,' ',y.last_name)
                     ELSE CONCAT(yt.first_name,' ',yt.last_name)
-                END AS member_name
+                END AS member_name,
+                m.name AS mandal_name
             FROM attendances a
             LEFT JOIN yuvaks  y  ON y.id  = a.member_id AND a.member_type = 'yuvak'
             LEFT JOIN yuvatis yt ON yt.id = a.member_id AND a.member_type = 'yuvati'
+            LEFT JOIN mandals m  ON m.id  = COALESCE(y.mandal_id, yt.mandal_id)
             $where ORDER BY a.attendance_date DESC, a.created_at DESC
         ");
         $stmt->execute($params);
@@ -248,9 +256,9 @@ class AttendanceController
         header('Cache-Control: no-store, no-cache');
         header('Pragma: no-cache');
         $out = fopen('php://output', 'w');
-        fputcsv($out, ['Date', 'Time', 'Member Type', 'Member Code', 'Member Name'], ',', '"', '\\');
+        fputcsv($out, ['Date', 'Time', 'Member Type', 'Member Code', 'Member Name', 'Mandal'], ',', '"', '\\');
         foreach ($rows as $r) {
-            fputcsv($out, [$r['attendance_date'], $r['scan_time'], ucfirst($r['member_type']), $r['member_code'], $r['member_name']], ',', '"', '\\');
+            fputcsv($out, [$r['attendance_date'], $r['scan_time'], ucfirst($r['member_type']), $r['member_code'], $r['member_name'], $r['mandal_name']], ',', '"', '\\');
         }
         fclose($out);
         exit;

@@ -33,7 +33,7 @@ export class YuvatiListComponent implements OnInit {
   rows    = signal<any[]>([]);
   total   = signal(0);
   xetras: any[] = []; mandals: any[] = [];
-  loading = false; perPage = 15;
+  loading = false; perPage = 20;
   searchTerm = ''; xetraFilter: any = null; mandalFilter: any = null;
   birthDateFrom = ''; birthDateTo = '';
   sortField = 'created_at';
@@ -53,7 +53,8 @@ export class YuvatiListComponent implements OnInit {
   }
 
   onLazyLoad(event: TableLazyLoadEvent) {
-    const page = Math.floor((event.first ?? 0) / (event.rows ?? this.perPage)) + 1;
+    this.perPage = event.rows ?? this.perPage;
+    const page = Math.floor((event.first ?? 0) / this.perPage) + 1;
     if (event.sortField) { this.sortField = event.sortField as string; this.sortOrder = event.sortOrder ?? 1; }
     this.loadData(page);
   }
@@ -77,6 +78,13 @@ export class YuvatiListComponent implements OnInit {
   }
 
   onSearch(v: string) { this.search$.next(v); }
+
+  whatsappLink(y: any): string {
+    const number = y.whatsapp_number || y.mo_number;
+    const welcomeUrl = `${document.baseURI}welcome/yuvati/${y.uuid}`;
+    const text = `Jay Swaminarayan ${y.first_name} ${y.last_name}!\nWelcome to Tithal Yuvak Mandal.\nYour Yuvati Id is *${y.yuvati_id}*\n${welcomeUrl}`;
+    return `https://wa.me/91${number}?text=${encodeURIComponent(text)}`;
+  }
 
   exportCsv() {
     const token = localStorage.getItem('tdd_token') || '';

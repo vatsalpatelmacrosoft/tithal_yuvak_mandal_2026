@@ -168,32 +168,33 @@
       </button>
     </div>
 
-    <p-table *ngIf="memberTab === 'yuvak' && canViewYuvak" [value]="yuvakRecords" [paginator]="true" [rows]="20"
+    <p-table *ngIf="memberTab === 'yuvak' && canViewYuvak" [value]="yuvakRecords" [paginator]="true" [rows]="20" [rowsPerPageOptions]="[20,50,100,200]" paginatorDropdownAppendTo="body"
       [showCurrentPageReport]="true" currentPageReportTemplate="{first}-{last} of {totalRecords}"
       [scrollable]="true" scrollHeight="450px"
       [customSort]="true" (sortFunction)="onSortList($event)" [sortField]="sortField" [sortOrder]="sortOrder"
       styleClass="p-datatable-striped" [tableStyle]="{'min-width':'46rem'}">
       <ng-template pTemplate="header">
         <tr>
-          <th pSortableColumn="attendance_date">Date &amp; Time <p-sortIcon field="attendance_date" /></th>
+          <th pSortableColumn="attendance_date">Date <p-sortIcon field="attendance_date" /></th>
+          <th>Time</th>
           <th pSortableColumn="member_name">Name <p-sortIcon field="member_name" /></th>
           <th>Yuvak ID</th>
+          <th>Mandal</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-a>
         <tr>
-          <td style="white-space:nowrap">
-            <span style="font-size:0.85rem;color:#374151;font-weight:500">{{ a.attendance_date | date:'dd MMM yyyy'
-              }}</span><br>
-            <span style="font-size:0.78rem;color:#9CA3AF">{{ a.scan_time }}</span>
-          </td>
+          <td style="white-space:nowrap;font-size:0.85rem;color:#374151;font-weight:500">{{ a.attendance_date |
+            date:'dd MMM yyyy' }}</td>
+          <td style="white-space:nowrap;font-size:0.85rem;color:#374151">{{ a.scan_time }}</td>
           <td style="font-weight:500">{{ a.member_name }}</td>
           <td><code class="id-badge-saffron">{{ a.member_code }}</code></td>
+          <td>{{ a.mandal_name }}</td>
         </tr>
       </ng-template>
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="3" class="empty-state">
+          <td colspan="5" class="empty-state">
             <i class="pi pi-user" style="font-size:2rem;display:block;margin-bottom:10px;color:#D1D5DB"></i>
             No Yuvak attendance for this period
           </td>
@@ -201,32 +202,33 @@
       </ng-template>
     </p-table>
 
-    <p-table *ngIf="memberTab === 'yuvati' && canViewYuvati" [value]="yuvatiRecords" [paginator]="true" [rows]="20"
+    <p-table *ngIf="memberTab === 'yuvati' && canViewYuvati" [value]="yuvatiRecords" [paginator]="true" [rows]="20" [rowsPerPageOptions]="[20,50,100,200]" paginatorDropdownAppendTo="body"
       [showCurrentPageReport]="true" currentPageReportTemplate="{first}-{last} of {totalRecords}"
       [scrollable]="true" scrollHeight="450px"
       [customSort]="true" (sortFunction)="onSortList($event)" [sortField]="sortField" [sortOrder]="sortOrder"
       styleClass="p-datatable-striped" [tableStyle]="{'min-width':'46rem'}">
       <ng-template pTemplate="header">
         <tr>
-          <th pSortableColumn="attendance_date">Date &amp; Time <p-sortIcon field="attendance_date" /></th>
+          <th pSortableColumn="attendance_date">Date <p-sortIcon field="attendance_date" /></th>
+          <th>Time</th>
           <th pSortableColumn="member_name">Name <p-sortIcon field="member_name" /></th>
           <th>Yuvati ID</th>
+          <th>Mandal</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-a>
         <tr>
-          <td style="white-space:nowrap">
-            <span style="font-size:0.85rem;color:#374151;font-weight:500">{{ a.attendance_date | date:'dd MMM yyyy'
-              }}</span><br>
-            <span style="font-size:0.78rem;color:#9CA3AF">{{ a.scan_time }}</span>
-          </td>
+          <td style="white-space:nowrap;font-size:0.85rem;color:#374151;font-weight:500">{{ a.attendance_date |
+            date:'dd MMM yyyy' }}</td>
+          <td style="white-space:nowrap;font-size:0.85rem;color:#374151">{{ a.scan_time }}</td>
           <td style="font-weight:500">{{ a.member_name }}</td>
           <td><code class="id-badge-blue">{{ a.member_code }}</code></td>
+          <td>{{ a.mandal_name }}</td>
         </tr>
       </ng-template>
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="3" class="empty-state">
+          <td colspan="5" class="empty-state">
             <i class="pi pi-users" style="font-size:2rem;display:block;margin-bottom:10px;color:#D1D5DB"></i>
             No Yuvati attendance for this period
           </td>
@@ -259,7 +261,7 @@
         (click)="exportNameWiseCsv(nmTab)" />
     </div>
 
-    <p-table *ngIf="nmTab === 'yuvak' && canViewYuvak" [value]="yuvakNameWise" [paginator]="true" [rows]="20"
+    <p-table *ngIf="nmTab === 'yuvak' && canViewYuvak" [value]="yuvakNameWise" [paginator]="true" [rows]="20" [rowsPerPageOptions]="[20,50,100,200]" paginatorDropdownAppendTo="body"
       [showCurrentPageReport]="true" currentPageReportTemplate="{first}-{last} of {totalRecords}"
       [customSort]="true" (sortFunction)="onSortNameWise($event)"
       [sortField]="nameWiseSortField" [sortOrder]="nameWiseSortOrder" [scrollable]="true" scrollHeight="450px"
@@ -269,6 +271,7 @@
           <th style="width:3rem">#</th>
           <th pSortableColumn="member_name">Name <p-sortIcon field="member_name" /></th>
           <th style="width:120px">Yuvak ID</th>
+          <th>Mandal</th>
           <th style="width:130px;text-align:center" pSortableColumn="total_present">
             Total Present <p-sortIcon field="total_present" />
           </th>
@@ -279,12 +282,13 @@
           <td style="color:#9CA3AF;font-size:0.82rem">{{ i + 1 }}</td>
           <td style="font-weight:500">{{ r.member_name }}</td>
           <td><code class="id-badge-saffron">{{ r.member_code }}</code></td>
+          <td>{{ r.mandal_name }}</td>
           <td style="text-align:center"><span class="nm-count-badge saffron">{{ r.total_present }}</span></td>
         </tr>
       </ng-template>
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="4" class="empty-state">
+          <td colspan="5" class="empty-state">
             <i class="pi pi-user" style="font-size:2rem;display:block;margin-bottom:10px;color:#D1D5DB"></i>
             No Yuvak attendance in this period
           </td>
@@ -292,7 +296,7 @@
       </ng-template>
     </p-table>
 
-    <p-table *ngIf="nmTab === 'yuvati' && canViewYuvati" [value]="yuvatiNameWise" [paginator]="true" [rows]="20"
+    <p-table *ngIf="nmTab === 'yuvati' && canViewYuvati" [value]="yuvatiNameWise" [paginator]="true" [rows]="20" [rowsPerPageOptions]="[20,50,100,200]" paginatorDropdownAppendTo="body"
       [showCurrentPageReport]="true" currentPageReportTemplate="{first}-{last} of {totalRecords}"
       [customSort]="true" (sortFunction)="onSortNameWise($event)"
       [sortField]="nameWiseSortField" [sortOrder]="nameWiseSortOrder" [scrollable]="true" scrollHeight="450px"
@@ -302,6 +306,7 @@
           <th style="width:3rem">#</th>
           <th pSortableColumn="member_name">Name <p-sortIcon field="member_name" /></th>
           <th style="width:120px">Yuvati ID</th>
+          <th>Mandal</th>
           <th style="width:130px;text-align:center" pSortableColumn="total_present">
             Total Present <p-sortIcon field="total_present" />
           </th>
@@ -312,12 +317,13 @@
           <td style="color:#9CA3AF;font-size:0.82rem">{{ i + 1 }}</td>
           <td style="font-weight:500">{{ r.member_name }}</td>
           <td><code class="id-badge-blue">{{ r.member_code }}</code></td>
+          <td>{{ r.mandal_name }}</td>
           <td style="text-align:center"><span class="nm-count-badge blue">{{ r.total_present }}</span></td>
         </tr>
       </ng-template>
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="4" class="empty-state">
+          <td colspan="5" class="empty-state">
             <i class="pi pi-users" style="font-size:2rem;display:block;margin-bottom:10px;color:#D1D5DB"></i>
             No Yuvati attendance in this period
           </td>
@@ -332,7 +338,7 @@
   </ng-container>
 
   <!-- Date-wise tab -->
-  <p-table *ngIf="activeTab === 'datewise'" [value]="dateWise()" [paginator]="true" [rows]="20"
+  <p-table *ngIf="activeTab === 'datewise'" [value]="dateWise()" [paginator]="true" [rows]="20" [rowsPerPageOptions]="[20,50,100,200]" paginatorDropdownAppendTo="body"
     [scrollable]="true" scrollHeight="450px"
     [customSort]="true" (sortFunction)="onSortDateWise($event)"
     [sortField]="dateWiseSortField" [sortOrder]="dateWiseSortOrder"
