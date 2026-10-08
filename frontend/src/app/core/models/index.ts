@@ -40,6 +40,7 @@ export interface Yuvak {
   middle_name?: string;
   last_name: string;
   birth_date: string;
+  baps_id?: string;
   mo_number: string;
   whatsapp_number?: string;
   email?: string;
@@ -118,6 +119,39 @@ export interface QuizQuestion {
   options?: string[];
   is_required: boolean;
   sort_order?: number;
+}
+
+export interface MessageRecipient {
+  id?: number;
+  member_type: 'yuvak' | 'yuvati';
+  member_id: number;
+  member_uuid: string;
+  full_name: string;
+  mo_number?: string;
+  whatsapp_number?: string;
+  used_number: string | null;
+  number_source: 'whatsapp' | 'mobile' | null;
+  is_valid?: boolean;
+  status?: 'pending' | 'sent' | 'skipped' | 'failed';
+  skip_reason?: string;
+  sent_at?: string;
+}
+
+export interface MessageCampaign {
+  id: number;
+  uuid: string;
+  subject: string;
+  message_body: string;
+  target_type: 'yuvak' | 'yuvati' | 'both';
+  scope: 'all' | 'xetra' | 'mandal' | 'individual';
+  total_recipients: number;
+  sent_count: number;
+  yuvak_sent_count: number;
+  yuvati_sent_count: number;
+  skipped_count: number;
+  created_by_name?: string;
+  created_at: string;
+  recipients?: MessageRecipient[];
 }
 
 export interface AttendanceRecord {

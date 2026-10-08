@@ -1,0 +1,178 @@
+/* ── Main tab nav (Compose / History) ─────────────────────────── */
+.msg-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.mtab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border-radius: 8px;
+  border: 1px solid var(--gray-200);
+  background: var(--white);
+  color: var(--gray-600);
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+
+  &.active {
+    background: linear-gradient(135deg, #FF6B00, #FF9240);
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(255, 107, 0, 0.3);
+  }
+}
+
+.tab-body { padding: 20px; }
+
+/* ── Wizard step indicator ─────────────────────────────────────── */
+.wizard-steps {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--gray-100);
+  padding-bottom: 14px;
+}
+.wstep {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--gray-400);
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: default;
+
+  .wnum {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--gray-200);
+    color: var(--gray-500);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.78rem;
+  }
+
+  &.active {
+    color: var(--gray-800);
+    .wnum { background: var(--saffron); color: #fff; }
+  }
+  &.done {
+    color: var(--gray-600);
+    cursor: pointer;
+    .wnum { background: var(--green); color: #fff; }
+  }
+}
+
+/* ── Form fields ────────────────────────────────────────────────── */
+.field-group {
+  margin-bottom: 20px;
+  label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--gray-700); margin-bottom: 8px; }
+  .w-full { width: 100%; }
+}
+
+.pill-group { display: flex; gap: 8px; flex-wrap: wrap; }
+.opt-pill {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1.5px solid var(--gray-200);
+  background: var(--white);
+  color: var(--gray-600);
+  font-size: 0.83rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+
+  &.active {
+    border-color: var(--saffron);
+    background: var(--cream);
+    color: var(--saffron-dark);
+  }
+}
+
+.picker-buttons { display: flex; gap: 10px; }
+
+.step-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+  margin-bottom: 16px;
+}
+
+/* ── Recipient preview table ───────────────────────────────────── */
+.recipient-preview { margin-top: 8px; }
+.rp-summary { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+.rp-total { font-size: 0.82rem; color: var(--gray-500); }
+
+.stat-pill {
+  display: inline-flex; align-items: center;
+  padding: 3px 10px; border-radius: 999px;
+  font-size: 0.78rem; font-weight: 700;
+  &.green  { background: #ECFDF5; color: #059669; }
+  &.orange { background: #FFF7ED; color: #C2410C; }
+  &.blue   { background: #EFF6FF; color: #1D4ED8; }
+}
+
+.badge-type {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--gray-100);
+  color: var(--gray-700);
+}
+
+.rm-btn {
+  border: none;
+  background: transparent;
+  color: var(--gray-400);
+  cursor: pointer;
+  padding: 4px;
+  &:hover { color: var(--red); }
+}
+
+.empty-msg { text-align: center; color: var(--gray-400); padding: 24px; }
+
+/* ── WhatsApp preview bubble ────────────────────────────────────── */
+.wa-preview { background: #E5DDD5; border-radius: 10px; padding: 16px; }
+.wa-bubble {
+  background: #DCF8C6;
+  border-radius: 8px;
+  padding: 10px 14px;
+  max-width: 420px;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  color: #111;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* ── Send queue ─────────────────────────────────────────────────── */
+.queue-progress { margin-bottom: 20px; }
+.qp-bar { height: 8px; background: var(--gray-100); border-radius: 999px; overflow: hidden; }
+.qp-fill { height: 100%; background: linear-gradient(135deg, #FF6B00, #FF9240); transition: width 0.25s ease; }
+.qp-label { margin-top: 6px; font-size: 0.8rem; color: var(--gray-500); }
+
+.queue-card {
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  padding: 20px;
+  text-align: center;
+}
+.qc-name { font-size: 1.15rem; font-weight: 700; color: var(--gray-800); }
+.qc-meta { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 10px 0 18px; color: var(--gray-600); font-size: 0.86rem; }
+.qc-actions { display: flex; justify-content: center; gap: 10px; }
+
+.queue-done {
+  text-align: center;
+  padding: 30px 10px;
+  i { font-size: 3rem; color: var(--green); }
+}
+.qd-title { font-size: 1.2rem; font-weight: 700; margin: 10px 0 6px; color: var(--gray-800); }
+.qd-summary { color: var(--gray-500); margin-bottom: 18px; }
+.queue-done .step-actions { justify-content: center; }
+
+/* ── Detail dialog ──────────────────────────────────────────────── */
+.detail-head { margin-bottom: 14px; font-size: 0.88rem; color: var(--gray-700); }

@@ -6,12 +6,12 @@ import {
   TimesIcon
 } from "./chunk-2UA673FT.js";
 import {
-  BaseIcon
-} from "./chunk-PPSNSOBH.js";
-import {
   AutoFocus,
   AutoFocusModule
 } from "./chunk-OQVD43ZT.js";
+import {
+  BaseIcon
+} from "./chunk-PPSNSOBH.js";
 import {
   ConnectedOverlayScrollHandler,
   DomHandler

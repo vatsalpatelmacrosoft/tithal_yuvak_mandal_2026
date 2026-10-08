@@ -1,11 +1,11 @@
 import {
   CheckIcon
 } from "./chunk-XECRHX7D.js";
-import "./chunk-PPSNSOBH.js";
 import {
   AutoFocus,
   AutoFocusModule
 } from "./chunk-OQVD43ZT.js";
+import "./chunk-PPSNSOBH.js";
 import "./chunk-JZQAVOZS.js";
 import {
   PrimeNGConfig,

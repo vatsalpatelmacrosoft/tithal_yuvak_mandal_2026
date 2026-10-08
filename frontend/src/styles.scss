@@ -45,7 +45,10 @@ body {
   line-height: 1.55;
 }
 a { text-decoration: none; color: inherit; }
-button { cursor: pointer; border: none; background: none; font: inherit; }
+/* :not(.p-component) excludes PrimeNG-rendered buttons (Button, Paginator, SplitButton, ...) —
+   PrimeNG's theme CSS lives in `@layer primeng`, and unlayered rules always beat layered ones
+   regardless of specificity, so an unscoped reset here would silently erase PrimeNG's button colors. */
+button:not(.p-component) { cursor: pointer; border: none; background: none; font: inherit; }
 
 /* ── App Shell ────────────────────────────────────────────────── */
 .app-shell { display: flex; min-height: 100vh; }

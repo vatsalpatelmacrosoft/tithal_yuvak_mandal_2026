@@ -19,6 +19,7 @@ const MENU_ITEMS = [
   { slug: 'shibir',          label: 'Shibir',          icon: 'pi-calendar',        path: '/admin/shibir'          },
   { slug: 'quiz',            label: 'Quiz',            icon: 'pi-question-circle', path: '/admin/quiz'            },
   { slug: 'reports',         label: 'Reports',         icon: 'pi-chart-bar',       path: '/admin/reports'         },
+  { slug: 'messages',        label: 'Send Message',    icon: 'pi-whatsapp',        path: '/admin/messages'        },
   { slug: 'users',           label: 'Users',           icon: 'pi-cog',             path: '/admin/users'           },
   { slug: 'roles',           label: 'Roles',           icon: 'pi-id-card',         path: '/admin/roles'           },
   { slug: 'settings',        label: 'Settings',        icon: 'pi-sliders-h',       path: '/admin/settings'        },

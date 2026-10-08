@@ -69,6 +69,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 require_once __DIR__ . '/helpers/response.php';
 require_once __DIR__ . '/helpers/jwt.php';
 require_once __DIR__ . '/helpers/id_encoder.php';
+require_once __DIR__ . '/helpers/phone.php';
+require_once __DIR__ . '/helpers/baps_id.php';
 require_once __DIR__ . '/middleware/auth.php';
 
 // ── Route parsing ─────────────────────────────────────────────
@@ -95,6 +97,7 @@ require_once __DIR__ . '/routes/questions.php';
 require_once __DIR__ . '/routes/settings.php';
 require_once __DIR__ . '/routes/reports.php';
 require_once __DIR__ . '/routes/attendance.php';
+require_once __DIR__ . '/routes/messages.php';
 require_once __DIR__ . '/routes/dashboard.php';
 require_once __DIR__ . '/routes/public.php';
 

@@ -36,6 +36,7 @@ class PublicController
     public function registerYuvak(array $body): void
     {
         $this->checkRegOpen();
+        $body['baps_id'] = normalizeBapsId($body['baps_id'] ?? null);
         $errors = $this->validateMember($body);
         if ($errors) sendValidationError($errors);
 
@@ -61,11 +62,11 @@ class PublicController
         $this->pdo->beginTransaction();
         try {
             $this->pdo->prepare("
-                INSERT INTO yuvaks (uuid,yuvak_id,first_name,middle_name,last_name,birth_date,mo_number,
+                INSERT INTO yuvaks (uuid,yuvak_id,first_name,middle_name,last_name,birth_date,baps_id,mo_number,
                     whatsapp_number,email,address,xetra_id,mandal_id,is_karyakar)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             ")->execute([$uuid, $tempId, $body['first_name'], $body['middle_name'] ?? null,
-                $body['last_name'], $body['birth_date'], $body['mo_number'], $body['whatsapp_number'] ?? null,
+                $body['last_name'], $body['birth_date'], $body['baps_id'], $body['mo_number'], $body['whatsapp_number'] ?? null,
                 $body['email'] ?? null, $body['address'] ?? null,
                 $body['xetra_id'], $body['mandal_id'], $karyakar]);
 
@@ -87,6 +88,7 @@ class PublicController
     public function registerYuvati(array $body): void
     {
         $this->checkRegOpen();
+        $body['baps_id'] = normalizeBapsId($body['baps_id'] ?? null);
         $errors = $this->validateMember($body);
         if ($errors) sendValidationError($errors);
 
@@ -110,11 +112,11 @@ class PublicController
         $this->pdo->beginTransaction();
         try {
             $this->pdo->prepare("
-                INSERT INTO yuvatis (uuid,yuvati_id,first_name,middle_name,last_name,birth_date,mo_number,
+                INSERT INTO yuvatis (uuid,yuvati_id,first_name,middle_name,last_name,birth_date,baps_id,mo_number,
                     whatsapp_number,email,address,xetra_id,mandal_id,is_karyakar)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             ")->execute([$uuid, $tempId, $body['first_name'], $body['middle_name'] ?? null,
-                $body['last_name'], $body['birth_date'], $body['mo_number'], $body['whatsapp_number'] ?? null,
+                $body['last_name'], $body['birth_date'], $body['baps_id'], $body['mo_number'], $body['whatsapp_number'] ?? null,
                 $body['email'] ?? null, $body['address'] ?? null,
                 $body['xetra_id'], $body['mandal_id'], $karyakar]);
 
@@ -599,7 +601,7 @@ class PublicController
         $stmt = $this->pdo->prepare("
             SELECT y.uuid, y.$idField AS member_id,
                    CONCAT(y.first_name, ' ', COALESCE(NULLIF(y.middle_name,''), ''), ' ', y.last_name) AS full_name,
-                   y.first_name, y.last_name,
+                   y.first_name, y.last_name, y.baps_id,
                    x.name AS xetra_name, m.name AS mandal_name
             FROM $table y
             JOIN xetras  x ON x.id = y.xetra_id
@@ -613,6 +615,7 @@ class PublicController
         sendSuccess([
             'type'        => $type,
             'member_id'   => $row['member_id'],
+            'baps_id'     => $row['baps_id'],
             'full_name'   => trim(preg_replace('/\s+/', ' ', $row['full_name'])),
             'xetra_name'  => $row['xetra_name'],
             'mandal_name' => $row['mandal_name'],
@@ -634,6 +637,7 @@ class PublicController
         if (empty($body['last_name']))  $errors['last_name']  = 'Last name is required';
         if (empty($body['birth_date'])) $errors['birth_date'] = 'Birth date is required';
         elseif (!self::isValidPastDate($body['birth_date'])) $errors['birth_date'] = 'Invalid birth date';
+        if ($e = bapsIdError($body['baps_id'] ?? null)) $errors['baps_id'] = $e;
         if (empty($body['mo_number']))  $errors['mo_number']  = 'Mobile number is required';
         if (!empty($body['mo_number']) && !preg_match('/^[6-9]\d{9}$/', $body['mo_number'])) {
             $errors['mo_number'] = 'Invalid Indian mobile number (10 digits starting with 6–9)';

@@ -39,6 +39,12 @@
         <input pInputText formControlName="birth_date" type="date" [max]="maxBirthDate" [class.err]="hasError('birth_date')">
         <small class="p-error" *ngIf="hasError('birth_date')">{{ getError('birth_date') }}</small>
       </div>
+      <div class="field">
+        <label>BAPS ID</label>
+        <input pInputText formControlName="baps_id" maxlength="10" placeholder="e.g. VP1997947 (optional)"
+          style="text-transform:uppercase" [class.err]="hasError('baps_id')">
+        <small class="p-error" *ngIf="hasError('baps_id')">{{ getError('baps_id') }}</small>
+      </div>
     </div>
   </div>
 

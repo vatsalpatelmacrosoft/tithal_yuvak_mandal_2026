@@ -96,6 +96,12 @@ import { ToastService } from '../../core/services/toast.service';
                 <small class="p-error" *ngIf="hasErr('birth_date')">{{ getErr('birth_date') }}</small>
               </div>
               <div class="field">
+                <label>BAPS ID</label>
+                <input pInputText formControlName="baps_id" maxlength="10" placeholder="e.g. VP1997947 (optional)" class="w-full"
+                  style="text-transform:uppercase" [ngClass]="{'ng-invalid ng-dirty': hasErr('baps_id')}">
+                <small class="p-error" *ngIf="hasErr('baps_id')">{{ getErr('baps_id') }}</small>
+              </div>
+              <div class="field">
                 <label class="required">Mobile Number</label>
                 <input pInputText formControlName="mo_number" type="tel" placeholder="10-digit mobile" class="w-full"
                   [ngClass]="{'ng-invalid ng-dirty': hasErr('mo_number')}">
@@ -172,6 +178,7 @@ export class RegisterComponent implements OnInit {
   form = this.fb.group({
     first_name: ['', Validators.required], middle_name: [''], last_name: ['', Validators.required],
     birth_date: ['', Validators.required],
+    baps_id: ['', Validators.pattern(/^[A-Za-z0-9]{0,10}$/)],
     mo_number: ['', [Validators.required, Validators.pattern(/^[6-9]\d{9}$/)]], whatsapp_number: [''],
     email: ['', Validators.email], address: [''],
     xetra_id: [null, Validators.required], mandal_id: [null, Validators.required],
@@ -209,6 +216,7 @@ export class RegisterComponent implements OnInit {
     if (this.apiErrors[f]) return this.apiErrors[f];
     const c = this.form.get(f);
     if (c?.errors?.['required']) return 'This field is required';
+    if (c?.errors?.['pattern'] && f === 'baps_id') return 'Letters and digits only, max 10';
     if (c?.errors?.['pattern'])  return 'Invalid mobile number (10 digits, starts 6-9)';
     if (c?.errors?.['email'])    return 'Invalid email';
     return '';

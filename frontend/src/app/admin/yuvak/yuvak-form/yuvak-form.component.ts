@@ -44,6 +44,7 @@ export class YuvakFormComponent implements OnInit {
     middle_name:     [''],
     last_name:       ['', Validators.required],
     birth_date:      ['', Validators.required],
+    baps_id:         ['', Validators.pattern(/^[A-Za-z0-9]{0,10}$/)],
     mo_number:       ['', [Validators.required, Validators.pattern(/^[6-9]\d{9}$/)]],
     whatsapp_number: [''],
     email:           ['', Validators.email],
@@ -106,6 +107,7 @@ export class YuvakFormComponent implements OnInit {
     if (this.apiErrors[f]) return this.apiErrors[f];
     const ctrl = this.form.get(f);
     if (ctrl?.errors?.['required']) return `This field is required`;
+    if (ctrl?.errors?.['pattern'] && f === 'baps_id') return 'Letters and digits only, max 10';
     if (ctrl?.errors?.['pattern'])  return 'Invalid format';
     if (ctrl?.errors?.['email'])    return 'Invalid email address';
     return '';

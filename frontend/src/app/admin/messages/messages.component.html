@@ -1,0 +1,309 @@
+<div class="module-hero">
+  <div class="hero-left">
+    <div class="hero-icon green"><i class="pi pi-whatsapp"></i></div>
+    <div>
+      <div class="hero-title">Send Message</div>
+      <div class="hero-subtitle">Compose and send WhatsApp messages to Yuvak / Yuvati members</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Main Tab Nav ─────────────────────────────────────────────── -->
+<div class="msg-tabs">
+  <button class="mtab" [class.active]="activeTab === 'compose'" (click)="setTab('compose')">
+    <i class="pi pi-pencil"></i><span>Compose</span>
+  </button>
+  <button class="mtab" [class.active]="activeTab === 'history'" (click)="setTab('history')">
+    <i class="pi pi-history"></i><span>History</span>
+  </button>
+</div>
+
+<!-- ══════════════════════════════ COMPOSE ═══════════════════════ -->
+<div class="table-card tab-body" *ngIf="activeTab === 'compose'">
+
+  <div class="wizard-steps">
+    <div class="wstep" [class.active]="step === 1" [class.done]="step > 1" (click)="checked && goToStep(1)">
+      <span class="wnum">1</span> Recipients
+    </div>
+    <div class="wstep" [class.active]="step === 2" [class.done]="step > 2" (click)="checked && step >= 2 && goToStep(2)">
+      <span class="wnum">2</span> Message
+    </div>
+    <div class="wstep" [class.active]="step === 3">
+      <span class="wnum">3</span> Send
+    </div>
+  </div>
+
+  <!-- ── Step 1: Recipients ────────────────────────────────────── -->
+  <div class="wizard-panel" *ngIf="step === 1">
+    <div class="field-group">
+      <label>Send to</label>
+      <div class="pill-group">
+        <button class="opt-pill" [class.active]="targetType==='yuvak'" (click)="targetType='yuvak'; onTargetTypeChange()">Yuvak</button>
+        <button class="opt-pill" [class.active]="targetType==='yuvati'" (click)="targetType='yuvati'; onTargetTypeChange()">Yuvati</button>
+        <button class="opt-pill" [class.active]="targetType==='both'" (click)="targetType='both'; onTargetTypeChange()">Both</button>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label>Selection scope</label>
+      <div class="pill-group">
+        <button class="opt-pill" [class.active]="scope==='all'" (click)="scope='all'; onScopeChange()">All</button>
+        <button class="opt-pill" [class.active]="scope==='xetra'" (click)="scope='xetra'; onScopeChange()">Xetra-wise</button>
+        <button class="opt-pill" [class.active]="scope==='mandal'" (click)="scope='mandal'; onScopeChange()">Mandal-wise</button>
+        <button class="opt-pill" [class.active]="scope==='individual'" (click)="scope='individual'; onScopeChange()">Individual</button>
+      </div>
+    </div>
+
+    <div class="field-group" *ngIf="scope === 'xetra'">
+      <label>Choose Xetra(s)</label>
+      <p-multiSelect [options]="xetras" optionLabel="name" optionValue="id" placeholder="Select xetra(s)"
+                      [(ngModel)]="selectedXetraIds" (onChange)="resetCheck()" display="chip" styleClass="w-full" />
+    </div>
+
+    <div class="field-group" *ngIf="scope === 'mandal'">
+      <label>Choose Mandal(s)</label>
+      <p-multiSelect [options]="mandals" optionLabel="name" optionValue="id" placeholder="Select mandal(s)"
+                      [(ngModel)]="selectedMandalIds" (onChange)="resetCheck()" display="chip" styleClass="w-full" />
+    </div>
+
+    <div class="field-group" *ngIf="scope === 'individual'">
+      <label>Choose members</label>
+      <div class="picker-buttons">
+        <p-button *ngIf="targetType !== 'yuvati'" label="Pick Yuvak ({{ selectedYuvakUuids.size }})"
+                  icon="pi pi-user" [outlined]="true" (click)="openPicker('yuvak')" />
+        <p-button *ngIf="targetType !== 'yuvak'" label="Pick Yuvati ({{ selectedYuvatiUuids.size }})"
+                  icon="pi pi-user" [outlined]="true" (click)="openPicker('yuvati')" />
+      </div>
+    </div>
+
+    <div class="step-actions">
+      <p-button label="Check Recipients" icon="pi pi-search" [loading]="checking"
+                [disabled]="!canCheckRecipients" (click)="checkRecipients()" />
+    </div>
+
+    <div class="recipient-preview" *ngIf="checked">
+      <div class="rp-summary">
+        <span class="stat-pill green">{{ validRecipients.length }} valid</span>
+        <span class="stat-pill orange" *ngIf="invalidRecipients.length">{{ invalidRecipients.length }} invalid — will be skipped</span>
+        <span class="rp-total">{{ recipients().length }} total matched</span>
+      </div>
+
+      <p-table [value]="recipients()" [scrollable]="true" scrollHeight="320px" styleClass="p-datatable-striped">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Number Used</th>
+            <th>Source</th>
+            <th>Status</th>
+            <th style="width:3rem"></th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-r>
+          <tr>
+            <td>{{ r.full_name }}</td>
+            <td><span class="badge-type">{{ r.member_type | titlecase }}</span></td>
+            <td>{{ r.used_number || '—' }}</td>
+            <td>
+              <p-tag *ngIf="r.number_source" [value]="r.number_source" severity="info" />
+              <span *ngIf="!r.number_source">—</span>
+            </td>
+            <td>
+              <p-tag [value]="r.is_valid ? 'Valid' : 'Invalid'" [severity]="r.is_valid ? 'success' : 'danger'" />
+            </td>
+            <td>
+              <button class="rm-btn" pTooltip="Remove from list" (click)="removeRecipient(r)"><i class="pi pi-times"></i></button>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="6" class="empty-msg">No recipients matched.</td></tr>
+        </ng-template>
+      </p-table>
+
+      <div class="step-actions">
+        <p-button label="Next: Compose Message" icon="pi pi-arrow-right" iconPos="right"
+                  [disabled]="!validRecipients.length" (click)="goToStep(2)" />
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Step 2: Message ──────────────────────────────────────── -->
+  <div class="wizard-panel" *ngIf="step === 2">
+    <div class="field-group">
+      <label>Subject</label>
+      <input pInputText [(ngModel)]="subject" placeholder="e.g. Shibir Reminder" class="w-full" />
+    </div>
+
+    <div class="field-group">
+      <label>Message</label>
+      <p-editor [(ngModel)]="messageBody" [style]="{height:'220px'}"
+                placeholder="Write your message here..." />
+    </div>
+
+    <div class="field-group" *ngIf="subject || messageBody">
+      <label>WhatsApp Preview</label>
+      <div class="wa-preview">
+        <div class="wa-bubble">{{ whatsappPreview }}</div>
+      </div>
+    </div>
+
+    <div class="step-actions">
+      <p-button label="Back" icon="pi pi-arrow-left" [outlined]="true" (click)="goToStep(1)" />
+      <p-button label="Send" icon="pi pi-send" [loading]="sending"
+                [disabled]="!subject.trim() || !messageBody.trim()" (click)="sendCampaign()" />
+    </div>
+  </div>
+
+  <!-- ── Step 3: Send Queue ───────────────────────────────────── -->
+  <div class="wizard-panel" *ngIf="step === 3 && campaign">
+    <div class="queue-progress">
+      <div class="qp-bar"><div class="qp-fill" [style.width.%]="queue.length ? (currentIndex / queue.length * 100) : 100"></div></div>
+      <div class="qp-label">{{ currentIndex }} / {{ queue.length }} processed</div>
+    </div>
+
+    <div class="queue-card" *ngIf="!finished && currentRecipient">
+      <div class="qc-name">{{ currentRecipient.full_name }}</div>
+      <div class="qc-meta">
+        <span class="badge-type">{{ currentRecipient.member_type | titlecase }}</span>
+        <span>{{ currentRecipient.used_number }}</span>
+        <p-tag [value]="currentRecipient.number_source || ''" severity="info" />
+      </div>
+      <div class="qc-actions">
+        <p-button label="Open WhatsApp" icon="pi pi-whatsapp" (click)="openWhatsApp(currentRecipient)" />
+        <p-button label="Mark Sent" icon="pi pi-check" severity="success" [loading]="marking" (click)="markCurrent('sent')" />
+        <p-button label="Skip" icon="pi pi-step-forward" [outlined]="true" [loading]="marking" (click)="markCurrent('skipped')" />
+      </div>
+    </div>
+
+    <div class="queue-done" *ngIf="finished">
+      <i class="pi pi-check-circle"></i>
+      <div class="qd-title">Queue complete</div>
+      <div class="qd-summary">
+        {{ campaign.sent_count }} sent · {{ campaign.skipped_count }} skipped ·
+        {{ campaign.yuvak_sent_count }} Yuvak · {{ campaign.yuvati_sent_count }} Yuvati
+      </div>
+      <div class="step-actions">
+        <p-button label="Compose Another" icon="pi pi-plus" (click)="startNewMessage()" />
+        <p-button label="View History" icon="pi pi-history" [outlined]="true" (click)="setTab('history')" />
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ HISTORY ═══════════════════════ -->
+<div class="table-card tab-body" *ngIf="activeTab === 'history'">
+  <p-table [value]="campaigns()" [lazy]="true" (onLazyLoad)="onHistoryLazyLoad($event)"
+           [totalRecords]="historyTotal()" [rows]="historyPerPage" [paginator]="true"
+           [rowsPerPageOptions]="[20,50,100]" [loading]="historyLoading" styleClass="p-datatable-striped"
+           [tableStyle]="{'min-width':'70rem'}">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Date</th>
+        <th>Subject</th>
+        <th>Target</th>
+        <th>Scope</th>
+        <th class="text-center">Total</th>
+        <th class="text-center">Sent</th>
+        <th class="text-center">Yuvak Sent</th>
+        <th class="text-center">Yuvati Sent</th>
+        <th class="text-center">Skipped</th>
+        <th>Sent By</th>
+        <th style="width:4rem"></th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-c>
+      <tr>
+        <td>{{ c.created_at | date:'dd-MMM-yyyy HH:mm' }}</td>
+        <td>{{ c.subject }}</td>
+        <td><span class="badge-type">{{ c.target_type | titlecase }}</span></td>
+        <td>{{ c.scope | titlecase }}</td>
+        <td class="text-center">{{ c.total_recipients }}</td>
+        <td class="text-center"><span class="stat-pill green">{{ c.sent_count }}</span></td>
+        <td class="text-center">{{ c.yuvak_sent_count }}</td>
+        <td class="text-center">{{ c.yuvati_sent_count }}</td>
+        <td class="text-center"><span class="stat-pill orange">{{ c.skipped_count }}</span></td>
+        <td>{{ c.created_by_name || '—' }}</td>
+        <td>
+          <button class="rm-btn" pTooltip="View detail" (click)="viewDetail(c)"><i class="pi pi-eye"></i></button>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="11" class="empty-msg">No messages sent yet.</td></tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<!-- ── Individual Picker Dialog ───────────────────────────────────── -->
+<p-dialog [(visible)]="pickerVisible" [modal]="true" [style]="{width:'700px'}"
+          [header]="'Select ' + (pickerType | titlecase)" (onHide)="closePicker()">
+  <input pInputText [(ngModel)]="pickerSearch" (ngModelChange)="onPickerSearch($event)"
+         placeholder="Search by name, mobile, ID..." class="w-full" style="margin-bottom:10px" />
+
+  <p-table [value]="pickerRows()" [lazy]="true" (onLazyLoad)="onPickerLazyLoad($event)"
+           [totalRecords]="pickerTotal()" [rows]="pickerPerPage" [paginator]="true"
+           [loading]="pickerLoading" styleClass="p-datatable-striped">
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="width:3rem"></th>
+        <th>Name</th>
+        <th>Mobile</th>
+        <th>Mandal</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-row>
+      <tr>
+        <td><input type="checkbox" [checked]="isPicked(row)" (change)="togglePicked(row)" /></td>
+        <td>{{ row.first_name }} {{ row.last_name }}</td>
+        <td>{{ row.mo_number }}</td>
+        <td>{{ row.mandal_name }}</td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="4" class="empty-msg">No members found.</td></tr>
+    </ng-template>
+  </p-table>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Done" icon="pi pi-check" (click)="closePicker()" />
+  </ng-template>
+</p-dialog>
+
+<!-- ── Campaign Detail Dialog ─────────────────────────────────────── -->
+<p-dialog [(visible)]="detailVisible" [modal]="true" [style]="{width:'800px'}" header="Message Detail">
+  <ng-container *ngIf="detailCampaign() as d">
+    <div class="detail-head">
+      <div><strong>Subject:</strong> {{ d.subject }}</div>
+      <div><strong>Sent:</strong> {{ d.created_at | date:'dd-MMM-yyyy HH:mm' }}</div>
+      <div class="rp-summary" style="margin-top:8px">
+        <span class="stat-pill green">{{ d.sent_count }} sent</span>
+        <span class="stat-pill orange">{{ d.skipped_count }} skipped</span>
+        <span class="rp-total">Yuvak: {{ d.yuvak_sent_count }} · Yuvati: {{ d.yuvati_sent_count }}</span>
+      </div>
+    </div>
+    <p-table [value]="d.recipients || []" [scrollable]="true" scrollHeight="360px" styleClass="p-datatable-striped">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Number</th>
+          <th>Status</th>
+          <th>Sent At</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-r>
+        <tr>
+          <td>{{ r.full_name }}</td>
+          <td><span class="badge-type">{{ r.member_type | titlecase }}</span></td>
+          <td>{{ r.used_number || '—' }}</td>
+          <td>
+            <p-tag [value]="r.status"
+                   [severity]="r.status === 'sent' ? 'success' : (r.status === 'pending' ? 'info' : 'danger')" />
+          </td>
+          <td>{{ r.sent_at ? (r.sent_at | date:'dd-MMM HH:mm') : '—' }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </ng-container>
+</p-dialog>

@@ -65,6 +65,7 @@
         <th pSortableColumn="yuvak_id">Yuvak ID <p-sortIcon field="yuvak_id" /></th>
         <th pSortableColumn="first_name">Name <p-sortIcon field="first_name" /></th>
         <th pSortableColumn="birth_date">Birth Date <p-sortIcon field="birth_date" /></th>
+        <th pSortableColumn="baps_id">BAPS ID <p-sortIcon field="baps_id" /></th>
         <th pSortableColumn="mo_number">Mobile <p-sortIcon field="mo_number" /></th>
         <th>WhatsApp</th>
         <th pSortableColumn="xetra_name">Xetra <p-sortIcon field="xetra_name" /></th>
@@ -82,6 +83,7 @@
         </td>
         <td style="font-weight:500">{{ y.first_name }} {{ y.middle_name }} {{ y.last_name }}</td>
         <td>{{ y.birth_date | date:'dd-MM-yyyy' }}</td>
+        <td>{{ y.baps_id || '—' }}</td>
         <td>{{ y.mo_number }}</td>
         <td style="white-space:nowrap">
           {{ y.whatsapp_number || y.mo_number }}
@@ -115,7 +117,7 @@
 
     <ng-template pTemplate="emptymessage">
       <tr>
-        <td colspan="10" style="text-align:center;padding:3rem;color:#9CA3AF">
+        <td colspan="11" style="text-align:center;padding:3rem;color:#9CA3AF">
           <i class="pi pi-user" style="font-size:2rem;display:block;margin-bottom:10px;color:#D1D5DB"></i>
           No Yuvak records found
         </td>

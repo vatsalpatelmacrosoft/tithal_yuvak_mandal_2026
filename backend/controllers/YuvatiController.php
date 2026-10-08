@@ -17,8 +17,8 @@ class YuvatiController
 
         if (!empty($_GET['search'])) {
             $s = '%' . $_GET['search'] . '%';
-            $where .= " AND (y.first_name LIKE ? OR y.last_name LIKE ? OR y.mo_number LIKE ? OR y.yuvati_id LIKE ?)";
-            $params = [$s, $s, $s, $s];
+            $where .= " AND (y.first_name LIKE ? OR y.last_name LIKE ? OR y.mo_number LIKE ? OR y.yuvati_id LIKE ? OR y.baps_id LIKE ?)";
+            $params = [$s, $s, $s, $s, $s];
         }
         if (!empty($_GET['xetra_id']))  { $where .= ' AND y.xetra_id = ?';  $params[] = $_GET['xetra_id']; }
         if (!empty($_GET['mandal_id'])) { $where .= ' AND y.mandal_id = ?'; $params[] = $_GET['mandal_id']; }
@@ -30,6 +30,7 @@ class YuvatiController
             'first_name'  => 'y.first_name',
             'last_name'   => 'y.last_name',
             'birth_date'  => 'y.birth_date',
+            'baps_id'     => 'y.baps_id',
             'mo_number'   => 'y.mo_number',
             'xetra_name'  => 'x.name',
             'mandal_name' => 'm.name',
@@ -78,6 +79,7 @@ class YuvatiController
 
     public function store(array $body): void
     {
+        $body['baps_id'] = normalizeBapsId($body['baps_id'] ?? null);
         $errors = $this->validate($body);
         if ($errors) sendValidationError($errors);
 
@@ -94,14 +96,14 @@ class YuvatiController
 
         $stmt = $this->pdo->prepare("
             INSERT INTO yuvatis
-                (uuid, yuvati_id, first_name, middle_name, last_name, birth_date, mo_number, whatsapp_number,
+                (uuid, yuvati_id, first_name, middle_name, last_name, birth_date, baps_id, mo_number, whatsapp_number,
                  email, address, xetra_id, mandal_id, is_karyakar, tags)
-            VALUES (?, 'TEMP', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, 'TEMP', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         $stmt->execute([
             $uuid,
             $body['first_name'], $body['middle_name'] ?? null, $body['last_name'], $body['birth_date'],
-            $body['mo_number'], $body['whatsapp_number'] ?? null,
+            $body['baps_id'], $body['mo_number'], $body['whatsapp_number'] ?? null,
             $body['email'] ?? null, $body['address'] ?? null,
             $body['xetra_id'], $body['mandal_id'],
             $body['is_karyakar'] ?? 'no',
@@ -129,6 +131,8 @@ class YuvatiController
         $existing = $stmt->fetch();
         if (!$existing) sendError(404, 'Yuvati not found');
 
+        $body['baps_id'] = normalizeBapsId($body['baps_id'] ?? null);
+
         $errors = $this->validate($body);
         if ($errors) sendValidationError($errors);
 
@@ -138,13 +142,13 @@ class YuvatiController
 
         $this->pdo->prepare("
             UPDATE yuvatis SET
-                first_name=?, middle_name=?, last_name=?, birth_date=?, mo_number=?,
+                first_name=?, middle_name=?, last_name=?, birth_date=?, baps_id=?, mo_number=?,
                 whatsapp_number=?, email=?, address=?,
                 xetra_id=?, mandal_id=?, is_karyakar=?, tags=?
             WHERE uuid=?
         ")->execute([
             $body['first_name'], $body['middle_name'] ?? null, $body['last_name'], $body['birth_date'],
-            $body['mo_number'], $body['whatsapp_number'] ?? null, $body['email'] ?? null,
+            $body['baps_id'], $body['mo_number'], $body['whatsapp_number'] ?? null, $body['email'] ?? null,
             $body['address'] ?? null, $body['xetra_id'], $body['mandal_id'],
             $body['is_karyakar'] ?? 'no',
             isset($body['tags']) ? json_encode($body['tags']) : null,
@@ -169,8 +173,8 @@ class YuvatiController
 
         if (!empty($_GET['search'])) {
             $s = '%' . $_GET['search'] . '%';
-            $where .= " AND (y.first_name LIKE ? OR y.last_name LIKE ? OR y.mo_number LIKE ? OR y.yuvati_id LIKE ?)";
-            $params = [$s, $s, $s, $s];
+            $where .= " AND (y.first_name LIKE ? OR y.last_name LIKE ? OR y.mo_number LIKE ? OR y.yuvati_id LIKE ? OR y.baps_id LIKE ?)";
+            $params = [$s, $s, $s, $s, $s];
         }
         if (!empty($_GET['xetra_id']))  { $where .= ' AND y.xetra_id = ?';  $params[] = (int)$_GET['xetra_id']; }
         if (!empty($_GET['mandal_id'])) { $where .= ' AND y.mandal_id = ?'; $params[] = (int)$_GET['mandal_id']; }
@@ -178,7 +182,7 @@ class YuvatiController
         if (!empty($_GET['birth_date_to']))   { $where .= ' AND y.birth_date <= ?'; $params[] = $_GET['birth_date_to']; }
 
         $stmt = $this->pdo->prepare("
-            SELECT y.yuvati_id, y.first_name, y.middle_name, y.last_name, y.birth_date,
+            SELECT y.yuvati_id, y.first_name, y.middle_name, y.last_name, y.birth_date, y.baps_id,
                    y.mo_number, y.whatsapp_number, y.email, y.address,
                    y.is_karyakar, x.name AS xetra_name, m.name AS mandal_name,
                    DATE(y.created_at) AS joined_on
@@ -196,11 +200,11 @@ class YuvatiController
         header('Pragma: no-cache');
 
         $out = fopen('php://output', 'w');
-        fputcsv($out, ['Yuvati ID','First Name','Middle Name','Last Name','Birth Date','Mobile','WhatsApp','Email','Address','Karyakar','Xetra','Mandal','Joined On'], ',', '"', '\\');
+        fputcsv($out, ['Yuvati ID','First Name','Middle Name','Last Name','Birth Date','BAPS ID','Mobile','WhatsApp','Email','Address','Karyakar','Xetra','Mandal','Joined On'], ',', '"', '\\');
         foreach ($rows as $r) {
             fputcsv($out, [
                 $r['yuvati_id'], $r['first_name'], $r['middle_name'] ?? '',
-                $r['last_name'], $r['birth_date'] ?? '', $r['mo_number'], $r['whatsapp_number'] ?? '',
+                $r['last_name'], $r['birth_date'] ?? '', $r['baps_id'] ?? '', $r['mo_number'], $r['whatsapp_number'] ?? '',
                 $r['email'] ?? '', $r['address'] ?? '', $r['is_karyakar'],
                 $r['xetra_name'], $r['mandal_name'], $r['joined_on'],
             ], ',', '"', '\\');
@@ -245,6 +249,7 @@ class YuvatiController
         if (empty($body['last_name']))  $errors['last_name']  = 'Last name is required';
         if (empty($body['birth_date'])) $errors['birth_date'] = 'Birth date is required';
         elseif (!self::isValidPastDate($body['birth_date'])) $errors['birth_date'] = 'Invalid birth date';
+        if ($e = bapsIdError($body['baps_id'] ?? null)) $errors['baps_id'] = $e;
         if (empty($body['mo_number']))  $errors['mo_number']  = 'Mobile number is required';
         if (!empty($body['mo_number']) && !preg_match('/^[6-9]\d{9}$/', $body['mo_number'])) {
             $errors['mo_number'] = 'Invalid Indian mobile number (10 digits, starts 6-9)';

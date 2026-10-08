@@ -42,6 +42,7 @@ export class YuvatiFormComponent implements OnInit {
   form = this.fb.group({
     first_name: ['', Validators.required], middle_name: [''], last_name: ['', Validators.required],
     birth_date: ['', Validators.required],
+    baps_id: ['', Validators.pattern(/^[A-Za-z0-9]{0,10}$/)],
     mo_number: ['', [Validators.required, Validators.pattern(/^[6-9]\d{9}$/)]], whatsapp_number: [''],
     email: ['', Validators.email], address: [''],
     xetra_id: [null as any, Validators.required], mandal_id: [null as any, Validators.required],
@@ -93,6 +94,7 @@ export class YuvatiFormComponent implements OnInit {
     if (this.apiErrors[f]) return this.apiErrors[f];
     const c = this.form.get(f);
     if (c?.errors?.['required']) return 'This field is required';
+    if (c?.errors?.['pattern'] && f === 'baps_id') return 'Letters and digits only, max 10';
     if (c?.errors?.['pattern'])  return 'Invalid format';
     if (c?.errors?.['email'])    return 'Invalid email address';
     return '';
